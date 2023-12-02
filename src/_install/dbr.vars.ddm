@@ -18,10 +18,10 @@ model "Variables globales"
         @"varname" string(32) unique required
         @"vardefault" string(255)
         @"varvalue" mmemo
-        @"varcaption" string     // Etiqueta de la variable
-        @"varhelp" memo          // Ayuda o información adicional
-        @"vartype" string(15)    // Tipo de dato: string,integer,decimal,bool,date,datetime,time
-        @"varinput" string(255)  // Tipo de control de entrada: null or 'default', color, select,inputkey,dkl,json,textarea
+        @"varcaption" string    // Etiqueta de la variable
+        @"varhelp" memo         // Ayuda o información adicional
+        @"vartype" string(15)   // Tipo de dato: string,integer,decimal,bool,date,datetime,time
+        @"varinput" memo        // Json con especificaciones al tipo de control de entrada: null or 'default', color, select,inputkey,dkl,json,textarea
         @"ref_varcat" ref: "varcategory" // Categoría de variable
         @"userenable" bool // Si es true, la variable puede establecerse por usuario
     }
