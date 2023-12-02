@@ -1,0 +1,8 @@
+{
+	"id":"dbext",
+	"dependences":["*ddm.dkl"],
+	"install":{
+        "models":["dbr.vars.ddm"],
+        "execute":[]
+    }
+}

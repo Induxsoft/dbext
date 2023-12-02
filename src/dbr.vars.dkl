@@ -1,0 +1,79 @@
+#include "dkli.dkh"
+#!
+module "Variables alojadas en la base de datos :dbr.vars"
+{
+    userid::&db
+    {
+        new p { @"sid": dbr.getSID(db) }
+        ref rec=dbr.rec(db,"select u.userid from tuser u inner join sys_session s on s.iuser=u.sys_pk where s.sys_guid=@sid",p)
+
+        if isnull(rec){ return "" }
+        return @@(rec,"$userid")
+
+        exception{}
+        return ""
+    }
+
+    asrecord::&db,sql,&p
+    {
+        ref l=dbr.table(db,sql,p)
+        new rec { }
+        for i=0;i<@count(l)
+        {
+            rec<trim(cell.str(l,i,0))+"*">:cell.obj(l,i,1)
+            exception{}
+        }
+        
+        return rec
+    }
+
+    getall::&db
+    {
+        return asrecord(db,"select varname, varvalue from globalvar",@null)
+    }
+
+    getallwhere::&db,where,&p
+    {
+        return asrecord(db,"select varname, varvalue from globalvar where "+where,p)
+    }
+
+    get::&db, varname { return getd(db,varname,"") }
+
+    getd::&db, varname,default
+    {
+        new p
+        {
+            @"varname":varname
+            @"sid":""
+            @"sid":dbr.getSID(db)
+            exception{}
+        }
+        
+        ref gv=@null
+        codeblock
+        {
+            ref gv=dbr.rec(db,"select varvalue,userenable from globalvar where varname=@varname",p)
+            exception
+            {
+                ref gv=dbr.rec(db,"select varvalue from globalvar where varname=@varname",p)
+            }
+        }
+
+        if isnull(gv) { return default }
+
+        value=@@(gv,"$varvalue")
+
+        if @@(gv,"#userenable")
+        {
+            using p
+            {
+                @"uid":userid(db)
+            }
+            ref gv=dbr.rec(db,"select varvalue from uservarval where varname=@varname and userid=@uid",p)
+            if not(isnull(gv)) { return @@(gv,"$varvalue") }
+        }
+
+        return value
+
+    }
+}

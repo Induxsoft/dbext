@@ -1,0 +1,41 @@
+#include "ddm.dkh"
+model "Variables globales"
+{
+    #include "induxsoft.abstracts.ddm"
+
+    // Categorías jerárquicas de variables
+    entity "varcategory"
+    {
+        @"id" string(32) key
+        @"caption" string(150) required
+        @"help" memo
+        @"parent" ref: "varcategory"
+    }
+
+    // Variables globales
+    entity "globalvar" : "TableModel"
+    {
+        @"varname" string(32) unique required
+        @"vardefault" string(255)
+        @"varvalue" mmemo
+        @"varcaption" string     // Etiqueta de la variable
+        @"varhelp" memo          // Ayuda o información adicional
+        @"vartype" string(15)    // Tipo de dato: string,integer,decimal,bool,date,datetime,time
+        @"varinput" string(255)  // Tipo de control de entrada: null or 'default', color, select,inputkey,dkl,json,textarea
+        @"ref_varcat" ref: "varcategory" // Categoría de variable
+        @"userenable" bool // Si es true, la variable puede establecerse por usuario
+    }
+
+    // Variables del usuario
+    entity "uservarval" : "TableModel"
+    {
+        @"varname" string(32) required
+        @"varvalue" mmemo 
+        @"userid" string(45) required
+        index "uservarval_unique" unique
+        {
+            field "varname"
+            field "userid"
+        }
+    }
+}
