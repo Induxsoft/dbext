@@ -1,0 +1,61 @@
+#include "dkli.dkh"
+#!
+module "Controladores de eventos :dbr.events"
+{
+    /*
+    Registra un script asociado a un identificador de disparador de eventos (sender_id), 
+    devuelve @true si se realiza la inserción o @false si ya existía un registro previo.
+    */
+    register::&db, sender_id,include_script
+    {
+        if not(file.exists(include_script)) { do rise_error(0,"No se encuentra el script '"+include_script+"'")}
+
+        new data
+        {
+            @"created*":dbr.sql("now()")
+            @"sender_id":sender_id
+            @"include_script":include_script
+        }
+
+        if isnull(dbr.rec(db,"select * from sys_event_handlers where sender_id=@sender_id and include_script=@include_script",data))
+        {
+            data<"sequence">:dbr.num(db,"select ifnull(max(sequence),0)+1 from sys_event_handlers where sender_id=@sender_id",data)
+            do dbr.insert(db,"sys_event_handlers",data)
+            return @true
+        }
+        
+        return @false
+    }
+
+    /*
+    Dispara un evento
+    */
+    fire::&db, sender_id,event, &data
+    {
+        new event_context{@"sender_id":sender_id}
+        ref hanlders=dbr.list(db,"select include_script from sys_event_handlers where sender_id=@sender_id order by sequence,sys_pk",event_context)
+
+        event_context<"event">:event
+        event_context<"database*">:db
+        event_context<"data*">:data
+
+        for i=0;i<@count(hanlders)
+        {
+            ref h=@item(hanlders,i)
+            do runscript(@@(h,"$include_script"),"event_context",event_context)           
+        }
+    }
+
+    /*
+    Elimina un registro de controlador de eventos
+    */
+    unregister::&db, sender_id,include_script
+    {
+        new p
+        {
+            @"sender_id":sender_id
+            @"include_script":include_script
+        }
+        do dbr.execute(db,"delete from sys_event_handlers where sender_id=@sender_id and include_script=@include_script",p)
+    }
+}

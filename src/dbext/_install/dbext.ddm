@@ -38,4 +38,20 @@ model "Variables globales"
             field "userid"
         }
     }
+
+    //Controladores de eventos 
+    entity "sys_event_handlers" 
+    {
+        @"sys_pk" int autoincremental key 
+        @"created" datetime required
+        @"sender_id" string(50) required
+        @"sequence" int
+        @"include_script" string(1024) required
+
+        index "sys_event_handlers_unique" unique
+        {
+            field "sender_id"
+            field "include_script"
+        }
+    }
 }
