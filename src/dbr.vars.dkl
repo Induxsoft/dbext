@@ -37,7 +37,7 @@ module "Variables alojadas en la base de datos :dbr.vars"
         return asrecord(db,"select varname, varvalue from globalvar where "+where,p)
     }
 
-    get::&db, varname { return getd(db,varname,"") }
+    get::&db, varname { return dbr.vars.getd(db,varname,"") }
 
     getd::&db, varname,default
     {
