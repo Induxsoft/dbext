@@ -3,6 +3,55 @@ model "Variables globales"
 {
     #include "induxsoft.abstracts.ddm"
 
+    //#region Usuarios, grupos, perfiles y permisos
+    // Usuarios
+    entity "tuser" : "TableModel"
+    {
+        @"locked" bool 
+        @"message" string(255) 
+        @"notes" memo 
+        @"pwd" string(32) 
+        @"userid" string(120) unique required
+        @"username" string(120) required
+        @"pwdmd5" string(64) 
+    }
+    // Grupo de usuarios
+    entity "usergroup" : "TableModel"
+    {
+        @"description" string(80) required
+        @"groupid" string(15) unique required
+        @"notes" memo 
+        @"uf_hidetoolbar" string(1) 
+    }
+    // Relacion entre usuarios y los grupos a los que pertenece
+    entity "user_usergroup_" : "NmModel"
+    {
+        @"groups" int ref:"usergroup" ["sys_pk"] required
+        @"users" int ref:"tuser" ["sys_pk"] required
+    }
+    // Permisos disponibles
+    entity "sitem" : "TableModel"
+    {
+        @"description" string(250) 
+        @"itemid" string(32) unique required
+        @"itemparent" int ref:"sitem" ["sys_pk"] 
+    }
+    // Permisos que tiene un grupo de usuario
+    entity "profile" : "TableModel"
+    {
+        @"item" int ref:"sitem" ["sys_pk"] required
+        @"usergroup" int ref:"usergroup" ["sys_pk"] required
+    }
+    // Valores del usuario
+    entity "uservar" : "TableModel"
+    {
+        @"vardefault" string(255) 
+        @"varname" string(32) unique required
+        @"varvalue" string(32000) 
+        @"fuser" int ref:"tuser" ["sys_pk"] required
+    }
+    //#endregion
+
     // Categorías jerárquicas de variables
     entity "varcategory"
     {
