@@ -37,7 +37,7 @@ module "Controladores de eventos :dbr.events"
 
         event_context<"event">:event
         event_context<"database*">:db
-        event_context<"data*">:data
+        event_context<"eventdata*">:data
 
         for i=0;i<@count(hanlders)
         {
