@@ -1,0 +1,4 @@
+"id","title","icon96x96","src","_blank","appid","cat"
+"dbext.tuser.list","Usuarios","/$/dbext/img/icons/dbext-96x96.png","/!/dbext/tuser/","0","dbext.tuser.v1","config"
+"dbext.usergroup.list","Grupos de usuarios","/$/dbext/img/icons/dbext-96x96.png","/!/dbext/usergroup/","0","dbext.usergroup.v1","config"
+"dbext.profile.list","Perfiles","/$/dbext/img/icons/dbext-96x96.png","/!/dbext/profile/","0","dbext.profile.v1","config"

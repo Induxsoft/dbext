@@ -1,0 +1,49 @@
+#include "dkli.dkh"
+#!
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "../config.dk"
+
+    do @context.begin(@crud_context)
+
+    ref usuarios = @("&./")
+    
+    #$
+    div(class="container")
+    {
+        a(href="#<replace(@DBEXT_ADD_EDIT_TUSER, '@id', '_new')>"){$"Agregar"}
+        table(class="table")
+        {
+            thead
+            {
+                tr
+                {
+                    th{$"User ID"}
+                    th{$"Nombre"}
+                    th{$"Acciones"}
+                }
+            }
+            tbody
+            {
+                $""
+                #! for i = 0; i < list.count(usuarios)
+                {
+                    ref usuario = list.obj(usuarios, i)
+
+                    #$ tr
+                    {
+                        td{$"#<@@(usuario,'$userid')>"}
+                        td{$"#<@@(usuario,'$username')>"}
+                        td
+                        {
+                            a(href="#<replace(@DBEXT_ADD_EDIT_TUSER, '@id', @@(usuario,'sys_pk'))>" class="btn btn-sm btn-light"){$"Editar"}
+                            button(class="btn btn-sm btn-light" onclick="InduxsoftCrudlModel.Delete(#<@@(usuario,'sys_pk')>)"){$"Eliminar"}
+                        }
+                    }
+                } 
+            }
+        }
+    }
+}

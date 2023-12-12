@@ -1,0 +1,74 @@
+﻿#include "dkli.dkh"
+#!
+module "Controller configs"
+{
+	#include "functions.dkh"
+	#include "serialize.dkh"
+	#include "dbr.dkh"
+	#include "crudl/crudl.dk"
+
+	if @@(@http_context,"$session/user/ids") == "" {
+		@http_context<"response/headers/location"> : "/"
+		return
+	}
+
+	// _pack = @@(@http_context,"$request/get/_pack")
+	// _program = @@(@http_context,"$request/get/_program")
+	// do rise_error(0, _pack + " - " + _program)
+
+	@base_path="dbext"
+	@path_root="w" // Establezca una ruta de ser necesario
+	
+	// Enmascaramiento de enrutamiento (Ejemplos)
+	// Definición de patrones de rutas con base en parámetros GET (request/get)
+	// do crudl.routes.pattern("/module/submodule/process/subprocess/")
+
+	// Comparación de rutas entrantes y asignación de parámetro _entities_type
+	// if crudl.routes.entity("inventario/movimientos/entrada/confirmar/","inventario-movs.entrada-confirmar")
+    // {
+    //    //Si es la ruta indicada, esto es @true y se asigna _entities_type
+    // }
+	// if crudl.route("inventario/movimientos/entrada/confirmar/")
+	// {
+    //    //Si es la ruta indicada esto es @true pero no se modifica _entities_type
+    // }
+
+	//No modifique a menos que sepa lo que está haciendo
+	do crudl.routes.pattern("/_program/")
+	do crudl.routes.entity("/tuser/","tuser")
+	do crudl.routes.entity("/usergroup/","usergroup")
+	do crudl.routes.entity("/profile/","profile")
+
+	@dbmvc_path="crudl/"
+	
+	@auto_crud=@true
+
+	@db_engine="MY_SQL"	
+
+	@list_view="list.dk"
+	@form_view="form.dk"
+	@error_view="error.dk"
+
+	@entity_id_blank="_new"
+
+	@dkl_view_ext=".dk"
+	@websencia_ext=".jsnwm"
+
+    @crudl.user="admin"
+    @crudl.pwd=""
+
+    @path_template_protected=@path_root+"/_protected/default.htt"
+
+    @crudl.enable_idreplacement=@true
+
+    @ws=@@(@http_context,"request/get/ws")
+
+    @crudl.qname=""
+
+	@crudl.access_privilege='
+	{
+		"access":[{"workspace":"'+@ws+'"}]
+	}'
+
+	#include "crudl/controller.dkl"
+}

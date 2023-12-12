@@ -1,0 +1,11 @@
+#include "dkli.dkh"
+#!
+module "config"
+{
+    // _PACKAGE
+    @DBEXT_TUSER = "/!/dbext/tuser/"
+    @DBEXT_USERGROUP = "/!/dbext/usergroup/"
+    @DBEXT_PROFILE = "/!/dbext/profile/"
+
+    @DBEXT_ADD_EDIT_TUSER = "/!/dbext/tuser/@id/"
+}

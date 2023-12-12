@@ -1,0 +1,9 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @table_name = "tuser"
+
+    // @read_query = ""
+    // @list_query = "SELECT  FROM tuser;"
+}

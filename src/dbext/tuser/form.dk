@@ -1,0 +1,41 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "../config.dk"
+
+    do @context.begin(@crud_context)
+    ref user = @("&./")
+    isNew = (@("$parameters/_entity_id") == "_new")
+
+    #$
+    div(class="container")
+    {
+        //h6{$"#<to.json(@crud_context)>"}
+        form(method="POST" action="./")
+        {
+            input(type="hidden" name="sys_pk" value="#<@@(user, '#sys_pk')>")
+            input(type="hidden" name="sys_recver" value="#<@@(user, '#sys_recver')>")
+
+            small{$"Nombre de inicio de sesión:"}
+            input(type="text" class="induxsoft-form-control" name="userid" value="#<@@(user, '$userid')>")
+
+            #! if isNew
+            {
+                #$ small{$"Contraseña:"}
+                input(type="password" class="induxsoft-form-control" name="pwd" value="#<@@(user, '$userid')>")
+            }
+
+            small{$"Nombre propio del usuario:"}
+            input(type="text" class="induxsoft-form-control" name="username" value="#<@@(user, '$username')>")
+
+            small{$"Notas:"}
+            textarea(name="notes" class="induxsoft-form-control"){$"#<@@(user, '$notes')>"}
+
+            button(class="btn btn-sm btn-primary" type="submit"){$"Guardar"}
+            a(class="btn btn-sm btn-light" href="#<@DBEXT_TUSER>"){$"Cancelar"}
+        }
+    }
+}
