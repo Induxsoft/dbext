@@ -1,0 +1,55 @@
+#include "dkli.dkh"
+#!
+module "list"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "../config.dk"
+
+    do @context.begin(@crud_context)
+
+    ref gusuarios = @("&./")
+    
+    #$
+    div(class="container")
+    {
+        div(class="d-flex justify-content-between align-items-center")
+        {
+            h6(class="m-0"){$"Grupos de usuarios"}
+            a(href="#<replace(@DBEXT_ADD_EDIT_GUSER, '@id', '_new')>"){$"Agregar"}
+        }
+        table(class="table")
+        {
+            thead
+            {
+                tr
+                {
+                    th{$"ID"}
+                    th{$"Descripción"}
+                    th{$"Notas"}
+                    th{$"Acciones"}
+                }
+            }
+            tbody
+            {
+                $""
+                #! for i = 0; i < list.count(gusuarios)
+                {
+                    ref gusuario = list.obj(gusuarios, i)
+
+                    #$ tr
+                    {
+                        td{$"#<@@(gusuario,'$groupid')>"}
+                        td{$"#<@@(gusuario,'$description')>"}
+                        td{$"#<@@(gusuario,'$notes')>"}
+                        td
+                        {
+                            a(href="#<replace(@DBEXT_ADD_EDIT_GUSER, '@id', @@(gusuario,'sys_pk'))>" class="btn btn-sm btn-light"){$"Editar"}
+                            button(class="btn btn-sm btn-light" onclick="InduxsoftCrudlModel.Delete(#<@@(gusuario,'sys_pk')>)"){$"Eliminar"}
+                        }
+                    }
+                } 
+            }
+        }
+    }
+}

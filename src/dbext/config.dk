@@ -2,10 +2,16 @@
 #!
 module "config"
 {
+    // _STATIC
+    @JS_TUSER = "/$/dbext/js/tuser.js"
+    @JS_MAIN = "/$/dbext/js/main.js"
+
     // _PACKAGE
     @DBEXT_TUSER = "/!/dbext/tuser/"
     @DBEXT_USERGROUP = "/!/dbext/usergroup/"
     @DBEXT_PROFILE = "/!/dbext/profile/"
 
     @DBEXT_ADD_EDIT_TUSER = "/!/dbext/tuser/@id/"
+    @DBEXT_ADD_EDIT_GUSER = "/!/dbext/usergroup/@id/"
+    @DBEXT_ADD_EDIT_UUGRP = "/!/dbext/ugroups/@id/"
 }

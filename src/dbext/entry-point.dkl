@@ -17,7 +17,7 @@ module "Controller configs"
 	// do rise_error(0, _pack + " - " + _program)
 
 	@base_path="dbext"
-	@path_root="w" // Establezca una ruta de ser necesario
+	@path_root="" // Establezca una ruta de ser necesario
 	
 	// Enmascaramiento de enrutamiento (Ejemplos)
 	// Definición de patrones de rutas con base en parámetros GET (request/get)
@@ -37,6 +37,7 @@ module "Controller configs"
 	do crudl.routes.pattern("/_program/")
 	do crudl.routes.entity("/tuser/","tuser")
 	do crudl.routes.entity("/usergroup/","usergroup")
+	do crudl.routes.entity("/ugroups/","ugroups")
 	do crudl.routes.entity("/profile/","profile")
 
 	@dbmvc_path="crudl/"

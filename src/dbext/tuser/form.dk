@@ -7,35 +7,152 @@ module "form.dk"
     #include "../config.dk"
 
     do @context.begin(@crud_context)
+
     ref user = @("&./")
-    isNew = (@("$parameters/_entity_id") == "_new")
+    ref groups = @@(user, "&groups")
+    entity_id = @("$parameters/_entity_id")
+    error = @("$error/message")
+    isNew = (entity_id == "_new")
+    action = replace(@DBEXT_ADD_EDIT_TUSER, "@id", entity_id)
+
+    function get_checklist_data(&groups)
+    {
+        ref checklist = list.create()
+        
+        if not(isnull(groups)) && list.count(groups) > 0
+        {
+            for i = 0; i < list.count(groups)
+            {
+                ref group = list.obj(groups, i)
+                new check
+                {
+                    @"id": @@(group,"#grupo_pk")
+                    @"text": @@(group,"$groupid") + " (" + @@(group,"$groupdescription") +")"
+                    @"done": @@(group,"#added")
+                }
+                do list.add(checklist, check)
+            }
+        }
+        new data
+        {
+            @"text": "Grupos de usuarios"
+            @"items*": checklist
+        }
+        return data
+    }
 
     #$
-    div(class="container")
+    div(class="container mt-3")
     {
-        //h6{$"#<to.json(@crud_context)>"}
-        form(method="POST" action="./")
+        h6{$"#<ifstr(isNew,'Agregar','Editar')> usuario"}
+
+        #! if trim(error) != "" { #$ h6{$"#<error>"} }
+        
+        form(method="POST" action="#<action>" id="form")
         {
             input(type="hidden" name="sys_pk" value="#<@@(user, '#sys_pk')>")
             input(type="hidden" name="sys_recver" value="#<@@(user, '#sys_recver')>")
+            input(type="hidden" name="locked" value="0")
+            input(type="hidden" name="groups" value="0" id="inputGroups")
 
-            small{$"Nombre de inicio de sesión:"}
-            input(type="text" class="induxsoft-form-control" name="userid" value="#<@@(user, '$userid')>")
-
-            #! if isNew
+            // NAV TABS
+            ul(class="nav nav-tabs" id="myTab" role="tablist")
             {
-                #$ small{$"Contraseña:"}
-                input(type="password" class="induxsoft-form-control" name="pwd" value="#<@@(user, '$userid')>")
+                li(class="nav-item" role="presentation") {
+                    button(class="nav-link active" id="general-tab" "data-bs-toggle"="tab" "data-bs-target"="#general" type="button" role="tab" "aria-controls"="general" "aria-selected"="true"){$"General"}
+                }
+                li(class="nav-item" role="presentation") {
+                    button(class="nav-link" id="groups-tab" "data-bs-toggle"="tab" "data-bs-target"="#groups" type="button" role="tab" "aria-controls"="groups" "aria-selected"="false"){$"Grupos"}
+                }
             }
 
-            small{$"Nombre propio del usuario:"}
-            input(type="text" class="induxsoft-form-control" name="username" value="#<@@(user, '$username')>")
+            // PANEL TABS
+            div(class="tab-content" id="tabContent")
+            {
+                div(class="tab-pane fade show active" id="general" role="tabpanel" "aria-labelledby"="general-tab")
+                {
+                    small{$"Nombre de inicio de sesión:"}
+                    input(type="text" class="induxsoft-form-control mb-2" name="userid" value="#<@@(user, '$userid')>" required="true")
 
-            small{$"Notas:"}
-            textarea(name="notes" class="induxsoft-form-control"){$"#<@@(user, '$notes')>"}
+                    #! if isNew
+                    {
+                        #$ small{$"Contraseña:"}
+                        input(type="password" class="induxsoft-form-control mb-2" name="pwd" id="pwd1" value="#<@@(user, '$userid')>")
+
+                        small{$"Confirmar contraseña:"}
+                        input(type="password" class="induxsoft-form-control mb-2" id="pwd_confirm1")
+                        small(class="text-danger d-block" id="pwdMessage1"){$""}
+                    }
+                    #! else 
+                    {
+                        #$ button(type="button" class="btn btn-sm btn-light induxsoft-corners d-block mb-2 border" "data-bs-toggle"="modal" "data-bs-target"="#modal_change_pwd"){$"Cambiar contraseña"}
+                    }
+
+                    small{$"Nombre propio del usuario:"}
+                    input(type="text" class="induxsoft-form-control mb-2" name="username" value="#<@@(user, '$username')>" required="true")
+
+                    small{$"Notas:"}
+                    textarea(name="notes" class="induxsoft-form-control mb-2"){$"#<@@(user, '$notes')>"}
+                }
+                div(class="tab-pane fade" id="groups" role="tabpanel" "aria-labelledby"="goups-tab")
+                {
+                    #! ref data = get_checklist_data(groups)
+
+                    #$ "check-list"(
+                        "id"="cl_user_groups"
+                        "data"='#<to.json(data)>'
+                        "can-check"="true"
+                        "can-add"="false"
+                    ){$""}
+                }
+            }
 
             button(class="btn btn-sm btn-primary" type="submit"){$"Guardar"}
             a(class="btn btn-sm btn-light" href="#<@DBEXT_TUSER>"){$"Cancelar"}
         }
+
+        // Modal modificar contraseña
+        #! if not(isNew)
+        {
+            #$ div(class="modal fade" id="modal_change_pwd" tabindex="-1" "aria-labelledby"="exampleModalLabel" "aria-hidden"="true" "data-bs-backdrop"="false")
+            {
+                div(class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable mt-0")
+                {
+                    div(class="modal-content induxsoft-corners p-0 border-0 shadow")
+                    {
+                        div(class="modal-header p-3")
+                        {
+                            h6(class="modal-title"){$"Cambiar contraseña"}
+                            button(type="button" class="btn-close btn-sm" "data-bs-dismiss"="modal" "aria-label"="Close"){$""}
+                        }
+                        div(class="modal-body p-4 bg-white" id="mdl_cpwd_controls")
+                        {
+                            input(type="hidden" name="sys_pk" value="#<@@(user, '#sys_pk')>")
+                            input(type="hidden" name="sys_recver" value="#<@@(user, '#sys_recver')>")
+
+                            small{$"Nueva contraseña:"}
+                            input(type="password" class="induxsoft-form-control mb-2" id="pwd2" name="pwd")
+
+                            small{$"Confirmar contraseña:"}
+                            input(type="password" class="induxsoft-form-control mb-2" id="pwd_confirm2" name="pwd_confirm")
+                            small(class="text-danger d-block" id="pwdMessage2"){$""}
+                        }
+                        div(class="modal-footer")
+                        {
+                            button(type="button" class="btn btn-sm btn-primary" onclick="tuser.changePwd()"){$"Aceptar"}
+                            button(type="button" class="btn btn-sm btn-light" "data-bs-dismiss"="modal"){$"Cancelar"}
+                        }
+                    }
+                }
+            }
+        }
+
+        script(src="#<@JS_TUSER>"){$""}
+        script(src="#<@JS_MAIN>"){$""}
+        script{$'
+            tuser.user = #<to.json(user)>;
+            tuser.url = "#<@DBEXT_ADD_EDIT_TUSER>";
+            console.log(#<to.json(user)>);
+        '}
     }
 }

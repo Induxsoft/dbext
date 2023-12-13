@@ -1,0 +1,42 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "../config.dk"
+
+    do @context.begin(@crud_context)
+
+    ref guser = @("&./")
+    entity_id = @("$parameters/_entity_id")
+    error = @("$error/message")
+    isNew = (entity_id == "_new")
+    action = replace(@DBEXT_ADD_EDIT_GUSER, "@id", entity_id)
+
+    #$
+    div(class="container mt-3")
+    {
+        h6{$"#<ifstr(isNew,'Agregar','Editar')> grupo de usuarios"}
+
+        #! if trim(error) != "" { #$ h6{$"#<error>"} }
+        
+        form(method="POST" action="#<action>")
+        {
+            input(type="hidden" name="sys_pk" value="#<@@(guser, '#sys_pk')>")
+            input(type="hidden" name="sys_recver" value="#<@@(guser, '#sys_recver')>")
+
+            small{$"Nombre (ID):"}
+            input(type="text" class="induxsoft-form-control mb-2" name="groupid" value="#<@@(guser, '$groupid')>" required="true")
+
+            small{$"Descripción:"}
+            input(type="text" class="induxsoft-form-control mb-2" name="description" value="#<@@(guser, '$description')>" required="true")
+
+            small{$"Notas:"}
+            textarea(name="notes" class="induxsoft-form-control mb-2"){$"#<@@(guser, '$notes')>"}
+
+            button(class="btn btn-sm btn-primary" type="submit"){$"Guardar"}
+            a(class="btn btn-sm btn-light" href="#<@DBEXT_USERGROUP>"){$"Cancelar"}
+        }
+    }
+}

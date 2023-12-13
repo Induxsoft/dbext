@@ -5,5 +5,92 @@ module "model"
     @table_name = "tuser"
 
     // @read_query = ""
-    // @list_query = "SELECT  FROM tuser;"
+    // @list_query = "SELECT * FROM tuser;"
+
+    function tuser_create(&db,&params,&data)
+    {
+        @use_transaction = @false
+        ref groups = @null
+
+        if field.exist(data,"groups")
+        {
+            ref groups = from.json(@@(data,"$groups"))
+            do field.remove(data, "groups")
+        }
+        if field.exist(data,"pwd")
+        {
+            data<"pwd">:toupper(md5(@@(data,"pwd")))
+            data<"pwdmd5">:@@(data,"pwd")
+        }
+
+        do dbr.begin(db)
+        ref res = entity.create(db,params,data)
+        if not(isnull(groups)) && list.count(groups) > 0 { do tuser_add_to_groups(db, groups, @@(res,"#sys_pk")) }
+        do dbr.commit(db)
+
+        return res
+
+        excepcion
+        {
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do rise_error(500, last_error())
+        }
+    }
+
+    function tuser_add_to_groups(&db, &groups, user_pk)
+    {
+        new prm { @"user": user_pk }
+        // Eliminamos todos los registros del usuario indicado
+        do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@user", prm)
+        // Agregamos todos los grupos al usuario indicado
+        for i = 0; i < list.count(groups)
+        {
+            new ugroup {
+                @"sys_timestamp*": dbr.sql("NOW()")
+                @"groups": list.num(groups, i)
+                @"users": @@(prm, "#user")
+            }
+            do dbr.insert(db, "user_usergroup_", ugroup)
+        }
+    }
+
+    function tuser_read(&db, &params)
+    {
+        ref res = entity.read(db, params)
+        res<"groups*">: get_user_groups(db, @@(res, "#sys_pk"))
+        return res
+    }
+
+    function tuser_blank(&db, &params)
+    {
+        new res {}
+        res<"groups*">: get_user_groups(db, @@(res, "#sys_pk"))
+        return res
+    }
+
+    function get_user_groups(&db, user_pk)
+    {
+        new prm { @"user": user_pk }
+        ref groups=dbr.list(db,"SELECT sys_pk grupo_pk, groupid, description groupdescription FROM usergroup;",@null)
+        ref uugs=dbr.list(db,"SELECT groups FROM user_usergroup_ WHERE users=@user",prm)
+
+        for i=0;i<list.count(groups) 
+        {
+            ref group=list.obj(groups,i)
+            added=@false
+
+            for j=0;j<list.count(uugs) 
+            {
+                ref uug=list.obj(uugs,j)
+                if @@(group,"#grupo_pk")==@@(uug,"#groups"){added=@true}
+            }
+            group<"added">: added
+        }
+        return groups
+    }
+
+    point @create to tuser_create
+    point @update to tuser_create
+    point @read to tuser_read
+    point @blank to tuser_blank
 }

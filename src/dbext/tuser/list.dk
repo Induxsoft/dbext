@@ -1,6 +1,6 @@
 #include "dkli.dkh"
 #!
-module "list.dk"
+module "list"
 {
     #include "functions.dkh"
     #include "serialize.dkh"
@@ -13,7 +13,11 @@ module "list.dk"
     #$
     div(class="container")
     {
-        a(href="#<replace(@DBEXT_ADD_EDIT_TUSER, '@id', '_new')>"){$"Agregar"}
+        div(class="d-flex justify-content-between align-items-center")
+        {
+            h6(class="m-0"){$"Usuarios"}
+            a(href="#<replace(@DBEXT_ADD_EDIT_TUSER, '@id', '_new')>"){$"Agregar"}
+        }
         table(class="table")
         {
             thead

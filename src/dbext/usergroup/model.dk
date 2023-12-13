@@ -1,0 +1,14 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @table_name = "usergroup"
+
+    function usergroup_create(&db,&params,&data)
+    {
+        return entity.create(db,params,data)
+    }
+
+    point @create to usergroup_create
+    point @update to usergroup_create
+}

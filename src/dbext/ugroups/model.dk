@@ -1,0 +1,73 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @table_name = "user_usergroup_"
+
+    function ugroup_create(&db, &params, &data)
+    {
+        @use_transaction = @false
+        ref groups = @@(data, "&groups")
+
+        do dbr.begin(db)
+        // Eliminamos todos los registros del usuario indicado
+        do ugroup_delete(db, params)
+        // Agregamos todos los grupos al usuario indicado
+        if not(isnull(groups)) && list.count(groups) > 0
+        {
+            for i = 0; i < list.count(groups)
+            {
+                new ugroup
+                {
+                    @"sys_timestamp*": dbr.sql("NOW()")
+                    @"groups": list.num(groups, i)
+                    @"users": @@(params, "#_entity_id")
+                }
+
+                do dbr.insert(db, "user_usergroup_", ugroup)
+            }
+        }
+        do dbr.commit(db)
+
+        return @true
+
+        excepcion
+        {
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do rise_error(500, last_error())
+        }
+    }
+
+    function ugroup_delete(&db, &params)
+    {
+        do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@_entity_id", params)
+        return @true
+    }
+
+    function ugroup_read(&db, &params)
+    {
+        ref groups=dbr.list(db,"SELECT sys_pk grupo_pk, groupid, description groupdescription FROM usergroup;",@null)
+        ref uugs=dbr.list(db,"SELECT groups FROM user_usergroup_ WHERE users=@_entity_id",params)
+
+        for i=0;i<list.count(groups)
+        {
+            ref group=list.obj(groups,i)
+            added=@false
+
+            for j=0;j<list.count(uugs)
+            {
+                ref uug=list.obj(uugs,j)
+                if @@(group,"#grupo_pk")==@@(uug,"#groups"){added=@true}
+            }
+
+            group<"added">: added
+        }
+
+        return groups
+    }
+
+    point @create to ugroup_create
+    point @update to ugroup_create
+    point @delete to ugroup_delete
+    point @read to ugroup_read
+}
