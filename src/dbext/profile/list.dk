@@ -1,0 +1,65 @@
+#include "dkli.dkh"
+#!
+module "list"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "../config.dk"
+    #include "lib.dk"
+
+    do @context.begin(@crud_context)
+
+    ref groups = @("&./")
+    ref fgroup = @null
+
+    //if not(isnull(groups)) && list.count(groups) > 0 { ref fgroup = list.obj(groups, 0) }
+
+    #$ div
+    {
+        link(rel="stylesheet" href="#<@CSS_MAIN>")
+        link(rel="stylesheet" href="#<@CSS_PROFILE>")
+
+        div(id="mainContainer")
+        {
+            div(id="SectionOne")
+            {
+                div
+                {
+                    div(class="d-flex align-items-center border-bottom bg-white px-2 section-bar")
+                    {
+                        small(class="text-secondary"){$"Grupos de usuarios disponibles"}
+                    }
+                    div
+                    {
+                        div(style="max-height: 80vh;display: flex;")
+						{
+							"edit-table"(id="treeGroups" data='#<to.json(groups)>' style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important; font-weight:500 !important;} #__table_input{ font-size: unset !important; }")
+							{
+								"edit-thead"
+								{
+									"edit-tr"
+									{
+										"edit-th"(type="NoEditable" field="groupid" style="text-align:start;"){$"ID"}
+									}
+								}
+							}
+						}
+                    }
+                }
+                div(id="ajust_panel_one"){ $"" }
+            }
+            div(id="sectionTwo")
+            {
+                #! do printGroupSecuritySchema(fgroup)   
+            }
+        }
+        #$
+        script(src="#<@JS_PROFILE>"){$""}
+        script{$'
+            profile.tablePId = "treeProfile";
+            profile.tableGId = "treeGroups";
+            profile.url = "#<@DBEXT_ADD_EDIT_PROFL>";
+            profile.groupSelected = #<to.json(fgroup)>;
+        '}
+    }
+}

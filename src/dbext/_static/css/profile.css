@@ -1,0 +1,44 @@
+#mainContainer {
+    display: grid;
+    grid-template-columns: auto 1fr;
+}
+#SectionOne {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    width: auto;
+    outline: 1px solid var(--color-borders);
+    transition: .5s;
+    position: relative;
+    padding-right: 5px;
+}
+#securitySchemaContainer{
+    height: 100vh;
+    background-color: var(--color-light-gray);
+}
+.section-bar{
+    min-height: 1.81rem;
+}
+.group-box-info{
+    border-right: 1px solid var(--color-borders);
+    padding: 8px 12px;
+}
+#ajust_panel_one {
+    height: 100%;
+    background-color: var(--color-gray);
+    width: 5px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 100;
+}
+#ajust_panel_one:hover {
+    cursor: col-resize;
+    background-color: var(--color-borders);
+}
+@media screen and (max-width: 768px){
+    .group-box-info {
+        font-size: .9rem;
+        padding: 4px;
+        border: none;
+    }
+}

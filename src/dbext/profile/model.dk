@@ -1,0 +1,29 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @table_name = "profile"
+
+    function profile_read(&db, &params)
+    {
+        ref group = dbr.rec(db, "SELECT sys_pk, groupid, description, IFNULL(notes,'') notes FROM usergroup WHERE sys_pk=@_entity_id LIMIT 1;", params)
+        if not(isnull(group)) { group<"sitem_profile*">: get_group_sitem_profile(db, group) }
+        return group
+    }
+    function profile_list(&db, &params)
+    {
+        ref groups = dbr.list(db, "SELECT sys_pk, groupid, description, notes FROM usergroup;", @null)
+        return groups
+    }
+    function get_group_sitem_profile(&db, &group)
+    {
+        sql = " SELECT s.sys_pk, s.itemid, s.description, s.itemparent, IF(IFNULL(p.item,0)=0,'No','Sí') active
+                FROM sitem s
+	            LEFT JOIN (SELECT item FROM profile WHERE usergroup=@sys_pk) p ON s.sys_pk = p.item;"
+
+        return dbr.list(db, sql, group)
+    }
+
+    point @read to profile_read
+    point @list to profile_list
+}

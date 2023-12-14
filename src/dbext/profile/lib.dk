@@ -1,0 +1,100 @@
+#include "dkli.dkh"
+#pattern function "function '$name' ()"
+#!
+module "lib"
+{
+    #! function printGroupSecuritySchema(&group)
+    {
+        if isnull(group) { ref group = record.create() }
+        found = (list.count(list.create_from_fields(group)) > 0)
+
+        #$ div(id="securitySchemaContainer")
+        {
+            div(class="d-flex align-items-center border-bottom bg-white px-2 section-bar")
+            {
+                small(class="text-secondary"){$"Información del grupo."}
+            }
+            div(id="groupInfo" class="py-2 px-3 d-flex gap-2 flex-wrap border-bottom bg-white")
+            {
+                #! if found
+                {
+                    #$ div(class="group-box-info")
+                    {
+                        small(class="fw-5"){$"ID"}
+                        p(class="m-0"){$"#<@@(group,'$groupid')>"}
+                    }
+                    div(class="group-box-info")
+                    {
+                        small(class="fw-5"){$"Descripción"}
+                        p(class="m-0"){$"#<@@(group,'$description')>"}
+                    }
+                    div(class="group-box-info")
+                    {
+                        small(class="fw-5"){$"Notas"}
+                        p(class="m-0"){$"#<@@(group,'$notes')>"}
+                    }
+                }
+                #! else 
+                {
+                    #$ small(class="text-secondary"){$"No hay información del grupo especificado."}
+                }
+            }
+            div(id="securityEschema")
+            {
+                #! 
+                ref sitem_profile = list.create()
+                display1 = "d-none"
+                display2 = ""
+
+                if found
+                {
+                    ref sitem_profile = @@(group, "&sitem_profile")
+                    display1 = ""
+                    display2 = "d-none"
+                }
+
+                #$ div(class="d-flex h-100 w-100 align-items-center justify-content-center #<display2>" id="securityEschemaEmpty" style="min-height: 50vh;")
+                {
+                    small(class="text-secondary"){$"No hay información del grupo especificado."}
+                }
+
+                div(class="#<display1>" id="securityEschemaTable")
+                {
+                    div(class="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-2 section-bar")
+                    {
+                        div(class="d-flex align-items-center")
+                        {
+                            small(class="text-secondary"){$"Esquema de seguridad."}
+                        }
+                        div(class="d-flex align-items-center" id="perfil_control")
+                        {
+                            button(class="control btn btn-sm d-flex align-items-center justify-content-center gap-2 no-shadow hidde-control d-none" title="Guardar cambios" onclick="profile.saveSecureSchema()" id="save_changes"){
+                                $"#<@@(@icons,'save')>"
+                                small{$"Guardar"}
+                            }
+                            button(class="control btn btn-sm d-flex align-items-center justify-content-center gap-2 no-shadow hidde-control d-none" title="Descartar cambios" onclick="profile.discardSecureSchema()" id="discart_changes"){
+                                $"#<@@(@icons,'discard')>"
+                                small{$"Descartar"}
+                            }
+                        }
+                    }
+                    div(style="max-height: 80vh;display: flex;")
+                    {
+                        "edit-table"(id="treeProfile" data='#<to.json(sitem_profile)>' "show-tree"="true" parentkey="itemparent" key="sys_pk" "can-move-row"="false" style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important;} table{ background-color:#FFF !important; } #__table_input{ font-size: unset !important; }tbody tr:hover{background-color:#EDEDED;}")
+                        {
+                            "edit-thead"
+                            {
+                                "edit-tr"
+                                {
+                                    "edit-th"(type="NoEditable" field="itemid"){$"ID"}
+                                    "edit-th"(type="NoEditable" field="description"){$"Descripción"}
+                                    "edit-th"(type="Check" field="active"){$"Activar"}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

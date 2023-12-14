@@ -1,0 +1,28 @@
+#include "dkli.dkh"
+#!
+module "form"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "../config.dk"
+    #include "lib.dk"
+
+    do @context.begin(@crud_context)
+
+    ref group = @("&./")
+
+    #$ div
+    {
+        link(rel="stylesheet" href="#<@CSS_MAIN>")
+        link(rel="stylesheet" href="#<@CSS_PROFILE>")
+
+        #! do printGroupSecuritySchema(group)
+
+        #$ 
+        script(src="#<@JS_PROFILE>"){$""}
+        script{$'
+            profile.tablePId = "treeProfile";
+            profile.groupSelected = #<to.json(group)>;
+        '}
+    }
+}
