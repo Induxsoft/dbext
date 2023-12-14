@@ -14,8 +14,21 @@ model "Variables globales"
 
     //#region Usuarios, grupos, perfiles y permisos
     // Usuarios
-    entity "tuser" : "TableModel"
+    entity "tuser"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"locked" bool 
         @"message" string(255) 
         @"notes" memo 
@@ -25,8 +38,21 @@ model "Variables globales"
         @"pwdmd5" string(64) 
     }
     // Grupo de usuarios
-    entity "usergroup" : "TableModel"
+    entity "usergroup"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"description" string(80) required
         @"groupid" string(15) unique required
         @"notes" memo 
@@ -39,21 +65,60 @@ model "Variables globales"
         @"users" int ref:"tuser" ["sys_pk"] required
     }
     // Permisos disponibles
-    entity "sitem" : "TableModel"
+    entity "sitem"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"description" string(250) 
         @"itemid" string(32) unique required
         @"itemparent" int ref:"sitem" ["sys_pk"] 
     }
     // Permisos que tiene un grupo de usuario
-    entity "profile" : "TableModel"
+    entity "profile"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"item" int ref:"sitem" ["sys_pk"] required
         @"usergroup" int ref:"usergroup" ["sys_pk"] required
     }
     // Valores del usuario
-    entity "uservar" : "TableModel"
+    entity "uservar"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"vardefault" string(255) 
         @"varname" string(32) unique required
         @"varvalue" string(32000) 
@@ -71,8 +136,21 @@ model "Variables globales"
     }
 
     // Variables globales
-    entity "globalvar" : "TableModel"
+    entity "globalvar"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"varname" string(32) unique required
         @"vardefault" string(255)
         @"varvalue" mmemo
@@ -85,8 +163,21 @@ model "Variables globales"
     }
 
     // Variables del usuario
-    entity "uservarval" : "TableModel"
+    entity "uservarval"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"varname" string(32) required
         @"varvalue" mmemo 
         @"userid" string(45) required
