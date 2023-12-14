@@ -35,8 +35,36 @@ module "form.dk"
             small{$"Notas:"}
             textarea(name="notes" class="induxsoft-form-control mb-2"){$"#<@@(guser, '$notes')>"}
 
+            button(class="btn btn-sm btn-secondary #<ifstr(isNew,'d-none','')>" type="button" id="btn_group_schema"){$"Esquema de seguridad"}
             button(class="btn btn-sm btn-primary" type="submit"){$"Guardar"}
             a(class="btn btn-sm btn-light" href="#<@DBEXT_USERGROUP>"){$"Cancelar"}
         }
+
+        // MODAL ESQUEMA DE SEGURIDAD
+        div(class="modal fade" id="modal_secure_schema" tabindex="-1" "aria-hidden"="true" "data-bs-backdrop"="false")
+        {
+            div(class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable mt-0")
+            {
+                div(class="modal-content induxsoft-corners p-0 border-0 shadow")
+                {
+                    div(class="modal-header p-3")
+                    {
+                        h6(class="modal-title"){$"Esquema de seguridad"}
+                        button(type="button" class="btn-close btn-sm" "data-bs-dismiss"="modal" "aria-label"="Close"){$""}
+                    }
+                    div(class="modal-body bg-white")
+                    {
+                        iframe(id="_main_view" id="mdl_ss_content" src=""){$""}
+                    }
+                }
+            }
+        }
+
+        script(src="#<@JS_MAIN>"){$""}
+        script(src="#<@JS_USERGROUP>"){$""}
+        script{$'
+            usergroup.guser = #<to.json(guser)>;
+            usergroup.url_profile = "#<@DBEXT_ADD_EDIT_PROFL>";
+        '}
     }
 }

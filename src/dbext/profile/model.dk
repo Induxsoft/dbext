@@ -17,13 +17,54 @@ module "model"
     }
     function get_group_sitem_profile(&db, &group)
     {
-        sql = " SELECT s.sys_pk, s.itemid, s.description, s.itemparent, IF(IFNULL(p.item,0)=0,'No','Sí') active
+        sql = " SELECT s.sys_pk, IFNULL(p.sys_guid,'') sys_guid, s.itemid, s.description, s.itemparent, IF(IFNULL(p.item,0)=0,'No','Sí') active
                 FROM sitem s
-	            LEFT JOIN (SELECT item FROM profile WHERE usergroup=@sys_pk) p ON s.sys_pk = p.item;"
+	            LEFT JOIN (SELECT item, sys_guid FROM profile WHERE usergroup=@sys_pk) p ON s.sys_pk = p.item;"
 
         return dbr.list(db, sql, group)
     }
 
+    function profile_create(&db, &params, &data)
+    {
+        ref profiles = @@(data, "&profile")
+        sql_p = ""
+
+        if not(isnull(profiles)) && list.count(profiles) > 0
+        {
+            sql_p = "INSERT INTO profile (sys_timestamp, sys_guid, sys_dtcreated, item, usergroup) VALUES "
+            
+            for i = 0; i < list.count(profiles)
+            {
+                ref profile = list.obj(profiles, i)
+                
+                guid = ifstr(trim(@@(profile,"$guid")) == "", toupper(uuid()), @@(profile,"$guid"))
+                item = @@(profile, "#item")
+                usergroup = @@(params, "#_entity_id")
+                
+                sql_p = sql_p + ftext("(NOW(), '#<guid>', NOW(), #<item>, #<usergroup>),")
+            }
+
+            sql_p = rremove(sql_p,1) + ";"
+        }
+
+        @use_transaction = @false
+
+        do dbr.begin(db)
+        // eliminamos los registros de la configuración actual
+        do dbr.execute(db, "DELETE FROM profile WHERE usergroup=@_entity_id", params)
+        // Insertamos la nueva configuración si se recibió
+        if trim(sql_p) != "" { do dbr.execute(db, sql_p, @null) }
+        do dbr.commit(db)
+
+        exception
+        {
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do errordet(@false)
+			do rise_error(last_error_code(),last_error())
+        }
+    }
+
     point @read to profile_read
     point @list to profile_list
+    point @create to profile_create
 }

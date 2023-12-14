@@ -5,8 +5,9 @@ module "config"
     // =============== GENERAL
 
     // _STATIC
-    @JS_TUSER = "/$/dbext/js/tuser.js"
     @JS_MAIN = "/$/dbext/js/main.js"
+    @JS_TUSER = "/$/dbext/js/tuser.js"
+    @JS_USERGROUP = "/$/dbext/js/usergroup.js"
     @JS_PROFILE = "/$/dbext/js/profile.js"
     @CSS_PROFILE = "/$/dbext/css/profile.css"
     @CSS_MAIN = "/$/dbext/css/main.css"

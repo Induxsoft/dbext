@@ -22,6 +22,7 @@ module "form"
         script(src="#<@JS_PROFILE>"){$""}
         script{$'
             profile.tablePId = "treeProfile";
+            profile.url = "#<@DBEXT_ADD_EDIT_PROFL>";
             profile.groupSelected = #<to.json(group)>;
         '}
     }

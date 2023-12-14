@@ -59,16 +59,21 @@ var main = {
             return false;
         }
     },
+    openModal(modalId='')
+    {
+        this.getBSModal(modalId).show();
+    },
     closeModal(modalId='')
     {
-        const modal = document.getElementById(modalId);
-        if (modal)
-        {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            return true;
-        }
-        return false;
+        this.getBSModal(modalId).hide();
+    },
+    getBSModal(modalId='')
+    {
+        const modalElement = document.getElementById(modalId);
+        const bsModal = bootstrap.Modal.getInstance(modalElement);
+        if (!bsModal) return new bootstrap.Modal(modalElement);
+
+        return bsModal;
     }
 }
 window.addEventListener('DOMContentLoaded', () => {

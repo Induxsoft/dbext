@@ -88,7 +88,7 @@ module "lib"
                                 {
                                     "edit-th"(type="NoEditable" field="itemid"){$"ID"}
                                     "edit-th"(type="NoEditable" field="description"){$"Descripción"}
-                                    "edit-th"(type="Check" field="active"){$"Activar"}
+                                    "edit-th"(type="Check" field="active" textalign="center"){$"Activar"}
                                 }
                             }
                         }

@@ -7,7 +7,9 @@ var profile =
     {
         this.tableGroups = document.querySelector('#'+this.tableGId);
         this.tableProfile = document.querySelector('#'+this.tablePId);
+        this.setConfigTables();
         this.setTableEvents();
+        this.saveProfileBackup(this.tableProfile.DataArray);
     },
     setConfigTables()
     {
@@ -40,6 +42,9 @@ var profile =
                 this.groupSelected = this.tableGroups.DataArray[e.sender.CurrentRowIndex()];
                 if (this.groupSelected) this.getGroupProfileInfo(this.groupSelected);
             }
+            if ((this.tableGroups?.DataArray??[]).length > 0) {
+                this.tableGroups.NavTo(0,0);
+            }
         }
         if (this.tableProfile)
         {
@@ -57,14 +62,14 @@ var profile =
         InduxsoftCrudlModel.InvokeService(endpoint, null,
             success => { 
                 this.printGroupSecuritySchema(success);
-                this.saveProfileBackup(success);
+                this.saveProfileBackup((success?.sitem_profile??[]));
             },
             failure => { 
                 this.printGroupSecuritySchema(null);
                 alert('No se pudo obtener información del grupo indicado\n'+JSON.stringify(failure));
             },
             "GET", false
-        )
+        );
     },
 
     printGroupSecuritySchema(data)
@@ -97,12 +102,14 @@ var profile =
 
         this.tableProfile._printRows();
     },
-    saveProfileBackup(groupData)
+    saveProfileBackup(profileData)
     {
-        this.profileDataBackup = JSON.parse(JSON.stringify(groupData?.sitem_profile??[]));
+        this.profileDataBackup = JSON.parse(JSON.stringify(profileData));
     },
     isDirtyProfile()
     {
+        // console.log(JSON.stringify(this.tableProfile.DataArray));
+        // console.log(JSON.stringify(this.profileDataBackup));
         let isDirty = false;
         if (!isDirty && this.tableProfile.DataArray && this.profileDataBackup)
             isDirty = (JSON.stringify(this.tableProfile.DataArray) !== JSON.stringify(this.profileDataBackup));
@@ -118,7 +125,23 @@ var profile =
     },
     saveSecureSchema()
     {
-        alert('Función no implementada');
+        let data = {
+            profile: (this.tableProfile?.DataArray?.filter(d => d.active==='Sí')?.map(d => ({item:d.sys_pk, guid:d.sys_guid}))??[])
+        }
+
+        let endpoint = profile.url.replace('@id',this.groupSelected.sys_pk);
+
+        InduxsoftCrudlModel.InvokeService(endpoint, data,
+            success => { 
+                console.log(success);
+                this.saveProfileBackup(this.tableProfile.DataArray);
+                this.showDirtyControls();
+            },
+            failure => { 
+                alert('No fue posible guardar el esquema de seguridad del grupo.\n'+JSON.stringify(failure));
+            },
+            "POST", false
+        );
     },
     discardSecureSchema()
     {
