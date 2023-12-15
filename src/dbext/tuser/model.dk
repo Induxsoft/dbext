@@ -42,6 +42,15 @@ module "model"
         new prm { @"user": user_pk }
         // Eliminamos todos los registros del usuario indicado
         do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@user", prm)
+        // Verificamos si la tabla requiere un sys_guid (tablas creadas con dba)
+        require_sys_guid = @false
+        ref desc = dbr.list(db, "DESCRIBE user_usergroup_;", @null)
+        if not(isnull(desc)) && list.count(desc) {
+            for i = 0; i < list.count(desc) {
+                ref d = list.obj(desc, i)
+                if @@(d, "$Field") == "sys_guid" { require_sys_guid = @true }
+            }
+        }
         // Agregamos todos los grupos al usuario indicado
         for i = 0; i < list.count(groups)
         {
@@ -50,6 +59,7 @@ module "model"
                 @"groups": list.num(groups, i)
                 @"users": @@(prm, "#user")
             }
+            if require_sys_guid { ugroup<"sys_guid">: toupper(uuid()) }
             do dbr.insert(db, "user_usergroup_", ugroup)
         }
     }
