@@ -9,18 +9,22 @@ module "config"
     @JS_TUSER = "/$/dbext/js/tuser.js"
     @JS_USERGROUP = "/$/dbext/js/usergroup.js"
     @JS_PROFILE = "/$/dbext/js/profile.js"
+    @JS_GLOBALVAR = "/$/dbext/js/globalvar.js"
     @CSS_PROFILE = "/$/dbext/css/profile.css"
+    @CSS_GLOBALVAR = "/$/dbext/css/globalvar.css"
     @CSS_MAIN = "/$/dbext/css/main.css"
 
     // _PACKAGE
     @DBEXT_TUSER = "/!/dbext/tuser/"
     @DBEXT_USERGROUP = "/!/dbext/usergroup/"
     @DBEXT_PROFILE = "/!/dbext/profile/"
+    @DBEXT_GLOBALVAR = "/!/dbext/globalvar/"
 
     @DBEXT_ADD_EDIT_TUSER = "/!/dbext/tuser/@id/"
     @DBEXT_ADD_EDIT_GUSER = "/!/dbext/usergroup/@id/"
     @DBEXT_ADD_EDIT_UUGRP = "/!/dbext/ugroups/@id/"
     @DBEXT_ADD_EDIT_PROFL = "/!/dbext/profile/@id/"
+    @DBEXT_ADD_EDIT_GLVAR = "/!/dbext/globalvar/@id/"
 
     @icon_color = "#888"
 

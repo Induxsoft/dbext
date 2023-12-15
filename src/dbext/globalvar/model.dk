@@ -1,0 +1,29 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @table_name = "globalvar"
+
+    function globalvar_read(&db, &params)
+    {
+        ref category = dbr.rec(db, "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent) parent FROM varcategory WHERE id=@_entity_id LIMIT 1;", params)
+        if not(isnull(category)) { category<"vars*">: get_category_vars(db, category) }
+        return category
+    }
+    function globalvar_list(&db, &params)
+    {
+        ref categories = dbr.list(db, "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent FROM varcategory;", @null)
+        return categories
+    }
+    function get_category_vars(&db, &category)
+    {
+        sql = " SELECT sys_pk, vardefault, varname, varvalue, varcaption, varhelp, vartype, varinput
+                FROM globalvar
+                WHERE ref_varcat=@id"
+
+        return dbr.list(db, sql, category)
+    }
+
+    point @read to globalvar_read
+    point @list to globalvar_list
+}
