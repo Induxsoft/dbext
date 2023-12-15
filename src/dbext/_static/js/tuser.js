@@ -38,6 +38,7 @@ var tuser =
                 console.log(success);
                 main.clearValues('mdl_cpwd_controls');
                 main.closeModal('modal_change_pwd');
+                this.changeSysRecver(success);
             },
             failure => { alert('No fue posible cambiar la contraseña\n' + JSON.stringify(failure)) },
             'PUT', false
@@ -63,6 +64,11 @@ var tuser =
             let data = cl_user_groups.getData(true);
             if (data) input_groups.value = JSON.stringify(data.items.filter(d=>d.done).map(d=>{return d.id}));
         }
+    },
+    changeSysRecver(userData)
+    {
+        const inputRecVer = document.querySelector('#form input[name="sys_recver"]');
+        if (inputRecVer) inputRecVer.value = userData.sys_recver;
     }
 }
 

@@ -19,8 +19,8 @@ module "model"
         }
         if field.exist(data,"pwd")
         {
-            data<"pwd">:toupper(md5(@@(data,"pwd")))
-            data<"pwdmd5">:@@(data,"pwd")
+            data<"pwd">:toupper(md5e(@@(data,"pwd"), "Unicode"))
+            data<"pwdmd5">:toupper(md5(@@(data,"pwd")))
         }
 
         do dbr.begin(db)
