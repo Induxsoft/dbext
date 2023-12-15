@@ -181,7 +181,7 @@ model "Variables globales"
         @"varname" string(32) required
         @"varvalue" mmemo 
         @"userid" string(45) required
-        index "uservarval_unique" unique
+        index "uv_u" unique
         {
             field "varname"
             field "userid"
@@ -197,7 +197,7 @@ model "Variables globales"
         @"sequence" int
         @"include_script" string(1024) required
 
-        index "sys_event_handlers_unique" unique
+        index "seh_u" unique
         {
             field "sender_id"
             field "include_script"
