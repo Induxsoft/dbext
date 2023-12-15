@@ -195,7 +195,7 @@ model "Variables globales"
         @"created" datetime required
         @"sender_id" string(50) required
         @"sequence" int
-        @"include_script" string(1024) required
+        @"include_script" string(255) required
 
         index "seh_u" unique
         {
