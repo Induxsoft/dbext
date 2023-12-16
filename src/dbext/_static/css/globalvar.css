@@ -12,6 +12,11 @@
     position: relative;
     padding-right: 5px;
 }
+#varsFormControls {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    grid-template-rows: auto;
+}
 .section-bar{
     min-height: 1.81rem;
 }
@@ -32,10 +37,25 @@
     cursor: col-resize;
     background-color: var(--color-borders);
 }
-@media screen and (max-width: 768px){
+.hint {
+    color: transparent;
+    transition: color .3s;
+}
+.show-hint:hover ~ .hint {
+    color: #888 !important;
+}
+@media screen and (max-width: 768px) {
     .group-box-info {
         font-size: .9rem;
         padding: 4px;
         border: none;
+    }
+    #varsFormControls {
+        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    }
+}
+@media screen and (max-width: 500px) {
+    #varsFormControls {
+        grid-template-columns: repeat(auto-fill, 1fr);
     }
 }

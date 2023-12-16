@@ -74,6 +74,14 @@ var main = {
         if (!bsModal) return new bootstrap.Modal(modalElement);
 
         return bsModal;
+    },
+    createFullElement(tagName="div", attributes={}, innerHTML='')
+    {
+        const elem = document.createElement(tagName);
+        const keys = Object.keys(attributes);
+        keys.forEach(key => elem.setAttribute(key, attributes[key]));
+        if (innerHTML) elem.innerHTML = innerHTML;
+        return elem;
     }
 }
 window.addEventListener('DOMContentLoaded', () => {

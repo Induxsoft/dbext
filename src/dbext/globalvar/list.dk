@@ -7,7 +7,6 @@ module "list"
     #include "../config.dk"
 
     do @context.begin(@crud_context)
-
     ref categories = @("&./")
 
     #$ div
@@ -29,7 +28,7 @@ module "list"
                     {
                         div(style="max-height: 80vh;display: flex;")
 						{
-							"edit-table"(id="treeCategories" data='#<to.json(categories)>' style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important; font-weight:500 !important;} #__table_input{ font-size: unset !important; }")
+							"edit-table"(id="treeCategories" data='#<to.json(categories)>' "show-tree"="true" parentkey="parent" key="id" "can-move-row"="false" style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important; font-weight:500 !important;} #__table_input{ font-size: unset !important; }")
 							{
 								"edit-thead"
 								{
@@ -46,13 +45,55 @@ module "list"
             }
             div(id="sectionTwo")
             {
-                $"Forms"
+                div(class="border-bottom bg-white")
+                {
+                    div(class="d-flex align-items-center border-bottom px-2 section-bar")
+                    {
+                        small(class="text-secondary"){$"Información de la categoría"}
+                    }
+                    div(class="py-2 px-3 d-flex gap-2" id="categoryInfo")
+                    {
+                        small(class="text-secondary"){$"Selecciona una categoría."}
+                    }
+                }
+                div(class="border-bottom bg-white d-flex justify-content-between")
+                {
+                    div(class="d-flex align-items-center px-2 section-bar")
+                    {
+                        small(class="text-secondary"){$"Variables de configuración"}
+                    }
+                    div(class="d-flex align-items-center" id="vars_controls")
+                    {
+                        button(class="control btn btn-sm d-flex align-items-center justify-content-center gap-2 no-shadow hidde-control d-none" title="Guardar cambios" id="save_changes"){
+                            $"#<@@(@icons,'save')>"
+                            small{$"Guardar"}
+                        }
+                        button(class="control btn btn-sm d-flex align-items-center justify-content-center gap-2 no-shadow hidde-control d-none" title="Descartar cambios" id="undo_changes"){
+                            $"#<@@(@icons,'discard')>"
+                            small{$"Descartar"}
+                        }
+                    }
+                }
+                div(class="p-4")
+                {
+                    h5(class="mb-3"){$"Opciones"}
+                    div(id="varsFormControls" class="d-none")
+                    {
+                        $"Formularios"
+                    }
+                    div(class="d-flex h-100 w-100 align-items-center justify-content-center" id="varsEmpty" style="min-height: 50vh;")
+                    {
+                        small(class="text-secondary"){$"No hay información de la categoría especificada."}
+                    }
+                }
             }
         }
         #$
+        script(src="#<@JS_MAIN>"){$""}
         script(src="#<@JS_GLOBALVAR>"){$""}
         script{$'
             globalvar.tableCId = "treeCategories";
+            globalvar.url = "#<@DBEXT_ADD_EDIT_GLVAR>";
         '}
     }
 }

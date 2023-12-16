@@ -1,7 +1,9 @@
 var profile =
 {
-    tableGroups:null, tableProfile:null, tableGId:'_', tablePId:'_',
+    tableGroups:null, tableProfile:null, tableGId:'_', tablePId:'_', url:'',
     groupSelected:null, profileDataBackup:null,
+
+    // =============== INIT
 
     init()
     {
@@ -55,22 +57,7 @@ var profile =
         }
     },
 
-    getGroupProfileInfo(group)
-    {
-        let endpoint = profile.url.replace('@id',group.sys_pk);
-
-        InduxsoftCrudlModel.InvokeService(endpoint, null,
-            success => { 
-                this.printGroupSecuritySchema(success);
-                this.saveProfileBackup((success?.sitem_profile??[]));
-            },
-            failure => { 
-                this.printGroupSecuritySchema(null);
-                alert('No se pudo obtener información del grupo indicado\n'+JSON.stringify(failure));
-            },
-            "GET", false
-        );
-    },
+    // =============== GROUP
 
     printGroupSecuritySchema(data)
     {
@@ -88,8 +75,7 @@ var profile =
                 <div class="group-box-info"><small class="fw-5">ID</small><p class="m-0">${data.description??''}</p></div>
                 <div class="group-box-info"><small class="fw-5">ID</small><p class="m-0">${data.notes??''}</p></div>
             `;
-
-            this.tableProfile.DataArray = (data.sitem_profile??[]);
+            this.setProfileData((data.sitem_profile??[]));
         }
         else
         {
@@ -97,10 +83,32 @@ var profile =
             sEEmpty.classList.remove('d-none');
 
             groupInfo.innerHTML = '<small class="text-secondary">No hay información del grupo especificado.</small>';
-            this.tableProfile.DataArray = [];
-        }
+            this.setProfileData([]);
+        }        
+    },
 
+    // =============== PROFILE
+    
+    setProfileData(data)
+    {
+        this.tableProfile.DataArray = data;
         this.tableProfile._printRows();
+    },
+    getGroupProfileInfo(group)
+    {
+        let endpoint = this.url.replace('@id',group.sys_pk);
+
+        InduxsoftCrudlModel.InvokeService(endpoint, null,
+            success => { 
+                this.printGroupSecuritySchema(success);
+                this.saveProfileBackup((success?.sitem_profile??[]));
+            },
+            failure => { 
+                this.printGroupSecuritySchema(null);
+                alert('No se pudo obtener información del grupo indicado\n'+JSON.stringify(failure));
+            },
+            "GET", false
+        );
     },
     saveProfileBackup(profileData)
     {
@@ -108,8 +116,6 @@ var profile =
     },
     isDirtyProfile()
     {
-        // console.log(JSON.stringify(this.tableProfile.DataArray));
-        // console.log(JSON.stringify(this.profileDataBackup));
         let isDirty = false;
         if (!isDirty && this.tableProfile.DataArray && this.profileDataBackup)
             isDirty = (JSON.stringify(this.tableProfile.DataArray) !== JSON.stringify(this.profileDataBackup));
@@ -129,7 +135,7 @@ var profile =
             profile: (this.tableProfile?.DataArray?.filter(d => d.active==='Sí')?.map(d => ({item:d.sys_pk, guid:d.sys_guid}))??[])
         }
 
-        let endpoint = profile.url.replace('@id',this.groupSelected.sys_pk);
+        let endpoint = this.url.replace('@id',this.groupSelected.sys_pk);
 
         InduxsoftCrudlModel.InvokeService(endpoint, data,
             success => { 

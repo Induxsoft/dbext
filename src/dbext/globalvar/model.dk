@@ -6,24 +6,59 @@ module "model"
 
     function globalvar_read(&db, &params)
     {
-        ref category = dbr.rec(db, "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent) parent FROM varcategory WHERE id=@_entity_id LIMIT 1;", params)
+        sql = " SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent 
+                FROM varcategory 
+                WHERE id=@_entity_id LIMIT 1;"
+
+        ref category = dbr.rec(db, sql, params)
         if not(isnull(category)) { category<"vars*">: get_category_vars(db, category) }
         return category
     }
     function globalvar_list(&db, &params)
     {
-        ref categories = dbr.list(db, "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent FROM varcategory;", @null)
-        return categories
+        sql = " SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent 
+                FROM varcategory;"
+
+        return dbr.list(db, sql, @null)
     }
     function get_category_vars(&db, &category)
     {
-        sql = " SELECT sys_pk, vardefault, varname, varvalue, varcaption, varhelp, vartype, varinput
+        sql = " SELECT sys_pk, sys_recver, IFNULL(vardefault,'') vardefault, varname, IFNULL(varvalue,'') varvalue, IFNULL(varcaption,'') varcaption, 
+                    IFNULL(varhelp,'') varhelp, IFNULL(vartype,'') vartype, IFNULL(varinput,'{}') varinput
                 FROM globalvar
-                WHERE ref_varcat=@id"
+                WHERE ref_varcat=@id;"
 
         return dbr.list(db, sql, category)
+    }
+    function globalvar_create(&db, &params, &data)
+    {
+        ref vars = @@(data, "&vars")
+        
+        @use_transaction = @false
+        do dbr.begin(db)
+
+        if not(isnull(vars)) && list.count(vars) > 0
+        {
+            for i = 0; i < list.count(vars)
+            {
+                ref var = list.obj(vars, i)
+                do dbr.save(db, "globalvar", var)
+            }
+        }
+
+        do dbr.commit(db)
+        return @true
+        
+        exception
+        {
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do errordet(@false)
+			do rise_error(last_error_code(),last_error())
+        }
     }
 
     point @read to globalvar_read
     point @list to globalvar_list
+    point @create to globalvar_create
+    point @update to globalvar_create
 }
