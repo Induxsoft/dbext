@@ -2,17 +2,12 @@
 #!
 module "model"
 {
+    #include "../config.dk"
     @table_name = "globalvar"
 
     function globalvar_read(&db, &params)
     {
-        sql = " SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent 
-                FROM varcategory 
-                WHERE id=@_entity_id LIMIT 1;"
-
-        ref category = dbr.rec(db, sql, params)
-        if not(isnull(category)) { category<"vars*">: get_category_vars(db, category) }
-        return category
+        return get_category_vars(db, params)
     }
     function globalvar_list(&db, &params)
     {
@@ -23,12 +18,13 @@ module "model"
     }
     function get_category_vars(&db, &category)
     {
-        sql = " SELECT sys_pk, sys_recver, IFNULL(vardefault,'') vardefault, varname, IFNULL(varvalue,'') varvalue, IFNULL(varcaption,'') varcaption, 
-                    IFNULL(varhelp,'') varhelp, IFNULL(vartype,'') vartype, IFNULL(varinput,'{}') varinput
+        sql = " SELECT sys_pk, sys_recver, IFNULL(vardefault,'') vardefault, varname, IFNULL(varvalue,'') varvalue, 
+                    IFNULL(varcaption,'*Without caption') varcaption, IFNULL(varhelp,'') varhelp, IFNULL(vartype,'') vartype, 
+                    IFNULL(varinput,'{}') varinput
                 FROM globalvar
-                WHERE ref_varcat=@id;"
-
-        return dbr.list(db, sql, category)
+                WHERE IFNULL(ref_varcat,'#<@id_vars_without_cat>')=@_entity_id;"
+        
+        return dbr.list(db, ftext(sql), category)
     }
     function globalvar_create(&db, &params, &data)
     {

@@ -9,6 +9,16 @@ module "list"
     do @context.begin(@crud_context)
     ref categories = @("&./")
 
+    new withoutCategory
+    {
+        @"id": @id_vars_without_cat
+        @"caption": "Sin categorizar"
+        @"help": "Variables sin categoría asignada"
+        @"parent":""
+    }
+
+    do list.add(categories, withoutCategory)
+
     #$ div
     {
         link(rel="stylesheet" href="#<@CSS_MAIN>")

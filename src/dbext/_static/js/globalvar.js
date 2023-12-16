@@ -44,7 +44,7 @@ var globalvar =
             this.tableCategories.Events[this.tableCategories.EdiTable.Const.Events.EnterCell] = (e) =>
             {
                 this.categorySelected = this.tableCategories.DataArray[e.sender.CurrentRowIndex()];
-                //this.printCategoryInfo(this.categorySelected);
+                this.printCategoryInfo(this.categorySelected);
                 this.getVarsFromCategory(this.categorySelected.id);
             }
             if ((this.tableCategories?.DataArray??[]).length > 0) {
@@ -62,7 +62,6 @@ var globalvar =
         if (data)
         {
             categoryInfo.innerHTML = `
-                <div class="group-box-info"><small class="fw-5">ID</small><p class="m-0">${data.id??''}</p></div>
                 <div class="group-box-info"><small class="fw-5">Título</small><p class="m-0">${data.caption??''}</p></div>
                 <div class="group-box-info"><small class="fw-5">Detalle</small><p class="m-0">${data.help??''}</p></div>
             `;
@@ -81,7 +80,7 @@ var globalvar =
 
         InduxsoftCrudlModel.InvokeService(endpoint, null,
             success => {
-                this.currentVars = (success.vars??[]);
+                this.currentVars = success;
                 this.currentVarsBackup = JSON.parse(JSON.stringify(this.currentVars));
                 this.printVars(success);
             },
@@ -92,18 +91,16 @@ var globalvar =
             "GET", false
         );
     },
-    printVars(varsData)
+    printVars(vars)
     {
-        this.printCategoryInfo(varsData);
         const varsFormControls = document.querySelector('#varsFormControls');
         const varsEmpty = document.querySelector('#varsEmpty');
 
-        if (varsData)
+        if (vars)
         {
             varsFormControls.classList.remove('d-none');
             varsEmpty.classList.add('d-none');
 
-            let vars = (varsData.vars??[]);
             let tmpl = ``;
 
             vars.forEach(v => {
@@ -122,7 +119,7 @@ var globalvar =
     getBlockControl(varData)
     {
         return `
-            <div class="p-3">
+            <div class="p-2">
                 <small class="d-block mb-1 fw-5">${(varData.varcaption??'')}:</small>
                 ${globalvar.getVarControl(varData)}
                 <small class="fz-7 hint" class="d-block">${(varData.varhelp??'')}</small>
@@ -182,8 +179,6 @@ var globalvar =
     },
     updateVarValue(var_pk, newValue)
     {
-        console.log('pk: ' + var_pk);
-        console.log('new value: ' + newValue);
         let _var = this.currentVars.find(v => v.sys_pk == var_pk);
         if (_var) _var.varvalue = newValue;
         this.showVarSaveControls();
@@ -204,6 +199,7 @@ var globalvar =
     {
         this.currentVars = JSON.parse(JSON.stringify(this.currentVarsBackup));
         this.showVarSaveControls();
+        this.printVars(this.currentVars);
     },
     saveVarsChanges()
     {

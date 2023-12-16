@@ -15,29 +15,50 @@ module "form.dk"
     action = replace(@DBEXT_ADD_EDIT_GUSER, "@id", entity_id)
 
     #$
-    div(class="container mt-3")
+    div(class="container p-0")
     {
-        h6{$"#<ifstr(isNew,'Agregar','Editar')> grupo de usuarios"}
-
         #! if trim(error) != "" { #$ h6{$"#<error>"} }
         
         form(method="POST" action="#<action>")
         {
-            input(type="hidden" name="sys_pk" value="#<@@(guser, '#sys_pk')>")
-            input(type="hidden" name="sys_recver" value="#<@@(guser, '#sys_recver')>")
+            div(id="main_bar" class="row container-section m-0 px-0 py-2 border-bottom")
+            {
+                div(class="col-4 d-flex align-items-center p-0")
+                {
+                    h6(class="tex-no-break m-0"){$"#<ifstr(isNew,'Agregar','Editar')> grupo de usuarios"}
+                }
+                div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
+                {
+                    button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action #<ifstr(isNew,'d-none','')>" type="button" id="btn_group_schema"){$"Esquema de seguridad"}
+                    button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){$"Guardar"}
+                    a(class="btn btn-sm border-secondary induxsoft-corners btn-main-action border-0" href="#<@DBEXT_USERGROUP>") {
+                        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16") {
+                            path(d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z")
+                        }
+                    }
+                }
+            }
+            div(id="work_area" class="container-section")
+            {
+                div(class="mt-3")
+                {
+                    input(type="hidden" name="sys_pk" value="#<@@(guser, '#sys_pk')>")
+                    input(type="hidden" name="sys_recver" value="#<@@(guser, '#sys_recver')>")
 
-            small{$"Nombre (ID):"}
-            input(type="text" class="induxsoft-form-control mb-2" name="groupid" value="#<@@(guser, '$groupid')>" required="true")
+                    small{$"Nombre (ID):"}
+                    input(type="text" class="induxsoft-form-control mb-2" name="groupid" value="#<@@(guser, '$groupid')>" required="true")
 
-            small{$"Descripción:"}
-            input(type="text" class="induxsoft-form-control mb-2" name="description" value="#<@@(guser, '$description')>" required="true")
+                    small{$"Descripción:"}
+                    input(type="text" class="induxsoft-form-control mb-2" name="description" value="#<@@(guser, '$description')>" required="true")
 
-            small{$"Notas:"}
-            textarea(name="notes" class="induxsoft-form-control mb-2"){$"#<@@(guser, '$notes')>"}
-
-            button(class="btn btn-sm btn-secondary #<ifstr(isNew,'d-none','')>" type="button" id="btn_group_schema"){$"Esquema de seguridad"}
-            button(class="btn btn-sm btn-primary" type="submit"){$"Guardar"}
-            a(class="btn btn-sm btn-light" href="#<@DBEXT_USERGROUP>"){$"Cancelar"}
+                    small{$"Notas:"}
+                    textarea(name="notes" class="induxsoft-form-control mb-2"){$"#<@@(guser, '$notes')>"}
+                }
+            }
+            div(id="status_bar" class="container-section")
+            {
+                $""
+            }
         }
 
         // MODAL ESQUEMA DE SEGURIDAD

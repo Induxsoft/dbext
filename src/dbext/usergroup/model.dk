@@ -8,7 +8,26 @@ module "model"
     {
         return entity.create(db,params,data)
     }
+    function usergroup_delete(&db, &params)
+    {
+        @use_transaction = @false
+
+        do dbr.begin(db)
+        do dbr.execute(db, "DELETE FROM profile WHERE usergroup=@_entity_id;", params)
+        do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE groups=@_entity_id;", params)
+        do entity.delete(db, params)
+        do dbr.commit(db)
+
+        return @true
+        
+        excepcion
+        {
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do rise_error(500, last_error())
+        }
+    }
 
     point @create to usergroup_create
     point @update to usergroup_create
+    point @delete to usergroup_delete
 }

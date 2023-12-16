@@ -99,8 +99,28 @@ module "model"
         return groups
     }
 
+    function tuser_delete(&db, &params)
+    {
+        @use_transaction = @false
+
+        do dbr.begin(db)
+        do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@_entity_id;", params)
+        do dbr.execute(db, "DELETE FROM uservar WHERE fuser=@_entity_id;", params)
+        do entity.delete(db, params)
+        do dbr.commit(db)
+
+        return @true
+        
+        excepcion
+        {
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do rise_error(500, last_error())
+        }
+    }
+
     point @create to tuser_create
     point @update to tuser_create
     point @read to tuser_read
     point @blank to tuser_blank
+    point @delete to tuser_delete
 }
