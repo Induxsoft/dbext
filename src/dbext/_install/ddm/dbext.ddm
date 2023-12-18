@@ -102,6 +102,12 @@ model "Variables globales"
 
         @"item" int ref:"sitem" ["sys_pk"] required
         @"usergroup" int ref:"usergroup" ["sys_pk"] required
+
+        index "iug_u" unique
+        {
+            field "item"
+            field "usergroup"
+        }
     }
     // Valores del usuario
     entity "uservar"
