@@ -10,7 +10,7 @@ var usergroup =
     {
         if (this.guser)
         {
-            let endpoint = usergroup.url_profile.replace('@id', this.guser.sys_pk) + "?_output=raw";
+            let endpoint = usergroup.url_profile.replace('@id', this.guser.sys_pk) + "?_output=raw&iframe=true";
             let mdl_ss_content = document.querySelector('#mdl_ss_content');
             if (mdl_ss_content) mdl_ss_content.src = endpoint;
             main.openModal('modal_secure_schema');
