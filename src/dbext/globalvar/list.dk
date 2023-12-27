@@ -38,7 +38,7 @@ module "list"
                     {
                         div(style="max-height: 80vh;display: flex;")
 						{
-							"edit-table"(id="treeCategories" data='#<to.json(categories)>' "show-tree"="true" parentkey="parent" key="id" "can-move-row"="false" style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important; font-weight:500 !important;} #__table_input{ font-size: unset !important; }")
+							"edit-table"(id="treeCategories" data='#<to.json(categories)>' "show-tree"="true" parentkey="parent" key="id" "hidde-selector"="true" "can-move-row"="false" style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important; font-weight:500 !important;} #__table_input{ font-size: unset !important; }")
 							{
 								"edit-thead"
 								{

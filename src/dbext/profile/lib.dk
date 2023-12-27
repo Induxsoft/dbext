@@ -80,7 +80,7 @@ module "lib"
                     }
                     div(style="max-height: 80vh;display: flex;")
                     {
-                        "edit-table"(id="treeProfile" data='#<to.json(sitem_profile)>' "show-tree"="true" parentkey="itemparent" key="sys_pk" "can-move-row"="false" style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important;} table{ background-color:#FFF !important; } #__table_input{ font-size: unset !important; }tbody tr:hover{background-color:#EDEDED;}input[type='checkbox']{accent-color:#EDEDED;}")
+                        "edit-table"(id="treeProfile" data='#<to.json(sitem_profile)>' "hidde-selector"="true" "show-tree"="true" parentkey="itemparent" key="sys_pk" "can-move-row"="false" style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important;} table{ background-color:#FFF !important; } #__table_input{ font-size: unset !important; }tbody tr:hover{background-color:#EDEDED;}input[type='checkbox']{accent-color:#EDEDED;}")
                         {
                             "edit-thead"
                             {

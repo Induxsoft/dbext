@@ -33,7 +33,7 @@ module "list"
                     {
                         div(style="max-height: 80vh;display: flex;")
 						{
-							"edit-table"(id="treeGroups" data='#<to.json(groups)>' style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important; font-weight:500 !important;} #__table_input{ font-size: unset !important; }")
+							"edit-table"(id="treeGroups" data='#<to.json(groups)>' "hidde-selector"="true" style="width: 100%;" "control-styles"="tr td{font-size:.8rem;} th{font-size:.9rem; outline: none !important; font-weight:500 !important;} #__table_input{ font-size: unset !important; }")
 							{
 								"edit-thead"
 								{
