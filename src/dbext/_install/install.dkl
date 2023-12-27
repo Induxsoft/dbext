@@ -24,6 +24,8 @@ program
     // Archivos de datos iniciales (Orden de instalación)
     init_files = '
         sitem.csv,
+        varcategory.csv,
+        globalvar.csv,
         sys_app_catalog.csv,
         sys_app_category.csv,
         sys_app_shortcut.csv
