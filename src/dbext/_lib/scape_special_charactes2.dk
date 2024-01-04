@@ -1,0 +1,53 @@
+#include "dkli.dkh"
+#!
+module
+{
+    #include "functions.dkh"
+
+    new @symbols
+    {
+        @"'": "&apos;"
+        @'"': "&quot;"
+        @">": "&gt;"
+        @"<": "&lt;"
+    }
+
+    encode::value
+    {
+        ref smbs=list.create_from_fields(@symbols)
+        for i = 0; i < list.count(smbs) {
+            smb = list.str(smbs,i)
+            value = replace(value, smb, @@(@symbols,smb))
+        }
+        return value
+    }
+
+    decode::value
+    {
+        ref smbs=list.create_from_fields(@symbols)
+        for i = 0; i < list.count(smbs) {
+            smb = list.str(smbs,i)
+            value = replace(value, @@(@symbols,smb), smb)
+        }
+        return value
+    }
+
+    scape_special_charactes::&t,f
+    {
+        // ENCODE
+        if not(isnull(t)) && list.count(t) > 0 
+        {
+            for i = 0; i < list.count(t) 
+            {
+                ref o=list.obj(t,i)
+                ref k=list.create_from_fields(o)
+                for j = 0; j < list.count(k) 
+                {
+                    kn = list.str(k,j)
+                    if (trim(f) !="" && (f=="*" || isanyword(kn,f))) { o<kn>: encode(@@(o,"$"+kn)) }
+                }
+            }
+        }
+        return t
+    }
+}

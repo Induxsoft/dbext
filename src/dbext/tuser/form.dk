@@ -50,10 +50,11 @@ module "form.dk"
             {
                 div(class="col-4 d-flex align-items-center p-0")
                 {
-                    h6(class="tex-no-break m-0"){$"#<ifstr(isNew,'Agregar','Editar')> usuario"}
+                    h5(class="tex-no-break m-0"){$"#<ifstr(isNew,'Agregar','Editar')> usuario"}
                 }
                 div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
                 {
+                    a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
                     button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){
                         $'#<@@(@icons,"save2")>'
                     }
@@ -90,26 +91,43 @@ module "form.dk"
                 {
                     div(class="tab-pane fade show active" id="general" role="tabpanel" "aria-labelledby"="general-tab")
                     {
-                        small{$"Nombre de inicio de sesión:"}
-                        input(type="text" class="induxsoft-form-control mb-2" name="userid" value="#<@@(user, '$userid')>" required="true")
-
-                        #! if isNew
+                        div(class="row mb-2 mt-4")
                         {
-                            #$ small{$"Contraseña:"}
-                            input(type="password" class="induxsoft-form-control mb-2" name="pwd" id="pwd1" value="#<@@(user, '$userid')>")
-
-                            small{$"Confirmar contraseña:"}
-                            input(type="password" class="induxsoft-form-control mb-2" id="pwd_confirm1")
-                            small(class="text-danger d-block" id="pwdMessage1"){$""}
+                            div(class="col-sm-6")
+                            {
+                                small(class="fw-bold"){$"Nombre de inicio de sesión:"}
+                                input(type="text" class="induxsoft-form-control mb-2" name="userid" value="#<@@(user, '$userid')>" required="true")
+                            }
+                            div(class="col-sm-6")
+                            {
+                                small(class="fw-bold"){$"Nombre propio del usuario:"}
+                                input(type="text" class="induxsoft-form-control mb-2" name="username" value="#<@@(user, '$username')>" required="true")
+                            }
                         }
-                        #! else 
+                        div(class="row mb-2")
                         {
-                            #$ button(type="button" class="btn btn-sm btn-light induxsoft-corners d-block mb-2 border" "data-bs-toggle"="modal" "data-bs-target"="#modal_change_pwd"){$"Cambiar contraseña"}
+                            #! if isNew
+                            {
+                                #$ div(class="col-sm-6")
+                                {
+                                    small{$"Contraseña:"}
+                                    input(type="password" class="induxsoft-form-control mb-2" name="pwd" id="pwd1" value="#<@@(user, '$userid')>")
+                                }
+                                div(class="col-sm-6")
+                                {
+                                    small{$"Confirmar contraseña:"}
+                                    input(type="password" class="induxsoft-form-control mb-2" id="pwd_confirm1")
+                                    small(class="text-danger d-block" id="pwdMessage1"){$""}
+                                }
+                            }
+                            #! else 
+                            {
+                                #$ div(class="col-sm-6")
+                                {
+                                    button(type="button" class="btn btn-sm btn-light induxsoft-corners d-block mb-2 border" "data-bs-toggle"="modal" "data-bs-target"="#modal_change_pwd"){$"Cambiar contraseña"}
+                                }
+                            }
                         }
-
-                        small{$"Nombre propio del usuario:"}
-                        input(type="text" class="induxsoft-form-control mb-2" name="username" value="#<@@(user, '$username')>" required="true")
-
                         small{$"Notas:"}
                         textarea(name="notes" class="induxsoft-form-control mb-2"){$"#<@@(user, '$notes')>"}
                     }

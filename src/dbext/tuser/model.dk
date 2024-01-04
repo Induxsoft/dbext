@@ -2,6 +2,7 @@
 #!
 module "model"
 {
+    #include "../config.dk"
     @table_name = "tuser"
 
     // @read_query = ""
@@ -118,9 +119,20 @@ module "model"
         }
     }
 
+    function list(&db, &params)
+    {
+        query="SELECT sys_pk, userid, username
+            FROM tuser
+            WHERE IF(IFNULL(@s,'')='', true, (userid LIKE CONCAT('%',@s,'%') OR username LIKE CONCAT('%',@s,'%')))
+            ORDER BY userid
+            LIMIT #<@default_max_rows>;"
+        return dbr.list(db, ftext(query), params)
+    }
+
     point @create to tuser_create
     point @update to tuser_create
     point @read to tuser_read
+    point @list to list
     point @blank to tuser_blank
     point @delete to tuser_delete
 }
