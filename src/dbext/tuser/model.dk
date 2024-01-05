@@ -3,6 +3,8 @@
 module "model"
 {
     #include "../config.dk"
+    #include "../_lib/lib.dk"
+
     @table_name = "tuser"
 
     // @read_query = ""
@@ -31,9 +33,10 @@ module "model"
 
         return res
 
-        excepcion
+        exception
         {
             if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do cu_error("usuario")
             do rise_error(500, last_error())
         }
     }
@@ -127,6 +130,14 @@ module "model"
             ORDER BY userid
             LIMIT #<@default_max_rows>;"
         return dbr.list(db, ftext(query), params)
+    }
+
+    function cu_error(table)
+    {
+        new fields {
+            @"userid": "El nombre de inicio de sesión"
+        }
+        do valide_duplicate(fields, table, last_error(), last_error_code())
     }
 
     point @create to tuser_create

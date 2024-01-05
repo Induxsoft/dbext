@@ -1,0 +1,21 @@
+#include "dkli.dkh"
+#!
+module
+{
+    #include "functions.dkh"
+
+    function valide_duplicate(&fields, table, error, code)
+    {
+        if contains(tolower(error),"duplicate entry")
+        {
+            go foreach.fstr(index:i, key:key, value:value) with(fields)
+            {
+                if contains(tolower(error),key)
+                {
+                    do errordet(@false)
+                    do rise_error(code, value + " de "+ table +" ya existe, intente con un valor diferente.") 
+                }
+            }
+        }
+    }
+}

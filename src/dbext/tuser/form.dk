@@ -42,11 +42,11 @@ module "form.dk"
     }
 
     #$
-    div(class="container mt-3")
+    div(class="container")
     {   
         form(method="POST" action="#<action>" id="form")
         {
-            div(id="main_bar" class="row container-section m-0 px-0 py-2 border-bottom")
+            div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
             {
                 div(class="col-4 d-flex align-items-center p-0")
                 {
@@ -67,9 +67,8 @@ module "form.dk"
             }
             div(id="work_area" class="container-section")
             {
-                #! if trim(error) != "" { #$ small{$"#<error>"} }
+                div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
 
-                #$
                 input(type="hidden" name="sys_pk" value="#<@@(user, '#sys_pk')>")
                 input(type="hidden" name="sys_recver" value="#<@@(user, '#sys_recver')>")
                 input(type="hidden" name="locked" value="0")
@@ -96,12 +95,12 @@ module "form.dk"
                             div(class="col-sm-6")
                             {
                                 small(class="fw-bold"){$"Nombre de inicio de sesión:"}
-                                input(type="text" class="induxsoft-form-control mb-2" name="userid" value="#<@@(user, '$userid')>" required="true")
+                                input(type="text" class="induxsoft-form-control mb-2" name="userid" value="#<@@(user, '$userid')>" required="true" maxlength="120")
                             }
                             div(class="col-sm-6")
                             {
                                 small(class="fw-bold"){$"Nombre propio del usuario:"}
-                                input(type="text" class="induxsoft-form-control mb-2" name="username" value="#<@@(user, '$username')>" required="true")
+                                input(type="text" class="induxsoft-form-control mb-2" name="username" value="#<@@(user, '$username')>" required="true" maxlength="120")
                             }
                         }
                         div(class="row mb-2")

@@ -2,11 +2,20 @@
 #!
 module "model"
 {
+    #include "../config.dk"
+    #include "../_lib/lib.dk"
+
     @table_name = "usergroup"
 
     function usergroup_create(&db,&params,&data)
     {
-        return entity.create(db,params,data)
+        ref res = entity.create(db,params,data)
+        return res
+        exception
+        {
+            do cu_error("grupo de usuario")
+            do rise_error(last_error_code(), last_error())
+        }
     }
     function usergroup_delete(&db, &params)
     {
@@ -27,7 +36,26 @@ module "model"
         }
     }
 
+    function list(&db, &params)
+    {
+        query="SELECT sys_pk, groupid, description, notes
+            FROM usergroup
+            WHERE IF(IFNULL(@s,'')='', true, (groupid LIKE CONCAT('%',@s,'%') OR description LIKE CONCAT('%',@s,'%')))
+            ORDER BY groupid
+            LIMIT #<@default_max_rows>;"
+        return dbr.list(db, ftext(query), params)
+    }
+
+    function cu_error(table)
+    {
+        new fields {
+            @"groupid": "El nombre"
+        }
+        do valide_duplicate(fields, table, last_error(), last_error_code())
+    }
+
     point @create to usergroup_create
     point @update to usergroup_create
     point @delete to usergroup_delete
+    point @list to list
 }
