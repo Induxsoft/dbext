@@ -1,0 +1,137 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.dkl"
+    #include "../config.dk"
+
+    do @context.begin(@crud_context)
+
+    ref data = @("&./")
+    entity_id = @("$parameters/_entity_id")
+    error = @("$error/message")
+    isNew = (entity_id == "_new")
+
+    new documento
+    {
+        @"datatable*":@("&./docs")
+        member "attributes"
+        {
+            @"class":"induxsoft-form-select"
+            @"name":"documento"
+			@"required":"true"
+        }
+        @"value_field":"id"
+        @"text_field":"descripcion"
+        @"selected":@('./documento')
+    }
+    #$
+    div(class="container")
+    {   
+        form(method="POST" action="." id="form")
+        {
+            div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
+            {
+                div(class="col-4 d-flex align-items-center p-0")
+                {
+                    h5(class="tex-no-break m-0"){$"Block de documentos"}
+                }
+                div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
+                {
+                    a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
+                    button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){
+                        $'#<@@(@icons,"save2")>'
+                    }
+                    a(class="btn btn-sm border-secondary induxsoft-corners btn-main-action" href="#<@DBEXT_BLOCKDOCS>") {
+                        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16") {
+                            path(d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z")
+                        }
+                    }
+                }
+            }
+            div(id="work_area" class="container-section")
+            {
+                div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+
+                input(type="hidden" name="sys_pk" value="#<@@(data, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(data, '#sys_recver')>")
+
+                // NAV TABS
+                ul(class="nav nav-tabs mt-3" id="myTab" role="tablist")
+                {
+                    li(class="nav-item" role="presentation") {
+                        button(class="nav-link active" id="general-tab" "data-bs-toggle"="tab" "data-bs-target"="#general" type="button" role="tab" "aria-controls"="general" "aria-selected"="true"){$"General"}
+                    }
+                    li(class="nav-item" role="presentation") {
+                        button(class="nav-link" id="groups-tab" "data-bs-toggle"="tab" "data-bs-target"="#groups" type="button" role="tab" "aria-controls"="groups" "aria-selected"="false"){$"Otros datos"}
+                    }
+                }
+
+                // PANEL TABS
+                div(class="tab-content" id="tabContent")
+                {
+                    div(class="tab-pane fade show active" id="general" role="tabpanel" "aria-labelledby"="general-tab")
+                    {
+                        div(class="row mb-2 mt-4")
+                        {
+                            div(class="col-sm-6")
+                            {
+                                small(class="fw-bold"){$"Documento:"}
+                                #!
+                                do uie.dbSelect(documento)
+                                #$
+                            }
+                            div(class="col-sm-6")
+                            {
+                                small(class="fw-bold"){$"Serie:"}
+                                input(type="text" class="induxsoft-form-control mb-2" name="serie" value="#<@@(data, '$serie')>" required="true" maxlength="10")
+                            }
+                        }
+                        div(class="row mb-2")
+                        {
+                            div(class="col-md-6")
+                            {
+                                small(class="fw-bold"){$"Folio inicial:"}
+                                #!
+                                finicial=if(@@(data, '#finicial')<1,1,@@(data, '#finicial'))
+                                #$
+                                input(type="Number" class="induxsoft-form-control mb-2" name="finicial" value="#<finicial>" maxlength="11" min="1")
+                            }
+                            div(class="col-md-6")
+                            {
+                                small(class="fw-bold"){$"Folio final:"}
+                                input(type="Number" class="induxsoft-form-control mb-2" name="fultimo" value="#<@@(data, '#fultimo')>" readonly="true" maxlength="11")
+                            }
+                        }
+                        div(class="d-flex")
+                        {
+                            label(class="m-1"){input(type="checkbox" name="activo" "#<ifstr(@('#./activo'),'checked','')>"="true" ) " Activo"}
+                            label(class="m-1"){input(type="checkbox" name="fiscal" "#<ifstr(@('#./fiscal'),'checked','')>"="true" ) " Fiscal"}
+                        }
+                    }
+                    div(class="tab-pane fade" id="groups" role="tabpanel" "aria-labelledby"="goups-tab")
+                    {
+                        label{"Notas:"}
+                        textarea(class="induxsoft-form-control mb-2" name="datos" maxlength="255"){"#<@('$./datos')>"}
+
+                        div(class="row")
+                        {
+                            div(class="col-md-6")
+                            {
+                                label{"ID control:"}
+                                input(type="text" class="induxsoft-form-control mb-2" name="idcontrol" value="#<@@(data, '$idcontrol')>" maxlength="32")
+                            }
+                            div(class="col-md-6")
+                            {
+                                 label{"Número de control:"}
+                                input(type="Number" class="induxsoft-form-control mb-2" name="numcontrol" value="#<@@(data, '#numcontrol')>" maxlength="11")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,61 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    @table_name="blockdocumentos"
+    like=" having if(ifnull(@s,'')='',true, concat_ws('',tipo,serie,finicial,fultimo,factivo,ffiscal) like concat('%',@s,'%') )"
+    @list_query="SELECT bd.sys_pk,cd.const tipo,bd.serie,bd.finicial,bd.fultimo,if(IFNULL(bd.activo,0),'Activo','Inactivo')factivo,if(IFNULL(bd.fiscal,0),'Sí','No')ffiscal
+    FROM blockdocumentos bd
+    INNER JOIN cdocumentos cd ON bd.documento=cd.id
+    "+like+"
+    order by cd.id,bd.sys_pk desc "
+
+    Prepare.View::&db,&params,&data
+    {
+        if isnull(data){return}
+        data<"docs*">:dbr.list(db,"select id,const descripcion from cdocumentos;",@null)        
+    }
+    blank::&db,&params
+    {
+       new entity{}
+       do Prepare.View(db,params,entity)
+       return entity
+    }
+    save::&db,&params,&data
+    {
+        if @@(data,"$finicial")=="" || @@(data,"#finicial")<1{data<"finicial">:1}
+        if @@(data,"$fultimo")==""{data<"fultimo">:0}
+        if @@(data,"$numcontrol")==""{data<"numcontrol">:0}
+
+        if parse.bool(@@(data,"activo")){data<"activo">:1}
+        else{data<"activo">:0}
+
+        if parse.bool(@@(data,"fiscal")){data<"fiscal">:1}
+        else{data<"fiscal">:0}
+
+        ref entity=@null
+    
+        if @@(params,"$_entity_id")!="_new"{ref entity= entity.update(db,params,data)} 
+        else{ref entity=entity.create(db,params,data)}
+
+        exception
+        {
+            do Prepare.View(db,params,data)
+            do rise_error(500,last_error())
+        }
+        return entity
+    }
+    read::&db,&params
+    {
+        ref entity=entity.read(db,params)
+        do Prepare.View(db,params,entity)
+        return entity
+    }
+    
+    point @read to read
+    point @create to save
+    point @update to save
+    point @blank to blank
+
+
+}

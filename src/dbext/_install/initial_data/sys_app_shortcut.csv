@@ -3,3 +3,4 @@
 "dbext.usergroup.list","Grupos de usuarios","/$/dbext/img/icons/usergroup-96x96.png","/!/dbext/usergroup/","0","dbext.usergroup.v1","00A0"
 "dbext.profile.list","Perfiles","/$/dbext/img/icons/profile-96x96.png","/!/dbext/profile/","0","dbext.profile.v1","00A0"
 "dbext.globalvar.list","Variables globales","/$/dbext/img/icons/globalvar-96x96.png","/!/dbext/globalvar/","0","dbext.globalvar.v1","00A0"
+"dbext.blockdocs.list","Control de folios","/$/dbext/img/icons/blockdocs-96x96.png","/!/dbext/blockdocs/","0","dbext.blockdocs.v1","00A0"

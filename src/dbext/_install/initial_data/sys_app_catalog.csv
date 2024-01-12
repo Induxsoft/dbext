@@ -3,3 +3,4 @@
 "dbext","dbext.usergroup.v1","Grupos de usuarios",2023-12-05T23:59:59,"Administración de grupos de usuarios"
 "dbext","dbext.profile.v1","Perfiles",2023-12-05T23:59:59,"Administración de perfiles"
 "dbext","dbext.globalvar.v1","Globalvar",2023-12-05T23:59:59,"Administración de permisos globales"
+"dbext","dbext.blockdocs.v1","Control de folios",2023-12-05T23:59:59,"Control de folios"
