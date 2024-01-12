@@ -1,0 +1,63 @@
+#include "dkli.dkh"
+#!
+module "Gestión de folios :dbr.folios"
+{
+
+    // Devuele la clave primaria correspondiente al block cuya serie y tipo de documento se indican
+    id_block::&db,doctype, serie
+    {
+        new p
+        {
+            @"doc":doctype
+            @"serie":serie
+        }
+
+        return dbr.num(db,"select sys_pk from 
+                                blockdocumentos 
+                            where 
+                                documento=@doc and serie=@serie and activo limit 1;",p)
+    }
+
+    // Obtiene el siguiente folio para el block indicado
+    get_new::&db, idblock
+    {
+        new p{@"block":id_block}
+        return dbr.num(db,"select fultimo+1 from blockdocumentos where sys_pk=@block and activo",p)
+    }
+
+    // Establece el folio y retorna su valor si tiene éxito, en caso contrario devuelve cero
+    set_new::&db,idblock,folio,intentos
+    {
+        if not(dbr.in_transaction(db)) { do rise_error(0,"Se requiere iniciar una transacción de bases de datos.")}
+        if intentos<1 { intentos=1 }
+
+        new reg
+        {
+            @"uuid":uuid()
+            @"sys_dtcreated*":dbr.sql("now()")
+            @"sys_timestamp*":dbr.sql("now()")
+            @"sys_recver":0
+            @"cancelado":@false
+            @"fecha*":dbr.sql("now()")
+            @"block":idblock
+            @"folio":folio+0
+        }
+
+        res=0
+
+        for i=0;i<intentos
+        {
+            do dbr.insert(db,"foliosdocumentos",reg)
+            do dbr.execute(db,"update blockdocumentos set fultimo="+str(folio),@null)
+            res=folio
+            break
+            
+            exception
+            {
+                folio=folio+1
+            }
+        }
+
+        return res
+    }
+}

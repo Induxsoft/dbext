@@ -236,4 +236,36 @@ model "Variables globales"
         @"appid" ref : "sys_app_catalog"
         @"cat" ref :"sys_app_category"
     }
+
+    //Folios
+    entity "cdocumentos" : "EnumModel" {}
+
+    entity "blockdocumentos" : "TableModel"
+    {
+        @"activo" bool required
+        @"datos" string(255)
+        @"documento" ref:"cdocumentos" required
+        @"finicial" int required
+        @"fiscal" bool required
+        @"fultimo" int required
+        @"idcontrol" string(32)
+        @"numcontrol" int
+        @"serie" string(10)
+        @"uf_cfdfolio" int
+        @"uf_cfdi_info" int
+    }
+
+    entity "foliosdocumentos" : "TableModel"
+    {
+        @"cancelado" bool required
+        @"fecha" date required
+        @"folio" int required
+        @"block" ref:"blockdocumentos" required
+
+        index "idx_foliodoc" unique
+        {
+            field "folio"
+            field "block"
+        }
+    }
 }
