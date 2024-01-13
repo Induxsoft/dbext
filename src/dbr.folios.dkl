@@ -21,7 +21,7 @@ module "Gestión de folios :dbr.folios"
     // Obtiene el siguiente folio para el block indicado
     get_new::&db, idblock
     {
-        new p{@"block":id_block}
+        new p{@"block":idblock}
         return dbr.num(db,"select fultimo+1 from blockdocumentos where sys_pk=@block and activo",p)
     }
 
@@ -48,7 +48,7 @@ module "Gestión de folios :dbr.folios"
         for i=0;i<intentos
         {
             do dbr.insert(db,"foliosdocumentos",reg)
-            do dbr.execute(db,"update blockdocumentos set fultimo="+str(folio),@null)
+            do dbr.execute(db,"update blockdocumentos set fultimo="+str(folio)+" where sys_pk=@block",reg)
             res=folio
             break
             
