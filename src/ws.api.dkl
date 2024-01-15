@@ -1,0 +1,128 @@
+#include "dkli.dkh"
+#!
+module ":ws.api"
+{
+    @url_ws = "https://api.induxsoft.net/workspaces/"
+
+    module ":__ws.api.private.ws"
+    {
+        imOwner::ws,ids
+        {
+            ref user_info = @@(@http_context,"&session/user")
+            if isnull(user_info) { return @false }
+
+            new headers { @"Content-Type": "application/json; charset=utf-8;" }
+            new data
+            {
+            	@"ids": ids
+            	@"operation": "read"
+            	@"id": ws
+            }
+            res = http.request(@url_ws,"POST",headers,to.json(data))
+            ref result = from.json(res)
+
+            if not(@@(result,"success")) { return @false }
+
+            ref fdata = @@(result,"&data")
+            if @@(fdata,"$owner") == @@(user_info,"$uid") { return @true }
+
+            return @false
+        }
+
+        listTeams::ws,ids
+        {
+            new headers { @"Content-Type": "application/json; charset=utf-8;" }
+            new body
+            {
+                @"ids": ids
+                @"operation": "list"
+                @"workspace": ws
+            }
+            ref response = from.json(http.request(@url_ws,"POST",headers,to.json(body)))
+
+            if parse.bool(@@(response,"$success"))
+            {
+                ref data = ifnull(@@(response,"&data"),list.create())
+                ref list = list.create()
+
+                for i = 0; i < list.count(data); i+1
+                {
+                    ref item = list.obj(data,i)
+                    if @@(item,"$type") == "team" { do list.add(list,item) }
+                }
+
+                return list
+            }
+            else 
+            {
+                if trim(@@(response,"$message")) != "" { do rise_error(99,trim(@@(response,"$message"))) }
+                do rise_error(99,"Ocurrión un error al invocar el servicio. \r\n" + to.json(response))
+            }
+
+            exception{ do rise_error(500, "Ocurrió un error al invocar el servicio. \r\n" + last_error()) }
+        }
+    }
+
+    module ":__ws.api.private.idp"
+    {
+        imOwner::&db
+        {
+            sql_groupid = "SELECT IF(TRIM(IFNULL(varvalue,'')) != '', TRIM(IFNULL(varvalue,'')), TRIM(IFNULL(vardefault,''))) varvalue FROM globalvar WHERE varname = 'admins_group_id';"
+
+            user_ids = dbr.getSID(db)
+            admins_group_id = dbr.str(db,sql_groupid,@null)
+
+            new params
+            {
+                @"ids": user_ids
+                @"gid": admins_group_id
+            }
+
+            PkUser = dbr.num(db,"SELECT u.sys_pk FROM tuser u INNER JOIN sys_session s ON u.sys_pk = s.iuser WHERE s.sys_guid = @ids;",params)
+            PkGroup = dbr.num(db,"SELECT sys_pk FROM usergroup WHERE groupid = @gid",params)
+            
+            params<"iuser"> : PkUser
+            params<"igroup"> : PkGroup
+            
+            ref result = dbr.rec(db,"SELECT sys_pk FROM user_usergroup_ WHERE `groups` = @igroup AND `users` = @iuser",params)
+            if not(isnull(result)) { return @true }
+
+            return @false
+        }
+
+        listTeams::&db
+        {
+            return dbr.list(db,"SELECT sys_guid id, groupid name FROM usergroup WHERE NOT IFNULL(sys_deleted,0)",@null)
+        }
+    }
+
+    isInduxsoftWorkspace::
+    {
+        if @@(@http_context,"$session/idp/name")=="induxsoft_idp" &&  @@(@http_context,"$request/get/ws")!="" { return @true }
+        return @false
+    }
+
+    ImOwner::
+    {
+        namespace "ws.api"
+
+        if isInduxsoftWorkspace()
+        {
+            return __ws.api.private.ws.imOwner(@@(@http_context,"$request/get/ws"),@@(@http_context,"$session/user/ids"))
+        }
+
+        return __ws.api.private.idp.imOwner(@@(@http_context,"&session/idp/database"))
+    }
+
+    ListTeams::
+    {
+        namespace "ws.api"
+
+        if isInduxsoftWorkspace()
+        {
+            return __ws.api.private.ws.listTeams(@@(@http_context,"$request/get/ws"),@@(@http_context,"$session/user/ids"))
+        }
+
+        return __ws.api.private.idp.listTeams(@@(@http_context,"&session/idp/database"))
+    }
+}
