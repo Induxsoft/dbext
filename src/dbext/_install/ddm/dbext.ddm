@@ -231,7 +231,7 @@ model "Variables globales"
         @"id" string(32) key
         @"title" string(255) required
         @"icon96x96" string(1024) required
-        @"src" string(1024) required
+        @"href" string(1024) required
         @"_blank" bool
         @"appid" ref : "sys_app_catalog"
         @"cat" ref :"sys_app_category"
