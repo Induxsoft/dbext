@@ -237,6 +237,25 @@ model "Variables globales"
         @"cat" ref :"sys_app_category"
     }
 
+    entity "sys_app_action"
+    {
+        @"id" string(32) key
+        @"title" string(255) required
+        @"icon16x16" string(1024) required
+        @"href" string(1024) required
+        @"_blank" bool
+        @"appid" ref : "sys_app_catalog"
+        @"context" ref : "sys_app_action_context"
+        @"req_context_item_id" bool
+        @"act_type" string(15) //Cadena con el tipo de acción: 'action' o 'report'
+    }
+
+    entity "sys_app_action_context"
+    {
+        @"id" string(32) key
+        @"title" string(255) required
+    }
+
     //Folios
     entity "cdocumentos" : "EnumModel" {}
 
