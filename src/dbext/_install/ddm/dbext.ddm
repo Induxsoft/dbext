@@ -61,8 +61,8 @@ model "Variables globales"
     // Relacion entre usuarios y los grupos a los que pertenece
     entity "user_usergroup_" : "NmModel"
     {
-        @"groups" int ref:"usergroup" ["sys_pk"] required
-        @"users" int ref:"tuser" ["sys_pk"] required
+        @"groups" ref:"usergroup" required
+        @"users" ref:"tuser" required
     }
     // Permisos disponibles
     entity "sitem"
@@ -237,7 +237,7 @@ model "Variables globales"
         @"cat" ref :"sys_app_category"
     }
 
-    entity "sys_app_action"
+    entity "sys_app_item_action"
     {
         @"id" string(32) key
         @"title" string(255) required
@@ -245,15 +245,27 @@ model "Variables globales"
         @"href" string(1024) required
         @"_blank" bool
         @"appid" ref : "sys_app_catalog"
-        @"context" ref : "sys_app_action_context"
+        @"itemtype" ref : "sys_app_item_type"
         @"req_context_item_id" bool
         @"act_type" string(15) //Cadena con el tipo de acción: 'action' o 'report'
     }
 
-    entity "sys_app_action_context"
+    entity "sys_app_item_type"
     {
         @"id" string(32) key
         @"title" string(255) required
+    }
+
+    entity "sys_group_app_shortcut"
+    {
+        @"shortcut" ref:"sys_app_shortcut" required
+        @"usergroup" ref "usergroup" required
+        
+        index "sys_group_app_shortcut_idx1" unique
+        {
+            field "shortcut"
+            field "usergroup"
+        }
     }
 
     //Folios

@@ -1,0 +1,100 @@
+#include "dkli.dkh"
+#!
+
+module ":dbr.apps"
+{
+    // Agrega o actualiza la información de una categoría de aplicaciones
+    category.set::&db,&data
+    {
+        //sys_app_category
+    }
+
+    // Devuelve todas las categorías de aplicaciones
+    categories::&db
+    {
+        return dbr.list(db,"select id, title from sys_app_category order by id;",@null)
+    }
+
+    // Elimina una categoría por su id
+    category.delete::&db,id
+    {
+
+    }
+
+    // Agregar o actualiza la información de una aplicación
+    set::&db,&data
+    {
+        //sys_app_catalog
+    }
+
+    //Devuelve todas las aplicaciones
+    list::&db
+    {
+        return dbr.list(db,"select * from sys_app_catalog order by app_id;",@null)
+    }
+
+    // Elimina una aplicación por su id
+    delete::&db,id
+    {
+
+    }
+
+    //Agrega o actualiza un acceso directo
+    shortcut.set::&db,&data
+    {
+        //sys_app_shortcut
+    }
+
+    //Eliminar un acceso directo
+    shortcut.delete::&db,id
+    {
+        //sys_app_shortcut
+    }
+
+    // Devuelve una lista de accesos directos que corresponden al 
+    // grupo indicado (por groupid o guid) o a todos los grupos si groupid="*" o al usuario conectado si groupid="" (cadena vacía)
+    shortcuts::&db,groupid
+    {
+        // Si ningún grupo al que pertenece el usuario tiene accesos directos, se devuelven todos
+        // Si al menos un grupo al que pertenece el usuario tiene acceso directos, se 
+    }
+
+    //Agrega o actualiza un tipo de elemento sobre el que aplican acciones
+    itemtype.set::&db,&data
+    {
+        //sys_app_item_type
+    }
+
+    //Elimina un tipo de elemento sobre el que aplican acciones
+    itemtype.delete::&db,id
+    {
+        //sys_app_item_type
+    }
+
+    //Obtiene una lista de todos los tipos de elementos
+    itemtypes::&db
+    {
+        //sys_app_item_type
+    }
+
+    //Agrega o actualiza una acción
+    itemaction.set::&db,&data
+    {
+        //sys_app_item_action
+    }
+
+    //Elimina una acción
+    itemaction.delete::&db,id
+    {
+        //sys_app_item_action
+    }
+
+    //Obtiene una lista de todas las acciones asociadas a un tipo de elemento
+    //Si iditemtype="*" devuelve todas las acciones
+    //Si acttype="*" no aplica el filtro por tipo de acción ('action' o 'report')
+    //Si text=="" no se aplica el filtro like por el titulo de la acción o tipo de elemento
+    itemactions::&db,iditemtype, acttype, text
+    {
+        //sys_app_item_action
+    }
+}
