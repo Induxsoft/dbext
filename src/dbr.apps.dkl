@@ -7,6 +7,7 @@ module ":dbr.apps"
     category.set::&db,&data
     {
         //sys_app_category
+        return dbr.execute(db, "INSERT INTO sys_app_category VALUES (@id, @title) ON DUPLICATE KEY UPDATE id=@id, title=@title;", data)
     }
 
     // Devuelve todas las categorías de aplicaciones
@@ -18,13 +19,15 @@ module ":dbr.apps"
     // Elimina una categoría por su id
     category.delete::&db,id
     {
-
+        new prm { @"id": id }
+        return dbr.execute(db, "DELETE FROM sys_app_category WHERE id=@id", prm)
     }
 
     // Agregar o actualiza la información de una aplicación
     set::&db,&data
     {
         //sys_app_catalog
+        return dbr.execute(db, "INSERT INTO sys_app_catalog VALUES (@pack_id, @app_id, @app_title, @created, @app_info) ON DUPLICATE KEY UPDATE pack_id=@pack_id, app_id=@app_id, app_title=@app_title, created=@created, app_info=@app_info;", data)
     }
 
     //Devuelve todas las aplicaciones
@@ -36,7 +39,8 @@ module ":dbr.apps"
     // Elimina una aplicación por su id
     delete::&db,id
     {
-
+        new prm { @"id": id }
+        return dbr.execute(db, "DELETE FROM sys_app_catalog WHERE app_id=@id", prm)
     }
 
     //Agrega o actualiza un acceso directo
@@ -93,8 +97,31 @@ module ":dbr.apps"
     //Si iditemtype="*" devuelve todas las acciones
     //Si acttype="*" no aplica el filtro por tipo de acción ('action' o 'report')
     //Si text=="" no se aplica el filtro like por el titulo de la acción o tipo de elemento
-    itemactions::&db,iditemtype, acttype, text
+    //req==0 Devolver todas las acciones, ==1 req_context_item_id=false (or null) y ==2 req_context_item_id=true
+    itemactions::&db,iditemtype, acttype, text, req
     {
         //sys_app_item_action
+    }
+
+    save::&db,tablename,&data
+    {
+        ref fields=list.create_from_fields(data)
+        sql="INSERT INTO "+ tablename +" VALUES ("
+
+        for i=0; i<list.count(fields) {
+            if i>0 { sql=sql+"," }
+            sql=sql+"@"+list.str(fields,i)
+        }
+
+        sql=sql+") ON DUPLICATE KEY UPDATE "
+
+        for i=0; i<list.count(fields) {
+            field=list.str(fields,i)
+            if i>0 { sql=sql+"," }
+            sql=sql+field+"=@"+field
+        }
+
+        sql=sql+";"
+        return dbr.execute(db, tablename, data);
     }
 }
