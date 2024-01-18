@@ -12,21 +12,39 @@ module ":ws.api"
             if isnull(user_info) { return @false }
 
             new headers { @"Content-Type": "application/json; charset=utf-8;" }
-            new data
+            new body
             {
             	@"ids": ids
             	@"operation": "read"
             	@"id": ws
             }
-            res = http.request(@url_ws,"POST",headers,to.json(data))
-            ref result = from.json(res)
+            ref response = from.json(http.request(@url_ws,"POST",headers,to.json(body)))
 
-            if not(@@(result,"success")) { return @false }
+            if not(parse.bool(@@(response,"$success"))) { return @false }
 
-            ref fdata = @@(result,"&data")
+            ref fdata = @@(response,"&data")
             if @@(fdata,"$owner") == @@(user_info,"$uid") { return @true }
 
             return @false
+
+            exception{ do rise_error(500, "Ocurrió un error al invocar el servicio. \r\n" + last_error()) }
+        }
+
+        getData::ws,ids
+        {
+            new headers { @"Content-Type": "application/json; charset=utf-8" }
+            new body
+            {
+                @"ids": ids
+                @"operation": "read"
+                @"id": ws
+            }
+            ref response = from.json(http.request(@url_ws,"POST",headers,to.json(body)))
+
+            if not(parse.bool(@@(response,"$success"))) { do rise_error(99,@@(response,"$message")) }
+            return @@(response,"&data")
+
+            exception{ do rise_error(500, "Ocurrió un error al invocar el servicio. \r\n" + last_error()) }
         }
 
         listTeams::ws,ids
@@ -39,26 +57,23 @@ module ":ws.api"
                 @"workspace": ws
             }
             ref response = from.json(http.request(@url_ws,"POST",headers,to.json(body)))
-
-            if parse.bool(@@(response,"$success"))
-            {
-                ref data = ifnull(@@(response,"&data"),list.create())
-                ref list = list.create()
-
-                for i = 0; i < list.count(data); i+1
-                {
-                    ref item = list.obj(data,i)
-                    if @@(item,"$type") == "team" { do list.add(list,item) }
-                }
-
-                return list
-            }
-            else 
-            {
+            
+            if not(parse.bool(@@(response,"$success"))) {
                 if trim(@@(response,"$message")) != "" { do rise_error(99,trim(@@(response,"$message"))) }
                 do rise_error(99,"Ocurrión un error al invocar el servicio. \r\n" + to.json(response))
             }
+            
+            ref data = ifnull(@@(response,"&data"),list.create())
+            ref list = list.create()
 
+            for i = 0; i < list.count(data); i+1
+            {
+                ref item = list.obj(data,i)
+                if @@(item,"$type") == "team" { do list.add(list,item) }
+            }
+            
+            return list
+            
             exception{ do rise_error(500, "Ocurrió un error al invocar el servicio. \r\n" + last_error()) }
         }
     }
@@ -90,6 +105,11 @@ module ":ws.api"
             return @false
         }
 
+        getData::&db
+        {
+            return record.create()
+        }
+
         listTeams::&db
         {
             return dbr.list(db,"SELECT sys_guid id, groupid name FROM usergroup WHERE NOT IFNULL(sys_deleted,0)",@null)
@@ -112,6 +132,18 @@ module ":ws.api"
         }
 
         return __ws.api.private.idp.imOwner(@@(@http_context,"&session/idp/database"))
+    }
+
+    GetData::
+    {
+        namespace "ws.api"
+
+        if isInduxsoftWorkspace()
+        {
+            return __ws.api.private.ws.getData(@@(@http_context,"$request/get/ws"),@@(@http_context,"$session/user/ids"))
+        }
+
+        return __ws.api.private.idp.getData(@@(@http_context,"&session/idp/database"))
     }
 
     ListTeams::
