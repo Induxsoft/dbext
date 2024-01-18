@@ -259,8 +259,8 @@ model "Variables globales"
     entity "sys_group_app_shortcut"
     {
         @"shortcut" ref:"sys_app_shortcut" required
-        @"usergroup" ref "usergroup" required
-        
+        @"usergroup" ref: "usergroup" required
+
         index "sys_group_app_shortcut_idx1" unique
         {
             field "shortcut"
