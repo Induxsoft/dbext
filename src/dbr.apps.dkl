@@ -68,9 +68,10 @@ module ":dbr.apps"
             @"sesion_id": dbr.getSID(db)
         }
         sql = "
-            SELECT DISTINCT sas.*
+            SELECT DISTINCT sas.*, IFNULL(sas.cat,'__without__') category, IFNULL(sac.app_info,'') info
             FROM sys_app_shortcut sas
-                INNER JOIN sys_group_app_shortcut sgas ON sgas.shortcut = sas.id
+                LEFT JOIN sys_app_catalog sac ON sas.appid = sac.app_id
+                LEFT JOIN sys_group_app_shortcut sgas ON sgas.shortcut = sas.id
                 LEFT JOIN usergroup ug2 ON sgas.usergroup = ug2.sys_pk
                 LEFT JOIN (
                     SELECT IFNULL(ug.sys_pk,-99) ug
@@ -93,7 +94,8 @@ module ":dbr.apps"
                             ug2.groupid = @group_id OR ug2.sys_guid = @group_id
                         )
                     )
-                );
+                )
+            ORDER BY sas.id;
         "
         return dbr.list(db, sql, prm)
     }
@@ -152,7 +154,7 @@ module ":dbr.apps"
         }
 
         sql = ""
-        
+
         if @@(prm,"#req") == 1 && @@(prm,"item_type") == "*"
         {
             sql = "

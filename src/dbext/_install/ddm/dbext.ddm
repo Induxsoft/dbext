@@ -82,7 +82,7 @@ model "Variables globales"
 
         @"description" string(250) 
         @"itemid" string(32) unique required
-        @"itemparent" int ref:"sitem" ["sys_pk"] 
+        @"itemparent" ref:"sitem" 
     }
     // Permisos que tiene un grupo de usuario
     entity "profile"
@@ -100,8 +100,8 @@ model "Variables globales"
         @"sys_deleted" bool
         @"sys_lock" int
 
-        @"item" int ref:"sitem" ["sys_pk"] required
-        @"usergroup" int ref:"usergroup" ["sys_pk"] required
+        @"item"  ref:"sitem"  required
+        @"usergroup"  ref:"usergroup"  required
 
         index "iug_u" unique
         {
@@ -128,7 +128,7 @@ model "Variables globales"
         @"vardefault" string(255) 
         @"varname" string(32) unique required
         @"varvalue" string(32000) 
-        @"fuser" int ref:"tuser" ["sys_pk"] required
+        @"fuser"  ref:"tuser" required
     }
     //#endregion
 
@@ -231,7 +231,7 @@ model "Variables globales"
         @"id" string(32) key
         @"title" string(255) required
         @"icon96x96" string(1024) required
-        @"src" string(1024) required
+        @"src" string(1024) required //cambiar a href
         @"_blank" bool
         @"appid" ref : "sys_app_catalog"
         @"cat" ref :"sys_app_category"
