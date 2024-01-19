@@ -7,7 +7,7 @@ module ":dbr.apps"
     category.set::&db,&data
     {
         //sys_app_category
-        return dbr.execute(db, "INSERT INTO sys_app_category VALUES (@id, @title) ON DUPLICATE KEY UPDATE id=@id, title=@title;", data)
+        return dbr.apps.save(db, "sys_app_category", data)
     }
 
     // Devuelve todas las categorías de aplicaciones
@@ -27,7 +27,7 @@ module ":dbr.apps"
     set::&db,&data
     {
         //sys_app_catalog
-        return dbr.execute(db, "INSERT INTO sys_app_catalog VALUES (@pack_id, @app_id, @app_title, @created, @app_info) ON DUPLICATE KEY UPDATE pack_id=@pack_id, app_id=@app_id, app_title=@app_title, created=@created, app_info=@app_info;", data)
+        return dbr.apps.save(db, "sys_app_catalog", data)
     }
 
     //Devuelve todas las aplicaciones
@@ -47,12 +47,14 @@ module ":dbr.apps"
     shortcut.set::&db,&data
     {
         //sys_app_shortcut
+        return dbr.apps.save(db, "sys_app_shortcut", data)
     }
 
     //Eliminar un acceso directo
     shortcut.delete::&db,id
     {
-        //sys_app_shortcut
+        new prm { @"id": id }
+        return dbr.execute(db, "DELETE FROM sys_app_shortcut WHERE id=@id", prm)
     }
 
     // Devuelve una lista de accesos directos que corresponden al 
@@ -61,52 +63,130 @@ module ":dbr.apps"
     {
         // Si ningún grupo al que pertenece el usuario tiene accesos directos, se devuelven todos
         // Si al menos un grupo al que pertenece el usuario tiene acceso directos, se 
+        new prm { 
+            @"group_id": groupid 
+            @"sesion_id": dbr.getSID(db)
+        }
+        sql = "
+            SELECT DISTINCT sas.*
+            FROM sys_app_shortcut sas
+                INNER JOIN sys_group_app_shortcut sgas ON sgas.shortcut = sas.id
+                LEFT JOIN usergroup ug2 ON sgas.usergroup = ug2.sys_pk
+                LEFT JOIN (
+                    SELECT IFNULL(ug.sys_pk,-99) ug
+                    FROM sys_session ss
+                        LEFT JOIN tuser tu ON ss.iuser = tu.sys_pk
+                        LEFT JOIN user_usergroup_ uug ON uug.users = tu.sys_pk
+                        LEFT JOIN usergroup ug ON uug.groups = ug.sys_pk
+                    WHERE ss.sys_guid = @sesion_id
+                ) u ON true
+            WHERE 
+                IF(
+                    @group_id='' AND u.ug NOT IN (SELECT usergroup FROM sys_group_app_shortcut), 
+                    true,
+                    IF(
+                        @group_id='', 
+                        u.ug = ug2.sys_pk, 
+                        IF(
+                            @group_id='*', 
+                            true, 
+                            ug2.groupid = @group_id OR ug2.sys_guid = @group_id
+                        )
+                    )
+                );
+        "
+        return dbr.list(db, sql, prm)
     }
 
     //Agrega o actualiza un tipo de elemento sobre el que aplican acciones
     itemtype.set::&db,&data
     {
         //sys_app_item_type
+        return dbr.apps.save(db, "sys_app_item_type", data)
     }
 
     //Elimina un tipo de elemento sobre el que aplican acciones
     itemtype.delete::&db,id
     {
         //sys_app_item_type
+        new prm { @"id": id }
+        return dbr.execute(db, "DELETE FROM sys_app_item_type WHERE id=@id", prm)
     }
 
     //Obtiene una lista de todos los tipos de elementos
     itemtypes::&db
     {
         //sys_app_item_type
+        return dbr.list(db,"select id, title from sys_app_item_type order by id;",@null)
     }
 
     //Agrega o actualiza una acción
     itemaction.set::&db,&data
     {
         //sys_app_item_action
+        return dbr.apps.save(db, "sys_app_item_action", data)
     }
 
     //Elimina una acción
     itemaction.delete::&db,id
     {
         //sys_app_item_action
+        new prm { @"id": id }
+        return dbr.execute(db, "DELETE FROM sys_app_item_action WHERE id=@id", prm)
     }
 
     //Obtiene una lista de todas las acciones asociadas a un tipo de elemento
     //Si iditemtype="*" devuelve todas las acciones
     //Si acttype="*" no aplica el filtro por tipo de acción ('action' o 'report')
-    //Si text=="" no se aplica el filtro like por el titulo de la acción o tipo de elemento
+    //Si text=="" no se aplica el filtro like por el id, titulo de la acción, tipo de elemento o shortcut
     //req==0 Devolver todas las acciones, ==1 req_context_item_id=false (or null) y ==2 req_context_item_id=true
-    itemactions::&db,iditemtype, acttype, text, req
+    //req==1 and iditemtype="*" mostrar los campos del shortcut
+    itemactions::&db, iditemtype, acttype, text, req
     {
         //sys_app_item_action
+        new prm {
+            @"item_type": iditemtype
+            @"act_type": acttype
+            @"text": text
+            @"req": req
+        }
+
+        sql = ""
+        
+        if @@(prm,"#req") == 1 && @@(prm,"item_type") == "*"
+        {
+            sql = "
+                SELECT * FROM ((SELECT sh.id, sh.title, sh.icon96x96 icon, sh.src href, sh._blank, sh.appid,'*' itemtype,0 req_context_item_id,'shortcut' act_type FROM sys_app_shortcut sh) 
+                UNION ALL 
+                (SELECT ia.id, ia.title, ia.icon16x16 icon, ia.href, ia._blank, ia.appid, ia.itemtype, ia.req_context_item_id, ia.act_type FROM sys_app_item_action ia)) v 
+                WHERE IF(@act_type='*', true, v.act_type=@act_type)
+                    AND IF(@text='', true, (v.id LIKE CONCAT('%',@text,'%') OR v.title LIKE CONCAT('%',@text,'%')))
+                ORDER BY v.id;
+            "
+        }
+        else 
+        {
+            sql = "
+                SELECT ia.id, ia.title, ia.icon16x16 icon, ia.href, ia._blank, ia.appid, ia.itemtype, ia.req_context_item_id, ia.act_type
+                FROM sys_app_item_action ia
+                    LEFT JOIN sys_app_item_type it ON ia.itemtype = it.id
+                WHERE IF(@item_type='*', true, ia.itemtype=@item_type)
+                    AND IF(@act_type='*', true, ia.act_type=@act_type)
+                    AND IF(@text='', true, (ia.id LIKE CONCAT('%',@text,'%') OR ia.title LIKE CONCAT('%',@text,'%') OR it.title LIKE CONCAT('%',@text,'%')))
+                    AND IF(@req=0, true, @req=(IFNULL(req_context_item_id,0)+1))
+                ORDER BY ia.id;
+            "    
+        }
+        
+        return dbr.list(db, sql, prm)
     }
 
     save::&db,tablename,&data
     {
         ref fields=list.create_from_fields(data)
-        sql="INSERT INTO "+ tablename +" VALUES ("
+        str_fields=replace(ranychars(to.json(fields),'[]{}"', " ")," ","")
+
+        sql="INSERT INTO "+tablename+" ("+str_fields+") VALUES ("
 
         for i=0; i<list.count(fields) {
             if i>0 { sql=sql+"," }
@@ -122,6 +202,6 @@ module ":dbr.apps"
         }
 
         sql=sql+";"
-        return dbr.execute(db, tablename, data);
+        return dbr.execute(db, sql, data)
     }
 }
