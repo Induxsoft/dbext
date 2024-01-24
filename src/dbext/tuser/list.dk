@@ -23,21 +23,25 @@ module "list"
             }
             div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
             {
-                a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
                 a(href="#<replace(@DBEXT_ADD_EDIT_TUSER, '@id', '_new')>" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"Agregar"}
                 button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Imprimir" onclick="window.print()"){$"#<@@(@icons,'PRINTER')>"}
+                a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
                 a(href="/" target="_top" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Salir"){$"#<@@(@icons,'X')>"}
             }
         }
         div(id="work_area" class="container-section pt-2")
         {
-            form(action="./" method="GET" id="form_search" class="d-flex mb-2 no-print")
+            form(action="./" method="GET" id="form_search" class="no-print my-1 d-flex py-1")
             {
-                input(class="induxsoft-form-control flex-grow-1" type="text" name="s" placeholder="Buscar" id="input_search" value='#<@@(@crud_context,"$parameters/s")>')
-                button(class="btn btn-sm btn-primary induxsoft-corners d-flex gap-2 align-items-center") {
-                    $"Buscar"
-                    $"#<@@(@icons,'SEARCH')>"
-                }
+                "filter-text"(
+                    "id"="ft_search"
+                    "text-field"="s"
+                    "placeholder"="Buscar"
+                    "form"="#form_search"
+                    "value"="#<@@(@@(@crud_context,'&http/request/get'),'$s')>"
+                    "auto-submit"="true"
+                    "class"="w-100"
+                ){$""}
             }
             div
             {
