@@ -76,4 +76,55 @@ module "Variables alojadas en la base de datos :dbr.vars"
         return value
 
     }
+
+    ImportList::&db,&list,tname
+    {
+        inserts = 0
+
+        for m = 0; m < list.count(list)
+        {
+            ref record = list.obj(list,m)
+            ref fields = list.create_from_fields(record)    
+            
+            for n = 0; n < list.count(fields)
+            {
+                field = list.str(fields,n)
+                value = @@(record,field)
+
+                if value=="\\N" || value=="\\0" || value=="NULL" { record<field+"*"> : @null }
+            }
+            
+            do dbr.insert(db,tname,record)
+            inserts = (inserts + 1)
+
+            exception{ if not(contains(last_error(),"Duplicate entry")){ do print(last_error()) } }
+        }
+
+        do print(ftext("- #<tname>: #<inserts>"))
+    }
+
+    ImportPrivs::&db,&list
+    {
+        for i = 0; i < list.count(list)
+        {
+            ref data = list.obj(list,i)
+            new sitem
+            {
+                @"sys_pk": 0
+                @"sys_guid": uuid()
+                @"sys_dtcreated*": now()
+                @"sys_timestamp*": now()
+                @"sys_recver": 0
+                @"description": @@(data,"$description")
+                @"itemid": @@(data,"$itemid")
+                @"itemparent": dbr.num(db,"select sys_pk from sitem where itemid = @itemparent",data)
+            }
+            if @@(sitem,"#itemparent") == 0 { sitem<"itemparent*"> : @null }
+
+            do dbr.insert(db,"sitem",sitem)
+            do print("- " + @@(sitem,"$description"))
+
+            exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
+        }
+    }
 }

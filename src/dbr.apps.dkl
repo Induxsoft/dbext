@@ -1,8 +1,40 @@
 #include "dkli.dkh"
 #!
-
 module ":dbr.apps"
 {
+    // Agrega o actualiza la información de un conjunto de categorias.
+    category.import::&db,&list
+    {
+        for i = 0; i < list.count(list)
+        {
+            ref cat = list.obj(list,i)
+            do dbr.apps.category.set(db,cat)
+            do print("- " + @@(cat,"$title"))
+        }
+    }
+
+    // Agrega o actualiza la información de un conjunto de aplicaciones.
+    import::&db,&list
+    {
+        for i = 0; i < list.count(list)
+        {
+            ref app = list.obj(list,i)
+            do dbr.apps.set(db,app)
+            do print("- " + @@(app,"$app_title"))
+        }
+    }
+
+    // Agrega o actualiza un conjunto de accesos directos.
+    shortcut.import::&db,&list
+    {
+        for i = 0; i < list.count(list)
+        {
+            ref sct = list.obj(list,i)
+            do dbr.apps.shortcut.set(db,sct)
+            do print("- " + @@(sct,"$title"))
+        }
+    }
+
     // Agrega o actualiza la información de una categoría de aplicaciones
     category.set::&db,&data
     {

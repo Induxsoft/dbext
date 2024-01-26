@@ -1,6 +1,5 @@
 #include "dkli.dkh"
 #!
-
 module "Extensiones DBR para gestión de permisos:dbr.security"
 {
     // Con base en los grupos a los que pertenece el usuario conectado, 
@@ -19,5 +18,63 @@ module "Extensiones DBR para gestión de permisos:dbr.security"
 
 		return dbr.num(db,sql,p)
 		exception { return 0 }
+	}
+
+	admins::&db
+	{
+		admins_groupid = ""
+
+		codeblock
+		{
+			admins_groupid = dbr.str(db,"SELECT IF(TRIM(IFNULL(varvalue,'')) != '', TRIM(IFNULL(varvalue,'')), TRIM(IFNULL(vardefault,''))) varvalue FROM globalvar WHERE varname = 'admins_group_id';",@null)
+
+			exception{/*ignore*/}
+		}
+
+		new params { @"groupid":admins_groupid }
+		ref usergroup = dbr.rec(db,"SELECT * FROM usergroup WHERE groupid = @groupid",params)
+
+		if admins_groupid == "" || isnull(usergroup) {
+			sql_admins_groupid = "SELECT groupid FROM usergroup WHERE (groupid='Administradores' OR groupid='Administrators' OR groupid='Admins')"
+			admins_groupid = dbr.str(db,sql_admins_groupid,@null)
+		}
+
+		return admins_groupid
+	}
+
+	assign::&db,groupid,&privs
+	{
+		new params { @"groupid":groupid }
+
+		pk_usergroup = dbr.num(db,"select sys_pk from usergroup where groupid = @groupid",params)
+		if pk_usergroup <= 0 { do rise_error(99,"No pudo encontrarse el grupo de usuario indicado.") }
+
+		for i = 0; i < list.count(privs)
+		{
+			priv = trim(list.str(privs,i))
+			pk_item = dbr.num(db,"select sys_pk from sitem where itemid='"+priv+"'",@null)
+
+			using params
+			{
+				@"pk_usergroup": pk_usergroup
+				@"pk_item": pk_item
+			}
+			sql = "SELECT COUNT(sys_pk) FROM profile WHERE item = @pk_item AND usergroup = @pk_usergroup;"
+			if dbr.num(db,sql,params) == 0
+			{
+				new profile_item
+				{
+					@"sys_pk": 0
+					@"sys_guid": uuid()
+					@"sys_dtcreated*": now()
+					@"sys_timestamp*": now()
+					@"sys_recver": 0
+					@"usergroup": pk_usergroup
+					@"item": pk_item
+				}
+				do dbr.insert(db,"profile",profile_item)
+				do print("- " + priv)
+			}
+		}
 	}
 }
