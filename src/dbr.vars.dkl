@@ -120,8 +120,6 @@ module "Variables alojadas en la base de datos :dbr.vars"
                 ref t=table.from(file.rtext(file))
                 table=file.justname(file)
                 
-                do print("--> Insertando en: "+table)
-                
                 do dbr.vars.InsertRows(db,t,table)
             }
             exception{ do print(last_error()) }
@@ -130,13 +128,16 @@ module "Variables alojadas en la base de datos :dbr.vars"
     #!
     InsertRows::&db,&t,tname
     {
+        inserts=0
         for i=0;i<table.rows(t)
         {
             ref rw=row.get(t,i)
             do dbr.insert(db,tname,rw)
+            inserts = (inserts + 1)
             
             exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
         }
+        do print(ftext("- #<tname>: #<inserts>"))
     }
     ImportPrivs::&db,&list
     {
