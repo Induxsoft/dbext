@@ -102,7 +102,42 @@ module "Variables alojadas en la base de datos :dbr.vars"
 
         do print(ftext("- #<tname>: #<inserts>"))
     }
+    /*
+    db -> ref a una bd abierta
+    lfiles -> obj lista con los nombres de archivos
+    dir_path -> directorio en donde se encuentran los archivos dkt
+    */
+    ImportListDkt::&db,&lfiles,dir_path
+    {
+        for j = 0; j < @count(lfiles)
+        {
+            fl=list.str(lfiles,j)
+            if trim(fl)!=""
+            {
+                file=path.concat(dir_path,fl)
+                if not(file.exists(file)){do rise_error(99,"No se encontró el archivo: "+fl)}
 
+                ref t=table.from(file.rtext(file))
+                table=file.justname(file)
+                
+                do print("--> Insertando en: "+table)
+                
+                do dbr.vars.InsertRows(db,t,table)
+            }
+            exception{ do print(last_error()) }
+        }
+    }
+    #!
+    InsertRows::&db,&t,tname
+    {
+        for i=0;i<table.rows(t)
+        {
+            ref rw=row.get(t,i)
+            do dbr.insert(db,tname,rw)
+            
+            exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
+        }
+    }
     ImportPrivs::&db,&list
     {
         for i = 0; i < list.count(list)
