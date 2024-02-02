@@ -299,4 +299,59 @@ model "Variables globales"
             field "block"
         }
     }
+    // Tipos de requerimientos de autorizaciones
+    entity "sys_auth_tpy" : "TableModel" 
+    {
+        @"id" string(32) unique required
+        @"text" string(50) required
+        @"view" lmemo required //Código Dkl de la vista estática para este tipo de entidades
+        @"usergroup" ref: "usergroup" required
+        @"min_users" int required // Valor mínimo admitido=1, indica la cantidad de usuarios diferentes del grupo que deben autorizar
+        @"masteruser" ref: "tuser" // Usuario maestro, puede conceder la autorización sin pertenecer al grupo o  sin reunir la cantidad
+        @"autologin" bool //Si es true, se crea una nueva sesión para el usuario solicitante si cuando se realiza la autorización no tiene una sesión activa
+    }
+
+    // Bitácora de autorizaciones
+    entity "sys_auth_log" : "TableModel" 
+    {
+        @"tpy" ref : "sys_auth_tpy" required
+        @"operation" string(15) required
+        @"transid" string(32) required
+        @"http_context" lmemo required
+        @"req_user" ref : "tuser"
+        @"note_req" memo
+        @"authorized" bool
+        @"rejected" bool //rechazada
+        @"rejby" ref: "tuser" //user rechazo
+        @"redir" string(1024)
+        @"cancel" bool
+        @"error" bool
+        @"error_info" mmemo
+        
+        index "sys_auth_log_i1" // Índice no único
+        {
+            field "transid"
+            field "tpy"
+            field "operation"
+        }
+    }
+
+    entity "sys_auth_log_usr" : "TableModel" 
+    {
+        @"log" ref:"sys_auth_log" required
+        @"auth_user" ref : "tuser"
+        @"note" memo
+        @"authorized" bool
+        @"cancel" bool
+        @"rejected" bool
+        @"asmaster" bool
+
+        index "sys_auth_log_usr_idx" unique
+        {
+            field "log"
+            field "auth_user"
+        }
+    }
+
+
 }

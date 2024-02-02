@@ -1,0 +1,37 @@
+#include "dkli.dkh"
+#!
+module ":dbr.auths"
+{
+    type.register::&db,&data
+    {
+	//agrega o actualiza un tipo de autorizacion
+    }
+    
+    type.unregister::&db,typeid
+    {
+	 //elimina fisica o logica 
+    }
+    
+    pending::&db,typeid,id,operation
+    {
+	//obtiene datos de  sys_auth_log
+    }
+    
+    post::&db,typoid,id,operation,&http_context
+    {
+	//inserta en sys_auth_log
+	//Si no hay otra pendiente 
+    }
+    
+    auth::&db,uuid
+    {
+    }
+    
+    deny::&db,uuid
+    {
+    }
+    
+    cancel::&db,uuid
+    {
+    }
+}
