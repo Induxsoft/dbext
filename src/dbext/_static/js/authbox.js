@@ -14,5 +14,27 @@ var auth=
         {
             if(auth.form_search)auth.form_search.submit();
         })
+    },
+    action(act=1,sys_guid)
+    {
+        var data=
+        {
+            uuid:sys_guid,
+            act:act
+        }
+        var r=prompt("nota:");
+        data["notas"]=r;
+        
+        InduxsoftCrudlModel.InvokeService(".", data,
+            success => 
+            { 
+                window.location.reload();
+            },
+            failure => 
+            { 
+                alert(failure.message??failure);
+            },
+            "POST", false
+        );
     }
 }

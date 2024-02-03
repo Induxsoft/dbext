@@ -8,6 +8,8 @@ module "form.dk"
 
     do @context.begin(@crud_context)
     ref @http_context=@("&http")
+    ref autorizaciones=@("&./autorizaciones")
+    // do file.wtext("C:\\Users\\Dev\\Documents\\devkrons\\devkronNet\\dbext\\t.json",to.json(@http_context))
 
     ref data = @("&./")
     entity_id = @("$parameters/_entity_id")
@@ -15,16 +17,33 @@ module "form.dk"
     isNew = (entity_id == "_new")
     action = replace(@AUTH_BOX_ADD_EDIT, "@id", entity_id)
 
+    new @auth_context
+    {
+        @"database":@("&database")
+        @"request*":from.json(@("$./http_request"))
+        @"response*":from.json(@("$./http_response"))
+        @"error_info": @("$./error_info")
+        @"error":@("#./error")
+    }
+
+    view=@('$./view')
+
+    if trim(view)!=""{res=runcode(view,'auth_context',@auth_context)}
+    else{ res=@("$./http_request")}
+
+    pendiente=@false 
+    if not(@("#./autorizado")) && not(@("#./rechazado")) && not(@("#./cancelado")) && not(@("#./error")){pendiente=@true}
     #$
     div(class="container")
     {   
+        script(src="#<@JS_AUTHBOX>"){""}
         form(method="POST" action="#<action>" id="form")
         {
             div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
             {
                 div(class="col-4 d-flex align-items-center p-0")
                 {
-                    h5(class="tex-no-break m-0"){$"Autorización"}
+                    h5(class="tex-no-break m-0"){$"Solicitud"}
                 }
                 div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
                 {
@@ -39,7 +58,98 @@ module "form.dk"
                     }
                 }
             }
-            $"#<runcode(@('$./view'),'http_context',@http_context)>"
+            
+            #$
+            div(class="d-flex")
+            {""
+                div
+                {
+                    h6{$"#<@('$./text')+' '+@('$./transid')+' '+@('$./operation')>"}
+                    small{"#<@('$./solicitante')+' ['+@('$./solicitud')+']'>"}
+                }
+               
+                span(class="flex-grow-1"){""}
+                #!
+                if pendiente
+                {
+                    #$ 
+                    div
+                    {
+                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(1,'#<@('$./sys_guid')>')"){"Autorizar"}
+                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(2,'#<@('$./sys_guid')>')"){"Rechazar"}
+                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(3,'#<@('$./sys_guid')>')"){"Cancelar"}
+                    }
+                   
+                    #!
+                }
+                else 
+                {
+                    #$
+                    div
+                    {
+                        h6(class="text-end fw-bold"){"#<@('$./estado')>"}
+                        #!
+                        if @("#./error"){#$ small(class="fw-bold"){"#<@('$./error_info')>"}}
+                        #! if @("#./rechazado"){#$ small(class="fw-bold"){"#<@('$./userrej')>"}}
+                    }
+                    
+                }
+                #$
+            }
+            #!
+            if @count(autorizaciones)>0
+            {
+                #$
+                div(style="max-height:20vh;overflow: auto;")
+                {
+                #$
+                    table(class="table")
+                    {
+                        thead
+                        {
+                            tr
+                            {
+                                // th{"User id"}
+                                th{"Usuario"}
+                                th{"Estado"}
+                                th{"Fecha"}
+                                th{"Notas"}
+                            }
+                        }
+                        
+                        tbody
+                        {
+                            #!
+                            for i = 0; i < @count(autorizaciones)
+                            {
+                                ref a=@item(autorizaciones,i)
+
+                                #$
+                                tr
+                                {
+                                    // td{"#<@@(a,'$userid')>"}
+                                    td{"#<@@(a,'$username')>"}
+                                    td{"#<@@(a,'$estado')>"}
+                                    td{"#<@@(a,'$autorizacion')>"}
+                                    td{"#<@@(a,'$note')>"}
+                                }
+                            }
+                            #$
+                        }
+                    }
+                    
+                }
+            }
+            
+            h5{"Datos de la solicitud"}
+            div(style="max-height:70vh;overflow: auto;")
+            {
+                div
+                {
+                    $"#<res>"
+                }
+            }
+            
         }
 
     }

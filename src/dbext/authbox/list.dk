@@ -20,11 +20,11 @@ module "list"
         {
             div(class="col-4 d-flex align-items-center p-0")
             {
-                h5(class="tex-no-break m-0"){$"Autorizaciones"}
+                h5(class="tex-no-break m-0"){$"Solicitudes de autorización"}
             }
             div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
             {
-                a(href="#<replace(@AUTH_BOX_ADD_EDIT, '@id', '_new')>" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"Agregar"}
+                // a(href="#<replace(@AUTH_BOX_ADD_EDIT, '@id', '_new')>" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"Agregar"}
                 button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Imprimir" onclick="window.print()"){$"#<@@(@icons,'PRINTER')>"}
                 a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
                 a(href="/" target="_top" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Salir"){$"#<@@(@icons,'X')>"}
@@ -41,7 +41,6 @@ module "list"
                     {
                         select(class="induxsoft-form-select " name="s" id="select_filter")
                         {
-                            option(value=""){"Todos"}
                             option(value="p1" "#<ifstr(filter=='p1','selected','')>"="true"){"Pendientes"}
                             option(value="a1" "#<ifstr(filter=='a1','selected','')>"="true"){"Autorizadas"}
                             option(value="r1" "#<ifstr(filter=='r1','selected','')>"="true"){"Rechazadas"}
@@ -80,8 +79,20 @@ module "list"
                                     th(class="h6"){$"ID"}
                                     th(class="h6"){$"Solicitud"}
                                     th(class="h6"){$"Solicitante"}
-                                    th(class="h6"){$"Notas"}
 
+                                    //rechazo
+                                    #!
+                                    if filter!="" && filter!="p1" && filter!="a1"
+                                    {
+                                        text="rechazado"
+                                        if filter=="c1"{text="cancelado"}
+                                        else if filter=="e1"{text="del error"}
+                                        #$
+                                        th(class="h6"){$"Fecha #<text>"}
+                                    }
+                                    #$
+                                    
+                                    th(class="h6"){$"Notas"}
                                     th(class="h6 text-center no-print"){$"Acciones"}
                                 }
                             }
@@ -91,15 +102,24 @@ module "list"
                                 #! for i = 0; i < list.count(data)
                                 {
                                     ref dt = list.obj(data, i)
-
+                                    pendiente=@false 
+                                    if not(@@(dt,"#autorizado")) && not(@@(dt,"#rechazado")) && not(@@(dt,"#cancelado")) && not(@@(dt,"#error")){pendiente=@true}
                                     #$ tr
                                     {
                                         // 
                                         td{$"#<@@(dt,'$text')>"}
                                         td{$"#<@@(dt,'$operation')>"}
-                                        td{$"#<@@(dt,'$id')>"}
                                         td{$"#<@@(dt,'$transid')>"}
+                                        td{$"#<@@(dt,'$solicitud')>"}
                                         td{$"#<@@(dt,'$solicitante')>"}
+                                        
+                                        #!
+                                        if filter!="" && filter!="p1" && filter!="a1"
+                                        {
+                                            #$
+                                            td{$"#<@@(dt,'$fhop')>"}
+                                        }
+                                        
                                         td{$"#<@@(dt,'$note')>"}
                                         td(class="no-print")
                                         {
@@ -107,6 +127,15 @@ module "list"
                                             {
                                                 a(href="#<replace(@AUTH_BOX_ADD_EDIT, '@id', @@(dt,'sys_pk'))>" class="btn btn-sm btn-light"){$"Ver"}
                                                 // button(class="btn btn-sm btn-light" onclick="InduxsoftCrudlModel.Delete(#<@@(dt,'sys_pk')>)"){$"Eliminar"}
+                                                #!
+                                                if pendiente
+                                                {
+                                                    #$
+                                                    button(type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(1,'#<@@(dt,'$sys_guid')>')"){"Autorizar"}
+                                                    button(type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(2,'#<@@(dt,'$sys_guid')>')"){"Rechazar"}
+                                                    button(type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(3,'#<@@(dt,'$sys_guid')>')"){"Cancelar"}
+                                                }
+                                                #$
                                             }
                                         }
                                     }
