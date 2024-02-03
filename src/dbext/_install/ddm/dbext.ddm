@@ -317,9 +317,10 @@ model "Variables globales"
         @"tpy" ref : "sys_auth_tpy" required
         @"operation" string(15) required
         @"transid" string(32) required
-        @"http_context" lmemo required
+        @"http_request" lmemo required
+        @"http_response" lmemo required
         @"req_user" ref : "tuser"
-        @"note_req" memo
+        @"note" memo
         @"authorized" bool
         @"rejected" bool //rechazada
         @"rejby" ref: "tuser" //user rechazo

@@ -1,0 +1,28 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @table_name = "sys_auth_log"
+
+    // @read_query = ""
+
+    filter="if(ifnull(@s,'')='',true,
+        if(@s='p1',ifnull(l.authorized,0)=1 and ifnull(l.rejected,0)=1 and ifnull(l.cancel,0)=1 and ifnull(l.error,0)=1,true)and 
+        if(@s='a1',ifnull(l.authorized,0)=1, true)and 
+        if(@s='r1',ifnull(l.rejected,0)=1 ,true)and 
+        if(@s='c1',ifnull(l.cancel,0)=1 ,true)and 
+        if(@s='e1',ifnull(l.error,0)=1, true)
+    )"
+    @list_query = "select l.*,t.id,t.text,t.`view`,t.min_users,if(ifnull(t.autologin,0),'Sí','No')fautologin,u.description descugroup,tu.username umaster 
+    from sys_auth_log l 
+    inner join sys_auth_tpy t on l.tpy=t.sys_pk
+    LEFT JOIN usergroup u on t.usergroup=u.sys_pk
+    LEFT JOIN tuser tu ON t.masteruser=tu.sys_pk
+    where true and "+filter+"
+    limit 200"
+
+    @read_query="select l.*,t.id,t.text,t.`view`,t.min_users,if(ifnull(t.autologin,0),'Sí','No')fautologin
+    from sys_auth_log l 
+    inner join sys_auth_tpy t on l.tpy=t.sys_pk where l.#<@keyfield>=@_entity_id limit 1"
+
+}

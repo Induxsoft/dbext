@@ -13,6 +13,7 @@ module "config"
     @CSS_PROFILE = "/$/dbext/css/profile.css"
     @CSS_GLOBALVAR = "/$/dbext/css/globalvar.css"
     @CSS_MAIN = "/$/dbext/css/main.css"
+    @JS_AUTHBOX="/$/dbext/js/authbox.js"
 
     // _PACKAGE
     @DBEXT_TUSER = "/!/dbext/tuser/"
@@ -27,6 +28,10 @@ module "config"
     @DBEXT_ADD_EDIT_UUGRP = "/!/dbext/ugroups/@id/"
     @DBEXT_ADD_EDIT_PROFL = "/!/dbext/profile/@id/"
     @DBEXT_ADD_EDIT_GLVAR = "/!/dbext/globalvar/@id/"
+
+    //authbox
+    @AUTH_BOX= "/!/dbext/authbox/"
+    @AUTH_BOX_ADD_EDIT="/!/dbext/authbox/@id/"
 
     @default_max_rows=250
 
