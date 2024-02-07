@@ -2,36 +2,400 @@
 #!
 module ":dbr.auths"
 {
+    sys_fields::&data
+    {
+        using data
+        {
+            @"sys_guid":uuid()
+            @"sys_recver":0
+            @"sys_dtcreated*":now()
+            @"sys_timestamp*":now()
+            @"sys_deleted":0
+        }
+    }
     type.register::&db,&data
     {
-	//agrega o actualiza un tipo de autorizacion
+	    //agrega o actualiza un tipo de autorizacion
+        if @@(data,"#min_users")<1{data<"min_users">:1}
+
+        ref type=dbr.rec(db,"select * from sys_auth_tpy where id=@id",data)
+
+        if isnull(type)
+        {
+            do dbr.auths.sys_fields(data)
+            do dbr.insert(db,"sys_auth_tpy",data)
+        }
+        else
+        {
+            data<"sys_deleted">:0
+            do dbr.update(db,"sys_auth_tpy",data,"id=@id",data)
+        }
+
+        return dbr.rec(db,"select * from sys_auth_tpy where id=@id",data)
     }
     
     type.unregister::&db,typeid
     {
-	 //elimina fisica o logica 
+	    //elimina fisica o logica 
+        new data{@"id":typeid}
+
+        do dbr.delete(db,"sys_auth_tpy","id=@id",data)
+
+        exception{do dbr.execute(db,"update sys_auth_tpy set sys_deleted=1 where id=@id",data)}
     }
     
     pending::&db,typeid,id,operation
     {
-	//obtiene datos de  sys_auth_log
+	    //obtiene datos de  sys_auth_log
+        new data
+        {
+            @"id":typeid
+            @"transid":id
+            @"op":operation
+        }
+        ref auth_log=dbr.rec(db,"select l.* from sys_auth_log l 
+                        inner join sys_auth_tpy t on l.tpy=t.sys_pk
+                        where t.id=@id and l.transid=@transid and l.operation=@op
+                        and ifnull(l.authorized,0)=0 and ifnull(l.rejected,0)=0
+                        and ifnull(l.cancel,0)=0 and ifnull(l.error,0)=0 
+                        and ifnull(t.sys_deleted,0)=0 ",data)// and ifnull(l.sys_deleted,0)=0
+
+        if not(isnull(auth_log)) && not(@@(auth_log,"#authorized")) && not(@@(auth_log,"#rejected")) && not(@@(auth_log,"#cancel")) && not(@@(auth_log,"#error")){auth_log<"pendiente">:@true}
+
+        return auth_log
+    }
+    existSolicitudAutorizada::&db,typeid,id,operation
+    {
+        new data
+        {
+            @"id":typeid
+            @"transid":id
+            @"op":operation
+        }
+         ref auth_log=dbr.rec(db,"select l.* from sys_auth_log l 
+                        inner join sys_auth_tpy t on l.tpy=t.sys_pk
+                        where t.id=@id and l.transid=@transid and l.operation=@op
+                        and ifnull(t.sys_deleted,0)=0 and ifnull(l.authorized,0) and executed is null order by l.sys_pk desc limit 1",data)
+
+        if not(isnull(auth_log)) && not(@@(auth_log,"#authorized")) && not(@@(auth_log,"#rejected")) && not(@@(auth_log,"#cancel")) && not(@@(auth_log,"#error")){auth_log<"pendiente">:@true}
+
+        return auth_log
+    }
+    @autorizar=@false
+    post::&db,typeid,id,operation,&http_context,&data
+    {
+        //inserta en sys_auth_log
+        //Si no hay otra pendiente 
+        text_error=""
+        autorizar=@false
+        ref auth_l=@null
+
+        new response
+        {
+            @"authorized":@true
+            @"error":text_error
+            @"request":auth_l
+        }
+
+        ref pending=dbr.auths.pending(db,typeid,id,operation)
+        ref exist_sol=dbr.auths.existSolicitudAutorizada(db,typeid,id,operation)
+         if not(isnull(exist_sol)) && not(@@(exist_sol,"#pendiente")){return response}
+
+        if not(isnull(pending)) && @@(pending,"#pendiente"){do rise_error(99,"Ya hay un proceso pendiente con los datos indicados")}
+
+        new params
+        {
+            @"id":typeid
+            @"transid":id
+            @"op":operation
+        }
+        ref type=dbr.rec(db,"select * from sys_auth_tpy where id=@id",params)
+        if isnull(type){do rise_error(99,"No hay datos de tipo indicado")}
+        ref user=dbr.auths.getUser(db)
+
+        // do dbr.auths.validateUserGroup(db,@@(type,"#usergroup"),@@(user,"#sys_pk"))
+        
+        if isnull(data){ref data=record.create()}
+        using data
+        {
+            @"tpy":@@(type,"#sys_pk")
+            @"operation" :operation
+            @"transid":id
+            @"http_request":to.json(http_context)
+            @"http_response":""
+            @"req_user":@@(user,"#sys_pk")
+            @"authorized":0
+            @"rejected":0
+            @"cancel":0
+            @"error":0
+            @"error_info":""
+        }
+
+        do dbr.auths.sys_fields(data)
+        do dbr.insert(db,"sys_auth_log",data)
+
+        @autorizar=@true
+        ref auth=dbr.auths.auth(db,@@(data,"$sys_guid"),"Autorizar")
+
+        text_error=@@(auth,"$error")
+        autorizar=@@(auth,"#authorized")
+
+        ref auth_l=dbr.rec(db,"select * from sys_auth_log where sys_guid=@sys_guid",data)
+        if @@(auth_l,"#authorized"){autorizar=@true}
+
+        exception
+        {
+            text_error=last_error()
+        }
+
+        new response
+        {
+            @"authorized":autorizar
+            @"error":text_error
+            @"request":auth_l
+        }
+        return response
+    }
+    //uuid -> sys_guid table sys_auth_log
+    getDataAuthlog::&db,uuid
+    {
+        new params{@"uuid":uuid}
+        ref auth_log= dbr.rec(db,"select l.*,t.id,
+                                t.text,
+                                t.view,
+                                t.usergroup,
+                                t.min_users,
+                                t.masteruser,
+                                t.autologin
+                                from sys_auth_log l 
+                                inner join sys_auth_tpy t on l.tpy=t.sys_pk
+                                where l.sys_guid=@uuid",params)
+        if isnull(auth_log){do rise_error(99,"No se encotró datos relacionado al uuid indicado")}
+
+        return auth_log
+    }
+    getUser::&db
+    {
+        ids=dbr.getSID(db)
+        new params{@"ids":ids}
+        ref user=dbr.rec(db,"select u.*,s.sys_guid ids from tuser u inner join sys_session s on u.sys_pk=s.iuser where s.sys_guid=@ids",params)
+        if isnull(user){do rise_error(99,"No se encontró datos del usuario")}
+
+        return user
+    }
+    validateUserGroup::&db,grupo,user
+    {
+        new params
+        {
+            @"grupo":grupo
+            @"user":user
+        }
+        ref data_grupo=dbr.rec(db,"select * from user_usergroup_ ug where ug.groups=@grupo and ug.users=@user",params)
+        if isnull(data_grupo){do rise_error(99,"El usuario no pertenece al grupo indicado en la tabla `sys_auth_tpy` ")}
+
+        return data_grupo
+    }
+    auth::&db,uuid,notas
+    {
+        update_log=@false
+
+        ref auth_log=dbr.auths.getDataAuthlog(db,uuid)
+        
+        if isnull(dbr.auths.pending(db,@@(auth_log,"$id"),@@(auth_log,"$transid"),@@(auth_log,"$operation"))){do rise_error(99,"No hay transaccción pendientes en relacion a la uuid indicado")}
+        ref user=dbr.auths.getUser(db)
+        
+        count_users=dbr.num(db,"select count(*) from sys_auth_log_usr where log=@sys_pk",auth_log)
+        if not(@@(auth_log,"#masteruser"))
+        {
+            ref grupo=dbr.auths.validateUserGroup(db,@@(auth_log,"#usergroup"),@@(user,"#sys_pk") )
+            count_auth_log_usr=count_users
+            if count_auth_log_usr>@@(auth_log,"#min_users"){do rise_error(99,"Se alcanzó el máximo de usuarios para la autorización")}
+        }
+
+        new auth_log_usr
+        {
+            @"log":@@(auth_log,"#sys_pk")
+            @"auth_user":@@(user,"#sys_pk")
+            @"note":notas
+            @"authorized": 1
+            @"asmaster":@@(auth_log,"#masteruser")>0
+        }
+        do dbr.auths.sys_fields(auth_log_usr)
+        do dbr.insert(db,"sys_auth_log_usr",auth_log_usr)
+
+        if @@(auth_log,"#masteruser"){update_log=@true}
+        else 
+        {
+            count_auth_log_usr=dbr.num(db,"select count(*) from sys_auth_log_usr where log=@log",auth_log_usr)
+            if @@(auth_log,"#min_users")==count_auth_log_usr{update_log=@true}
+        }
+        //autorizado completamente
+        if @autorizar
+        {
+            do dbr.execute(db,"update sys_auth_log set authorized=1 where sys_pk=@log",auth_log_usr)
+        } 
+        else if update_log 
+        {
+            do dbr.execute(db,"update sys_auth_log set authorized=1 where sys_pk=@log",auth_log_usr)
+            module "run_script"
+            {
+                http=@@(auth_log,"$http_request")
+                http=ifstr(trim(http)!="",http,to.json(record.create()))
+
+                ref http_obj=from.json(http)
+                http_obj<"request/cookies*">:record.create()
+                http_obj<"request/headers*">:record.copy(@@(http_obj,"&request/headers"),"*")
+                
+                qname=dbr.full_qname(db)
+                new p{@"user":@@(auth_log,"#req_user")}
+
+                ref database=db
+                ref data_user=user
+                if @@(user,"#sys_pk")!=@@(p,"#user")
+                {
+                    ref session=dbr.rec(db,"select * from sys_session where iuser=@user and ifnull(sys_deleted,0)=0",p)
+                    ref user2=dbr.rec(db,"select * from tuser where sys_pk=@user",p)
+                    ref data_user=ifnull(user2,record.create())
+                    
+                    if isnull(session) 
+                    {
+                        if not(@@(auth_log,"#autologin")){ref database=db}
+                        else 
+                        {
+                            if isnull(user2){do rise_error(99,"No se encotró datos del usuario, quien solicitó la autorizacíon")}
+                            ref database=dbr.auths.autoLogin(qname, @@(user2,"$userid"),@@(user2,"$username"), uuid())
+                        }
+                    }
+                    else 
+                    {
+                        ref database=dbr.reconnect(qname,@@(session,"$sys_guid"))
+                    }
+                }
+                new database_session
+                {
+                    @"name":"db_auth"
+                    @"qname":qname
+                    @"database*":database
+                }
+                if trim(@@(data_user,"$ids"))==""{data_user<"ids">:dbr.getSID(database)}
+                //reemplazar la referencia a la base de datos
+                http_obj<"session*">:record.create()
+                http_obj<"session/idp*">:database_session
+                http_obj<"session/user*">: data_user
+                //reemplazar el id de sesión del usuario que hizo la solicitud
+
+                http_obj<"response*">:record.create()
+                http_obj<"response/headers*">:record.create()
+                http_obj<"response/output">:"standard"
+                script=@@(http_obj,"$request/headers/path_translated")
+
+                res=runscript(script,"http_context",http_obj)
+                
+                if field.str(http_obj,"response/output","standard")=="standard"
+                {
+                    http_obj<"response/output">:"text"
+                    http_obj<"response/text">:res
+                }
+                auth_log_usr<"http_response">:to.json(http_obj)
+                //Guardas la respuesta (http_obj)
+                do dbr.execute(db,"update sys_auth_log set authorized=1,http_response=@http_response,executed=now() where sys_pk=@log",auth_log_usr)
+                exception
+                {
+                    new error
+                    {
+                        @"log":@@(auth_log_usr,"#log")
+                        @"error":last_error()
+                    }
+                    do dbr.execute(db,"update sys_auth_log set sys_timestamp=now(),authorized=0,error=1,error_info=@error where sys_pk=@log",error)
+                    do rise_error(99,@@(error,"$error"))
+                }
+            }
+        }
+        text_error=""
+        exception{text_error=last_error()}
+
+        new response
+        {
+            @"authorized":update_log
+            @"pending":@@(auth_log,"#min_users") - count_users
+        }
+        if text_error!=""{response<"error">:text_error}
+
+        return response
     }
     
-    post::&db,typoid,id,operation,&http_context
+    deny::&db,uuid,notas
     {
-	//inserta en sys_auth_log
-	//Si no hay otra pendiente 
+        ref auth_log=dbr.auths.getDataAuthlog(db,uuid)
+        
+        if isnull(dbr.auths.pending(db,@@(auth_log,"$id"),@@(auth_log,"$transid"),@@(auth_log,"$operation"))){do rise_error(99,"No hay transaccción pendientes en relacion a la uuid indicado")}
+        ref user=dbr.auths.getUser(db)
+
+        new auth_log_usr
+        {
+            @"log":@@(auth_log,"#sys_pk")
+            @"auth_user":@@(user,"#sys_pk")
+            @"note":notas
+            @"rejected": 1
+            @"asmaster":@@(auth_log,"#masteruser")
+        }
+        do dbr.auths.sys_fields(auth_log_usr)
+        do dbr.insert(db,"sys_auth_log_usr",auth_log_usr)
+        do dbr.execute(db,"update sys_auth_log set rejected=1,sys_timestamp=now(),rejby=@auth_user where sys_pk=@log",auth_log_usr)
     }
     
-    auth::&db,uuid
+    cancel::&db,uuid,notas
     {
+        ref auth_log=dbr.auths.getDataAuthlog(db,uuid)
+        
+        if isnull(dbr.auths.pending(db,@@(auth_log,"$id"),@@(auth_log,"$transid"),@@(auth_log,"$operation"))){do rise_error(99,"No hay transaccción pendientes en relacion a la uuid indicado")}
+        ref user=dbr.auths.getUser(db)
+
+        new auth_log_usr
+        {
+            @"log":@@(auth_log,"#sys_pk")
+            @"auth_user":@@(user,"#sys_pk")
+            @"note":notas
+            @"cancel": 1
+            @"asmaster":@@(auth_log,"#masteruser")
+        }
+        do dbr.auths.sys_fields(auth_log_usr)
+        do dbr.insert(db,"sys_auth_log_usr",auth_log_usr)
+        do dbr.execute(db,"update sys_auth_log set sys_timestamp=now(),cancel=1 where sys_pk=@log",auth_log_usr)
     }
-    
-    deny::&db,uuid
-    {
-    }
-    
-    cancel::&db,uuid
-    {
-    }
+    autoLogin::qname, uid,uname, ids
+	{
+		ref db = dbr.open(qname)
+        new params
+		{
+			@"userid":uid
+			@"username":uname
+			@"pwd":uuid()
+			@"sys_guid":uuid()
+		}
+		sys_pk_user = dbr.num(db, "Select sys_pk from tuser where userid=@userid", params)
+		
+		if not(sys_pk_user)
+		{
+			do dbr.execute(db, "insert into tuser(sys_timestamp,sys_guid,username,pwd,pwdmd5,userid) values(now(), @sys_guid,@username,@pwd,@pwd, @userid)", params)
+			sys_pk_user = dbr.num(db, "Select sys_pk from tuser where userid=@userid;", params)
+			
+		}
+		new p
+		{
+			@"sys_pk_user":sys_pk_user
+			@"sys_guid":ids
+		}
+
+		ids_u = dbr.str(db, "select ss.sys_guid from sys_session ss where ss.sys_guid=@sys_guid and not ifnull(ss.sys_deleted,0);", p)
+
+		if ids_u == ""
+		{
+			do dbr.execute(db, "insert into sys_session(sys_timestamp,sys_dtcreated,sys_guid,sys_deleted,iuser, sys_recver,clientinfo) values(now(),now(), @sys_guid,0,@sys_pk_user,0,'Unknow')", p)
+		}
+
+		do dbr.close(db)
+
+		return dbr.reconnect(qname, ids)
+	}
 }

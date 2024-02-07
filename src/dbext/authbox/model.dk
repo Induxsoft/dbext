@@ -14,7 +14,8 @@ module "model"
     "
     @list_query = "select l.*,t.id,t.text,t.`view`,t.min_users,if(ifnull(t.autologin,0),'Sí','No')fautologin,u.description descugroup,
     tu.username umaster ,tu2.username solicitante,date_format(l.sys_dtcreated,'%Y-%m-%d')solicitud,date_format(l.sys_timestamp,'%Y-%m-%d %h:%i:%s')fhop,
-    ifnull(l.authorized,0)autorizado,ifnull(l.rejected,0)rechazado,ifnull(l.cancel,0)cancelado,ifnull(l.error,0)error
+    ifnull(l.authorized,0)autorizado,ifnull(l.rejected,0)rechazado,ifnull(l.cancel,0)cancelado,ifnull(l.error,0)error,
+    if(ifnull(l.authorized,0) and ifnull(l.rejected,0) and ifnull(l.cancel,0) and  ifnull(l.error,0),1,0)pendiente
     from sys_auth_log l 
     inner join sys_auth_tpy t on l.tpy=t.sys_pk
     inner JOIN usergroup u on t.usergroup=u.sys_pk
@@ -26,6 +27,7 @@ module "model"
 
     @read_query="select l.*,t.id,t.text,t.`view`,t.min_users,if(ifnull(t.autologin,0),'Sí','No')fautologin,
     ifnull(l.authorized,0)autorizado,ifnull(l.rejected,0)rechazado,ifnull(l.cancel,0)cancelado,ifnull(l.error,0)error,
+    if(ifnull(l.authorized,0) and ifnull(l.rejected,0) and ifnull(l.cancel,0) and  ifnull(l.error,0),1,0)pendiente,
     tu3.username userrej,
     tu2.username solicitante,date_format(l.sys_dtcreated,'%Y-%m-%d')solicitud,
     (

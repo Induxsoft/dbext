@@ -5,26 +5,73 @@ module "model"
     #include "dbr.auths.dkl"
     @table_name = "sys_auth_tpy"
 
+     @list_query="SELECT t.*,u.description descgrupo,tu.username usuariomaster,if(IFNULL(t.autologin,0),'Sí','No')flogin
+     FROM sys_auth_tpy t 
+     INNER JOIN usergroup u ON t.usergroup=u.sys_pk
+     LEFT JOIN tuser tu ON t.masteruser=tu.sys_pk 
+     where ifnull(t.sys_deleted,0)=0
+     order by t.sys_pk desc"
 
+     prepareView::&db,&params,&rec
+     {
+          if isnull(rec){return}
+          rec<"grupos*">:dbr.list(db,"select * from usergroup ",params)
+          params<"user">:@@(rec,"#masteruser")
+          rec<"user*">:dbr.rec(db,"select * from tuser where sys_pk=@user",params)
+          rec<"users*">:dbr.list(db,"select * from tuser",params)
+     }
    list::&db,&params
    {
         ref entity= entity.list(db,params)
         return entity
    }
-   update::&db,&params,&data
-   {
-       
-        ref entity= entity.update(db,params,data)
-        return entity
-   }
+   
    read::&db,&params
    {
         ref entity= entity.read(db,params)
+        do prepareView(db,params,entity)
         return entity
    }
+   blank::&db,&params
+   {
+     new entity{}
+     do prepareView(db,params,entity)
+     return entity
+   }
+   save::&db,&params,&data
+   {
+     data<"autologin">:if(parse.bool(@@(data,"autologin")),1,0)
+     if @@(data,"#min_users")<1{data<"min_users">:1}
+     if @@(data,"$masteruser")==""{data<"masteruser*">:@null}
+
+     ref datatpy=dbr.rec(db,"select * from sys_auth_tpy where sys_pk=@_entity_id",params)
+     if not(isnull(datatpy)){data<"id">:@@(datatpy,"id")}
+     
+     ref entity=dbr.auths.type.register(db,data)
    
+     return entity
+
+     exception
+     {
+          error=last_error()
+          do prepareView(db,params,data)
+          do rise_error(500,error)
+     }
+   }
+   delete::&db,&params
+   {
+     ref data=dbr.rec(db,"select * from sys_auth_tpy where sys_pk=@_entity_id",params)
+     if isnull(data){do rise_error(500,"No se encontró datos")}
+
+     do dbr.auths.type.unregister(db,@@(data,"$id"))
+     return @null
+   }
+   
+   point @delete to delete
+   point @create to save
+   point @update to save
+   point @blank to blank
    point @read to read
-   point @create to update
    point @list to list
 
 }

@@ -46,7 +46,7 @@ module "form.dk"
             {
                 div(class="col-4 d-flex align-items-center p-0")
                 {
-                    h5(class="tex-no-break m-0"){$"Solicitud"}
+                    h5(class="tex-no-break m-0"){$"Solicitud de autorización"}
                 }
                 div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
                 {

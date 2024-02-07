@@ -23,7 +23,7 @@ module "list"
         {
             div(class="col-4 d-flex align-items-center p-0")
             {
-                h5(class="tex-no-break m-0"){$"Tipo de autorización"}
+                h5(class="tex-no-break m-0"){$"Tipos de solicitudes de autorización"}
             }
             div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
             {
@@ -35,10 +35,32 @@ module "list"
         }
         div(id="work_area" class="container-section pt-2")
         {
-            div
-            {""
-               
-            }
+             #!
+                new table
+                {
+                    @"datatable*":data
+                    member @"columns"
+                    {
+                        member @"id"{@"caption":"ID"}
+                        member @"text"{@"caption":"Transacción"}
+                        member @"descgrupo"{@"caption":"Grupo"}
+                        member @"min_users"{@"caption":"Min. usuarios"}                    
+                        member @"_actions"
+                        {
+                            @"caption":"Acciones"
+                            @"no-print":@true
+                            @"template":ftext('
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="#<@TYPE_AUTH_BOX>${DataRow.sys_pk}/" class="btn btn-sm btn-light">Editar</a>
+                                    <button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})">Cancelar</button>
+                                </div>
+                            ')
+                        }
+
+
+                    }
+                }
+                do uie.dbeditable(table,"tbl_tpy_solicitudes")
         }
        
     }

@@ -28,7 +28,7 @@ module "form.dk"
             {
                 div(class="col-4 d-flex align-items-center p-0")
                 {
-                    h5(class="tex-no-break m-0"){$"Solicitud"}
+                    h5(class="tex-no-break m-0"){$"Tipo de solicitud de autorización"}
                 }
                 div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
                 {
@@ -43,33 +43,70 @@ module "form.dk"
                     }
                 }
             }
-            
+            div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+            input(type="hidden" value="#<@('#./sys_recver')>" name="sys_recver")
             #$
-            div(class="d-flex pack-d-block-sm")
+            div(class="row")
             {""
-                label{"ID:"}
-                input(class="induxsoft-form-control" name="id" value="#<@('$./id')>")
-
-                label{"Texto:"}
-                input(class="induxsoft-form-control" name="text" value="#<@('$./text')>")
-
-                label{"View:"}
-                input(class="induxsoft-form-control" name="view" value="#<@('$./view')>")
-
-                label{"Texto:"}
-                select(class="induxsoft-form-select" name="usergroup" value="#<@('$./usergroup')>"){""}
-
-                label{"Min. de usuario:"}
-                input(class="induxsoft-form-control" name="min_users" value="#<@('$./min_users')>")
-
-                label{"Usuario maestro:"}
-                input(class="induxsoft-form-control" name="masteruser" value="#<@('$./masteruser')>")
-
-                label{"Auto login:"}
-                input(type="checkbox" class="induxsoft-form-control" name="autologin" value="#<@('$./autologin')>")
-
+                div(class="col-md-2")
+                {
+                    label{"ID:"}
+                    input(class="induxsoft-form-control" "#<ifstr(@('#./sys_pk')!=0,'disabled','')>"="true" name="id" value="#<@('$./id')>" required="true" maxlength="32")
+                }
+                
+                div(class="col-md-3")
+                {
+                    label{"Grupo:"}
+                    select(class="induxsoft-form-select" name="usergroup" value="#<@('$./usergroup')>"  required="true")
+                    {""
+                        #!
+                        for i = 0; i < @count(@("&./grupos"))
+                        {
+                            ref g=@item(@("&./grupos"),i)
+                            #$ option(value="#<@@(g,'sys_pk')>" "#<ifstr(@('#./usergroup')==@@(g,'#sys_pk'),'selected','')>"="true"){"#<@@(g,'description')>"}
+                        }
+                        #$
+                    }
+                }
+                div(class="col-md-3")
+                {
+                    label{"Min. de usuario:"}
+                    input(type="Number" min="1" class="induxsoft-form-control" name="min_users" value="#<@('$./min_users')>"  required="true")
+                }
+                div(class="col-md-4")
+                {
+                    label{"Usuario maestro:"}
+                    select(class="induxsoft-form-select" name="masteruser")
+                    {
+                        option(value=""){"Ninguno"}
+                         #!
+                        for i = 0; i < @count(@("&./users"))
+                        {
+                            ref u=@item(@("&./users"),i)
+                            #$ option(value="#<@@(u,'sys_pk')>" "#<ifstr(@('#./masteruser')==@@(u,'#sys_pk'),'selected','')>"="true"){"#<@@(u,'username')>"}
+                        }
+                        #$
+                    }
+                }
+                
             }
-           
+            div(class="row")
+            {
+                div(class="col-md-6")
+                {
+                    label{"Texto:"}
+                    input(class="induxsoft-form-control" name="text"  maxlength="50" value="#<@('$./text')>")
+                }
+                div(class="col-md-2 mt-2 d-flex align-items-center")
+                {
+                    label{input(type="checkbox" name="autologin" "#<ifstr(@('#./autologin'),'checked','')>"="true")" Auto login"}
+                }
+            }
+            div(class="col-md-12")
+            {
+                label{"View:"}
+                textarea(class="induxsoft-form-control" name="view"  required="true" ){"#<@('$./view')>"}
+            }
             
         }
 
