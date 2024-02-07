@@ -42,7 +42,7 @@ module "list"
                     member @"columns"
                     {
                         member @"id"{@"caption":"ID"}
-                        member @"text"{@"caption":"Transacción"}
+                        member @"text"{@"caption":"Descripción"}
                         member @"descgrupo"{@"caption":"Grupo"}
                         member @"min_users"{@"caption":"Min. usuarios"}                    
                         member @"_actions"
