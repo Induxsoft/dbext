@@ -6,12 +6,17 @@ module "list"
     #include "serialize.dkh"
     #include "../config.dk"
     #include "../_lib/scape_special_charactes2.dk"
+    #include "dbr.auths.dkl"
+    #include "dbr.dkh"
+    #include "uielements.v12.dkl"
 
     do @context.begin(@crud_context)
-
+    ref @http_context=@("&http")
     ref data = @("&./")
     
     filter=@("$parameters/s")
+
+    // ref ps=dbr.auths.post(@("&database"),"contrato","000001","update",@http_context,@null)
     #$
     div(class="container p-0")
     {
@@ -52,98 +57,47 @@ module "list"
             }
             div
             {
-                #! lenght = list.count(data)
-                if lenght <= 0
+                #!
+                new table
                 {
-                    message = ""
-                    if @@(@crud_context,"$parameters/s") == "" { message = "Sin registros." }
-                    else  { message = "Sin resultados." }
-
-                    #$ div(class="text-center")
+                    @"datatable*":data
+                    member @"columns"
                     {
-                        h6(style="background-color: #F5F5F5; padding: 10rem 0;"){"#<message>"}
-                    }
-                }
-                #! else 
-                {
-                    #$ div(style="overflow-y:auto;max-height: 75vh;" class="mb-2" id="list_table_container")
-                    {
-                        table(class="table")
+                        member @"text"{@"caption":"Transacción"}
+                        member @"operation"{@"caption":"Operación"}
+                        member @"transid"{@"caption":"ID"}
+                        member @"solicitud"{@"caption":"Solicitud"}
+                        member @"solicitante"{@"caption":"Solicitante"}
+                        if filter!="" && filter!="p1" && filter!="a1"
                         {
-                            thead
-                            {
-                                tr
-                                {
-                                    th(class="h6"){$"Transacción"}
-                                    th(class="h6"){$"Operación"}
-                                    th(class="h6"){$"ID"}
-                                    th(class="h6"){$"Solicitud"}
-                                    th(class="h6"){$"Solicitante"}
-
-                                    //rechazo
-                                    #!
-                                    if filter!="" && filter!="p1" && filter!="a1"
-                                    {
-                                        text="rechazado"
-                                        if filter=="c1"{text="cancelado"}
-                                        else if filter=="e1"{text="del error"}
-                                        #$
-                                        th(class="h6"){$"Fecha #<text>"}
-                                    }
-                                    #$
-                                    
-                                    th(class="h6"){$"Notas"}
-                                    th(class="h6 text-center no-print"){$"Acciones"}
-                                }
-                            }
-                            tbody
-                            {
-                                $""
-                                #! for i = 0; i < list.count(data)
-                                {
-                                    ref dt = list.obj(data, i)
-                                    pendiente=@false 
-                                    if not(@@(dt,"#autorizado")) && not(@@(dt,"#rechazado")) && not(@@(dt,"#cancelado")) && not(@@(dt,"#error")){pendiente=@true}
-                                    #$ tr
-                                    {
-                                        // 
-                                        td{$"#<@@(dt,'$text')>"}
-                                        td{$"#<@@(dt,'$operation')>"}
-                                        td{$"#<@@(dt,'$transid')>"}
-                                        td{$"#<@@(dt,'$solicitud')>"}
-                                        td{$"#<@@(dt,'$solicitante')>"}
-                                        
-                                        #!
-                                        if filter!="" && filter!="p1" && filter!="a1"
-                                        {
-                                            #$
-                                            td{$"#<@@(dt,'$fhop')>"}
-                                        }
-                                        
-                                        td{$"#<@@(dt,'$note')>"}
-                                        td(class="no-print")
-                                        {
-                                            div(class="d-flex gap-2 justify-content-center")
-                                            {
-                                                a(href="#<replace(@AUTH_BOX_ADD_EDIT, '@id', @@(dt,'sys_pk'))>" class="btn btn-sm btn-light"){$"Ver"}
-                                                // button(class="btn btn-sm btn-light" onclick="InduxsoftCrudlModel.Delete(#<@@(dt,'sys_pk')>)"){$"Eliminar"}
-                                                #!
-                                                if pendiente
-                                                {
-                                                    #$
-                                                    button(type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(1,'#<@@(dt,'$sys_guid')>')"){"Autorizar"}
-                                                    button(type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(2,'#<@@(dt,'$sys_guid')>')"){"Rechazar"}
-                                                    button(type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(3,'#<@@(dt,'$sys_guid')>')"){"Cancelar"}
-                                                }
-                                                #$
-                                            }
-                                        }
-                                    }
-                                } 
-                            }
+                            text="rechazado"
+                            if filter=="c1"{text="cancelado"}
+                            else if filter=="e1"{text="del error"}
+                            member @"fhop"{@"caption":"Fecha "+text}
                         }
+                        member @"note"{@"caption":"Notas"}                        
+                        member @"_actions"
+                        {
+                            @"caption":"Acciones"
+                            @"no-print":@true
+                            @"template":ftext('
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="#<@AUTH_BOX>${DataRow.sys_pk}/" class="btn btn-sm btn-light">Ver</a>
+                                    
+                                </div>
+                            ')
+                        }
+
+
                     }
                 }
+
+                
+                  //<button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(1,\'${DataRow.sys_guid}\')">Autorizar</button>
+                                   //// <button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(2,\'${DataRow.sys_guid}\')">Rechazar</button>
+                                   // <button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(3,\'${DataRow.sys_guid}\')">Cancelar</button>
+                do uie.dbeditable(table,"tbl_solicitudes")
+                #$
             }
         }
        

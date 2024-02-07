@@ -17,11 +17,13 @@ module "form.dk"
     isNew = (entity_id == "_new")
     action = replace(@AUTH_BOX_ADD_EDIT, "@id", entity_id)
 
+    response=ifstr(@("$./http_response")!="",@("$./http_response"),"{}")
+    request=ifstr(@("$./http_request")!="",@("$./http_request"),"{}")
     new @auth_context
     {
         @"database":@("&database")
-        @"request*":from.json(@("$./http_request"))
-        @"response*":from.json(@("$./http_response"))
+        @"request*":record.copy(from.json(request),"*")
+        @"response*":record.copy(from.json(response),"*")
         @"error_info": @("$./error_info")
         @"error":@("#./error")
     }
@@ -37,6 +39,7 @@ module "form.dk"
     div(class="container")
     {   
         script(src="#<@JS_AUTHBOX>"){""}
+        link(href="#<@CSS_MAIN>" rel="stylesheet"){""}
         form(method="POST" action="#<action>" id="form")
         {
             div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
@@ -60,42 +63,47 @@ module "form.dk"
             }
             
             #$
-            div(class="d-flex")
-            {""
+            div(class="d-flex pack-d-block-sm")
+            {
                 div
                 {
-                    h6{$"#<@('$./text')+' '+@('$./transid')+' '+@('$./operation')>"}
+                    h6(class="fw-bold"){$"#<@('$./text')+' '+@('$./transid')+' '+@('$./operation')>"}
                     small{"#<@('$./solicitante')+' ['+@('$./solicitud')+']'>"}
                 }
-               
                 span(class="flex-grow-1"){""}
                 #!
-                if pendiente
-                {
-                    #$ 
-                    div
-                    {
-                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(1,'#<@('$./sys_guid')>')"){"Autorizar"}
-                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(2,'#<@('$./sys_guid')>')"){"Rechazar"}
-                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(3,'#<@('$./sys_guid')>')"){"Cancelar"}
-                    }
-                   
-                    #!
-                }
-                else 
+                if not(pendiente)
                 {
                     #$
-                    div
+                    div(class="pack-control-sm-w-100")
                     {
                         h6(class="text-end fw-bold"){"#<@('$./estado')>"}
                         #!
                         if @("#./error"){#$ small(class="fw-bold"){"#<@('$./error_info')>"}}
-                        #! if @("#./rechazado"){#$ small(class="fw-bold"){"#<@('$./userrej')>"}}
+                        #! if @("#./rechazado"){#$ small{"#<@('$./userrej')>"}}
                     }
-                    
                 }
                 #$
             }
+            #!
+            if pendiente
+            {
+                #$
+                label(class="fw-bold"){"Nota:"}
+                textarea(class="induxsoft-form-control" id="text_notas" placeholder="Notas para Autorizar,Rechazar y Cancelar" style="resize:none"){""}
+                div(class="d-flex pack-d-block-sm")
+                {""
+                    span(class="flex-grow-1"){""}
+                    div
+                    {
+                        
+                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(1,'#<@('$./sys_guid')>')"){"Autorizar"}
+                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(2,'#<@('$./sys_guid')>')"){"Rechazar"}
+                        button(type="button" class="btn btn-sm border-secondary induxsoft-corners btn-main-action m-1" onclick="auth.action(3,'#<@('$./sys_guid')>')"){"Cancelar"}
+                    }
+                }
+            }
+            
             #!
             if @count(autorizaciones)>0
             {

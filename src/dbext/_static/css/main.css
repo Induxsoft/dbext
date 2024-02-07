@@ -27,3 +27,13 @@
 .modal-content{ background-color: var(--color-light-gray) !important; }
 
 .no-shadow{box-shadow: none !important;}
+
+@media screen and (max-width: 750px) 
+{
+	.pack-m-card{grid-template-columns: repeat(auto-fill, minmax(80vw, 1fr)) !important;}
+	.pack-lbl-d-block{display: block !important;}
+	.pack-control-sm-w-100{width: 100% !important;}
+	.pack-control-sm-h-100{height: 100% !important;}
+	.pack-reset-styles-md{all: revert !important;}
+	.pack-d-block-sm{display: block !important;}
+}

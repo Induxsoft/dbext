@@ -300,6 +300,12 @@ model "Variables globales"
         }
     }
     // Tipos de requerimientos de autorizaciones
+    /*
+    0-Read
+    1-Create
+    2-Update
+    3-Delete
+    */
     entity "sys_auth_tpy" : "TableModel" 
     {
         @"id" string(32) unique required
@@ -328,6 +334,7 @@ model "Variables globales"
         @"cancel" bool
         @"error" bool
         @"error_info" mmemo
+        @"executed" datetime
         
         index "sys_auth_log_i1" // Índice no único
         {

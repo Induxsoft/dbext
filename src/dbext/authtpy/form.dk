@@ -1,0 +1,77 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "../config.dk"
+
+    do @context.begin(@crud_context)
+    ref @http_context=@("&http")
+    ref autorizaciones=@("&./autorizaciones")
+    // do file.wtext("C:\\Users\\Dev\\Documents\\devkrons\\devkronNet\\dbext\\t.json",to.json(@http_context))
+
+    ref data = @("&./")
+    entity_id = @("$parameters/_entity_id")
+    error = @("$error/message")
+    isNew = (entity_id == "_new")
+    action = replace(@TYPE_AUTH_BOX_ADD_EDIT, "@id", entity_id)
+
+    #$
+    div(class="container")
+    {   
+        script(src="#<@JS_AUTHBOX>"){""}
+        link(href="#<@CSS_MAIN>" rel="stylesheet"){""}
+        form(method="POST" action="#<action>" id="form")
+        {
+            div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
+            {
+                div(class="col-4 d-flex align-items-center p-0")
+                {
+                    h5(class="tex-no-break m-0"){$"Solicitud"}
+                }
+                div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
+                {
+                    a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
+                    button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){
+                        $'#<@@(@icons,"save2")>'
+                    }
+                    a(class="btn btn-sm border-secondary induxsoft-corners btn-main-action" href="#<@TYPE_AUTH_BOX>") {
+                        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16") {
+                            path(d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z")
+                        }
+                    }
+                }
+            }
+            
+            #$
+            div(class="d-flex pack-d-block-sm")
+            {""
+                label{"ID:"}
+                input(class="induxsoft-form-control" name="id" value="#<@('$./id')>")
+
+                label{"Texto:"}
+                input(class="induxsoft-form-control" name="text" value="#<@('$./text')>")
+
+                label{"View:"}
+                input(class="induxsoft-form-control" name="view" value="#<@('$./view')>")
+
+                label{"Texto:"}
+                select(class="induxsoft-form-select" name="usergroup" value="#<@('$./usergroup')>"){""}
+
+                label{"Min. de usuario:"}
+                input(class="induxsoft-form-control" name="min_users" value="#<@('$./min_users')>")
+
+                label{"Usuario maestro:"}
+                input(class="induxsoft-form-control" name="masteruser" value="#<@('$./masteruser')>")
+
+                label{"Auto login:"}
+                input(type="checkbox" class="induxsoft-form-control" name="autologin" value="#<@('$./autologin')>")
+
+            }
+           
+            
+        }
+
+    }
+}

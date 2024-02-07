@@ -42,6 +42,7 @@ module "Controller configs"
 	do crudl.routes.entity("/globalvar/","globalvar")
 	do crudl.routes.entity("/blockdocs/","blockdocs")
 	do crudl.routes.entity("/authbox/","authbox")
+	do crudl.routes.entity("/authtpy/","authtpy")
 
 	@dbmvc_path="crudl/"
 	

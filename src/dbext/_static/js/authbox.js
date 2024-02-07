@@ -22,7 +22,24 @@ var auth=
             uuid:sys_guid,
             act:act
         }
-        var r=prompt("nota:");
+        var text_notas=document.getElementById("text_notas");
+
+        if(!text_notas)
+        {
+            var r=prompt("Nota:");
+            if(r==null)return;
+        }
+        else
+        {
+            var r=text_notas.value??"";
+        }
+        if(r.trim()=="")
+        {
+            if(text_notas)text_notas.focus();
+            alert("Debe colocar una nota");
+            return;
+        }
+
         data["notas"]=r;
         
         InduxsoftCrudlModel.InvokeService(".", data,

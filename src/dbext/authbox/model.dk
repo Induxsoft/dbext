@@ -55,12 +55,14 @@ module "model"
    {
         if field.exist(data,"act")
         {
+            ref auth_log=@null
             switch @@(data,"#act")
             {
-                case 1{do dbr.auths.auth(db,@@(data,"$uuid"),@@(data,"$notas"))}
-                case 2{do dbr.auths.deny(db,@@(data,"$uuid"),@@(data,"$notas"))}
-                case 3{do dbr.auths.cancel(db,@@(data,"$uuid"),@@(data,"$notas"))}
+                case 1{ref auth_log= dbr.auths.auth(db,@@(data,"$uuid"),@@(data,"$notas"))}
+                case 2{ref auth_log= dbr.auths.deny(db,@@(data,"$uuid"),@@(data,"$notas"))}
+                case 3{ref auth_log= dbr.auths.cancel(db,@@(data,"$uuid"),@@(data,"$notas"))}
             }
+            if trim(@@(auth_log,"$error"))!=""{do rise_error(500,@@(auth_log,"$error"))}
             return data
         }
         ref entity= entity.update(db,params,data)

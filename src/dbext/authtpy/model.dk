@@ -1,0 +1,30 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    #include "dbr.auths.dkl"
+    @table_name = "sys_auth_tpy"
+
+
+   list::&db,&params
+   {
+        ref entity= entity.list(db,params)
+        return entity
+   }
+   update::&db,&params,&data
+   {
+       
+        ref entity= entity.update(db,params,data)
+        return entity
+   }
+   read::&db,&params
+   {
+        ref entity= entity.read(db,params)
+        return entity
+   }
+   
+   point @read to read
+   point @create to update
+   point @list to list
+
+}
