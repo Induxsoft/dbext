@@ -1,5 +1,0 @@
-"pack_id","app_id","app_title","created","app_info"
-"dbext","dbext.tuser.v1","Usuarios",2023-12-05T23:59:59,"Administración de usuarios"
-"dbext","dbext.usergroup.v1","Grupos de usuarios",2023-12-05T23:59:59,"Administración de grupos de usuarios"
-"dbext","dbext.profile.v1","Perfiles",2023-12-05T23:59:59,"Administración de perfiles"
-"dbext","dbext.globalvar.v1","Globalvar",2023-12-05T23:59:59,"Administración de permisos globales"

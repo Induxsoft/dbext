@@ -160,7 +160,7 @@ model "Variables globales"
         @"varname" string(32) unique required
         @"vardefault" string(255)
         @"varvalue" mmemo
-        @"varcaption" string    // Etiqueta de la variable
+        @"varcaption" string(50)    // Etiqueta de la variable
         @"varhelp" memo         // Ayuda o información adicional
         @"vartype" string(15)   // Tipo de dato: string,integer,decimal,bool,date,datetime,time
         @"varinput" memo        // Json con especificaciones al tipo de control de entrada: null or 'default', color, select,inputkey,dkl,json,textarea
