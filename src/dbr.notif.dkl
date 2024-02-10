@@ -1,0 +1,194 @@
+#include "dkli.dkh"
+#!
+module "dbr.notif"
+{
+    /* Crea el registro de notificación. Retorna una referencia a un objeto como este:
+    {
+        "notifid":"sys_guid de la notificación",
+        "users":[{id:"admin",name:"Administrador",pk:10},...] //Lista de los usuarios notificados
+    }*/
+    dbr.notif.send::&db,&data
+    {
+        /* data = 
+        {
+            title:"Título de la notificación (requerido)",
+            sender:"Id del remitente de la notificación, si se omite se asume 'unknow'"
+            body:"Cuerpo del mensaje",
+            img:"Url a una imagen ilustrativa (opcional)",
+            href:"Url asociada",
+            target:"vacío | _self | _blank"
+            start:"fecha y hora a partir de la cual debe aparecer, si se omite se muestra de inmediato"
+            end:"fecha y hora hasta la que se mostrará, si se omite se muestra hasta que se marque como leída"
+            to:[...,{user:"userid o clave primaria"},...{group:"groupid o clave primaria del grupo"},...]
+        }*/
+
+        if not(field.exist(data, "title")) { do rise_error(0, "El campo title es requerido") }
+        
+        new sys_notif
+        {
+            @"sys_guid": uuid()
+            @"sys_dtcreated*": dbr.sql("NOW()")
+            @"sys_timestamp*": dbr.sql("NOW()")
+            @"sndrid": field.dstr(data, "sender", "unknow")
+            @"title": @@(data, "$title")
+            @"img": @@(data, "$img")
+            @"body": @@(data, "$body")
+            @"href": @@(data, "$href")
+            @"target": __dbr.notif.get.target(@@(data, "$target"))
+            @"start": @@(data, "$start")
+            @"end": @@(data, "$end")
+        }
+
+        if @@(sys_notif, "start") == "" { sys_notif<"start*">: dbr.sql("NOW()") }
+        if @@(sys_notif, "end") == "" { sys_notif<"end*">: dbr.sql("DATE_ADD(NOW(), INTERVAL 10 YEAR)") }
+
+        ref users = __dbr.notif.get.userspk(db, ifnull(@@(data,"&to"), list.create()))
+        
+        do dbr.begin(db)
+        do dbr.insert(db, "sys_notif", sys_notif)
+        
+        new prm { @"notif_id": @@(sys_notif,"sys_guid") }
+        ref notif = dbr.rec(db, "SELECT sys_pk FROM sys_notif WHERE sys_guid=@notif_id LIMIT 1;", prm)
+
+        do __dbr.notif.insert.sys_notif_usr(db, users, @@(notif, "#sys_pk"))
+        do dbr.commit(db)
+
+        new response
+        {
+            @"notifid": @@(sys_notif, "sys_guid")
+            @"users*": dbr.list(db, "SELECT u.userid id, u.username name, u.sys_pk FROM sys_notif_usr n INNER JOIN tuser u ON n.user=u.sys_pk WHERE n.notif=@sys_pk", notif)
+        }
+
+        return response
+
+        exception
+        {
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do rise_error(0, last_error())
+        }
+    }
+
+    // Número máximo de notificaciones no leidas a devolver por la función dbr.notif.list
+    @__dbr.notif.no.readed = 10
+
+    // Retorna una lista de las últimas (var:@__dbr.notif.no.readed) notificaciones del  
+    // usuario conectado, no marcadas como leídas
+    dbr.notif.list::&db
+    {
+        new prm { 
+            @"limit": @__dbr.notif.no.readed
+            @"sesion_id": dbr.getSID(db) 
+        }
+
+        sql = "
+            SELECT n.sys_guid id, n.sndrid, n.title, n.body, n.href, n.target, 
+                DATE_FORMAT(n.start,'%Y-%m-%d %H:%i:%s') start, DATE_FORMAT(n.end, '%Y-%m-%d %H:%i:%s') end
+            FROM sys_notif n
+                INNER JOIN sys_notif_usr nu ON nu.notif = n.sys_pk
+                INNER JOIN tuser u ON nu.user = u.sys_pk
+                INNER JOIN sys_session ss ON ss.iuser = u.sys_pk
+            WHERE ss.sys_guid = @sesion_id
+                AND (NOW() BETWEEN n.start AND n.end)
+            LIMIT @limit;
+        "
+
+        return dbr.list(db, sql, prm)
+    }
+
+    //Marca como leída la notificación indicada para el usuario conectado
+    dbr.notif.readed::&db,notifid
+    {
+        new prm { 
+            @"notifid": notifid
+            @"sesion_id": dbr.getSID(db) 
+        }
+
+        sql = "
+            UPDATE sys_notif_usr nu
+                INNER JOIN sys_notif n ON nu.notif = n.sys_pk
+                INNER JOIN tuser u ON nu.user = u.sys_pk
+                INNER JOIN sys_session ss ON ss.iuser = u.sys_pk
+            SET nu.readed = 1
+            WHERE n.sys_guid = @notifid
+                AND ss.sys_guid = @sesion_id;
+        "
+
+        return dbr.execute(db, sql, prm)
+    }
+
+    // Devuelve una lista de pk de los usuarios existentes en tuser dada
+    // una lista to: [{user:"userid o clave primaria"},{group:"groupid o clave primaria del grupo"},...]
+    __dbr.notif.get.userspk::&db,&to
+    {
+        ref users = list.create()
+
+        for m = 0; m < list.count(to)
+        {
+            ref to_obj = list.obj(to, m)
+            ref us_lst = list.create()
+
+            if field.exist(to_obj, "user")
+            {
+                sql = "
+                    SELECT sys_pk 
+                    FROM tuser 
+                    WHERE userid=@user OR sys_pk=@user LIMIT 1;
+                "
+                ref us_lst = dbr.list(db, sql, to_obj)
+            }
+            else if field.exist(to_obj, "group")
+            {
+                sql = "
+                    SELECT u.sys_pk
+                    FROM usergroup ug 
+                        INNER JOIN user_usergroup_ uug ON uug.groups=ug.sys_pk 
+                        INNER JOIN tuser u ON uug.users=u.sys_pk
+                    WHERE ug.groupid=@group OR ug.sys_pk=@group;
+                "
+                ref us_lst = dbr.list(db, sql, to_obj)
+            }
+            
+            for n = 0; n < list.count(us_lst)
+            {
+                do list.add(users, list.obj(us_lst, n))
+            }
+        }
+
+        return users
+    }
+    // Devuelve el número correspondiente al target indicado
+    // donde: vacio=0, _blank=1, _self=2
+    __dbr.notif.get.target::text
+    {
+        value = 0
+        switch text
+        {
+            case "_self"
+            {
+                value = 2
+                break
+            }
+            case "_blank"
+            {
+                value = 1
+                break
+            }
+        }
+        return value
+    }
+    __dbr.notif.insert.sys_notif_usr::&db,&users,notifpk
+    {
+        for i = 0; i < list.count(users)
+        {
+            ref usr = list.obj(users,i)
+            
+            new sys_notif_usr
+            {
+                @"uid": uuid()
+                @"notif": notifpk
+                @"user": @@(usr, "#sys_pk")
+            }
+            do dbr.execute(db, "INSERT IGNORE INTO sys_notif_usr (sys_guid,sys_dtcreated,sys_timestamp, notif,user,readed) VALUES (@uid,NOW(),NOW(), @notif,@user,0);", sys_notif_usr)
+        }
+    }
+}
