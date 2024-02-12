@@ -8,7 +8,7 @@ module "form.dk"
 
     do @context.begin(@crud_context)
 
-    ref user = @("&./")
+    ref user = record.caseinsensitive(@("&./"))
     ref groups = @@(user, "&groups")
     entity_id = @("$parameters/_entity_id")
     error = @("$error/message")
