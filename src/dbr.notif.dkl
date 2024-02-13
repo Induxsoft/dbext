@@ -89,6 +89,7 @@ module "dbr.notif"
                 INNER JOIN sys_session ss ON ss.iuser = u.sys_pk
             WHERE ss.sys_guid = @sesion_id
                 AND (NOW() BETWEEN n.start AND n.end)
+                AND IFNULL(nu.readed, 0) = 0
             LIMIT @limit;
         "
 
