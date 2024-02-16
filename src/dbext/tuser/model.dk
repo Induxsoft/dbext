@@ -71,7 +71,11 @@ module "model"
     function tuser_read(&db, &params)
     {
         ref res = entity.read(db, params)
-        res<"groups*">: get_user_groups(db, @@(res, "#sys_pk"))
+        if not(isnull(res)) 
+        {
+            ref res = record.caseinsensitive(res)
+            res<"groups*">: get_user_groups(db, @@(res, "#sys_pk"))
+        }
         return res
     }
 
