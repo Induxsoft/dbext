@@ -3,6 +3,7 @@ var usergroup =
     guser:null,
     init()
     {
+        if (this.guser) this.guser = Object.fromEntries(Object.entries(this.guser).map(([k,v])=>[k.toLowerCase(),v]));
         const btn_group_schema = document.querySelector('#btn_group_schema');
         if (btn_group_schema) btn_group_schema.addEventListener('click', e => this.showGroupSchema());
     },
