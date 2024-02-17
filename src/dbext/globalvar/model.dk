@@ -38,12 +38,13 @@ module "model"
             for i = 0; i < list.count(vars)
             {
                 ref var = list.obj(vars, i)
-                do dbr.save(db, "globalvar", var)
+                ref v= dbr.save(db, "globalvar", var)
+                var<"sys_recver">:@@(v,"#sys_recver")+1
             }
         }
 
         do dbr.commit(db)
-        return @true
+        return vars
         
         exception
         {

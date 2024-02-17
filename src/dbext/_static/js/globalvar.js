@@ -47,7 +47,9 @@ var globalvar =
                 this.printCategoryInfo(this.categorySelected);
                 this.getVarsFromCategory(this.categorySelected.id);
             }
-            if ((this.tableCategories?.DataArray??[]).length > 0) {
+            
+            if ((this.tableCategories?.DataArray??[]).length > 0 ) 
+            {
                 this.tableCategories.NavTo(0,0);
             }
         }
@@ -208,10 +210,10 @@ var globalvar =
         }
 
         let endpoint = this.url.replace('@id',this.categorySelected.id);
-
+       
         InduxsoftCrudlModel.InvokeService(endpoint, data,
             success => {
-                console.log(success);
+                this.setNewValues(success);
                 this.currentVarsBackup = JSON.parse(JSON.stringify(this.currentVars));
                 this.showVarSaveControls();
             },
@@ -222,6 +224,22 @@ var globalvar =
             "POST", false
         );
 
+    },
+    setNewValues(data)
+    {
+        if(!this.currentVars)return;
+        if(!data)return;
+
+        for (let i = 0; i < this.currentVars.length; i++) 
+        {
+            const _var = this.currentVars[i];
+            var newdata=data.find(d=>d.sys_pk==_var.sys_pk);
+            if(newdata)
+            {
+                _var.sys_recver=newdata.sys_recver;
+                break;
+            }
+        }
     },
     getmodifiedVars()
     {
