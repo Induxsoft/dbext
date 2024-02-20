@@ -26,6 +26,9 @@ module ""
     }
     save::&db,&params,&data
     {
+        if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_FOLIO)) { do rise_error(500,"No autorizado") }
+        if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_FOLIO)) { do rise_error(500,"No autorizado") }
+
         if @@(data,"$finicial")=="" || @@(data,"#finicial")<1{data<"finicial">:1}
         if @@(data,"$fultimo")==""{data<"fultimo">:0}
         if @@(data,"$numcontrol")==""{data<"numcontrol">:0}
@@ -48,17 +51,29 @@ module ""
         }
         return entity
     }
+    delete::&db,&params
+    {
+        if not(dbr.security.isauth(db,@AUT_DELETE_FOLIO)) { do rise_error(500,"No autorizado") }
+        return entity.delete(db,params)
+    }
     read::&db,&params
     {
+        if not(dbr.security.isauth(db,@AUT_READ_FOLIO)) { do rise_error(500,"No autorizado") }
+
         ref entity=entity.read(db,params)
         do Prepare.View(db,params,entity)
         return entity
     }
+    list::&db,&params
+    {
+        if not(dbr.security.isauth(db,@AUT_ACCESS_FOLIOS)) { do rise_error(500,"No autorizado") }
+        return entity.list(db,params)
+    }
     
+    point @list to list
     point @read to read
     point @create to save
     point @update to save
+    point @delete to delete
     point @blank to blank
-
-
 }

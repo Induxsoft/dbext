@@ -12,6 +12,9 @@ module "model"
 
     function tuser_create(&db,&params,&data)
     {
+        if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_USUARIO)) { do rise_error(500,"No autorizado") }
+        if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_USUARIO)) { do rise_error(500,"No autorizado") }
+
         @use_transaction = @false
         ref groups = @null
 
@@ -70,6 +73,8 @@ module "model"
 
     function tuser_read(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_READ_USUARIO)) { do rise_error(500,"No autorizado") }
+
         ref res = entity.read(db, params)
         if not(isnull(res)) 
         {
@@ -109,6 +114,8 @@ module "model"
 
     function tuser_delete(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_DELETE_USUARIO)) { do rise_error(500,"No autorizado") }
+
         @use_transaction = @false
 
         do dbr.begin(db)
@@ -128,6 +135,8 @@ module "model"
 
     function list(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_ACCESS_USUARIOS)) { do rise_error(500,"No autorizado") }
+
         query="SELECT sys_pk, userid, username
             FROM tuser
             WHERE IF(IFNULL(@s,'')='', true, (userid LIKE CONCAT('%',@s,'%') OR username LIKE CONCAT('%',@s,'%')))

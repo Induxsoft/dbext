@@ -20,58 +20,66 @@ module "model"
           rec<"user*">:dbr.rec(db,"select * from tuser where sys_pk=@user",params)
           rec<"users*">:dbr.list(db,"select * from tuser",params)
      }
-   list::&db,&params
-   {
-        ref entity= entity.list(db,params)
-        return entity
-   }
-   
-   read::&db,&params
-   {
-        ref entity= entity.read(db,params)
-        do prepareView(db,params,entity)
-        return entity
-   }
-   blank::&db,&params
-   {
-     new entity{}
-     do prepareView(db,params,entity)
-     return entity
-   }
-   save::&db,&params,&data
-   {
-     data<"autologin">:if(parse.bool(@@(data,"autologin")),1,0)
-     if @@(data,"#min_users")<1{data<"min_users">:1}
-     if @@(data,"$masteruser")==""{data<"masteruser*">:@null}
-
-     ref datatpy=dbr.rec(db,"select * from sys_auth_tpy where sys_pk=@_entity_id",params)
-     if not(isnull(datatpy)){data<"id">:@@(datatpy,"id")}
-     
-     ref entity=dbr.auths.type.register(db,data)
-   
-     return entity
-
-     exception
+     list::&db,&params
      {
-          error=last_error()
-          do prepareView(db,params,data)
-          do rise_error(500,error)
+          if not(dbr.security.isauth(db,@AUT_ACCESS_TIPO_AUTORIZACIONES)) { do rise_error(500,"No autorizado") }
+
+          ref entity= entity.list(db,params)
+          return entity
      }
-   }
-   delete::&db,&params
-   {
-     ref data=dbr.rec(db,"select * from sys_auth_tpy where sys_pk=@_entity_id",params)
-     if isnull(data){do rise_error(500,"No se encontró datos")}
-
-     do dbr.auths.type.unregister(db,@@(data,"$id"))
-     return @null
-   }
    
-   point @delete to delete
-   point @create to save
-   point @update to save
-   point @blank to blank
-   point @read to read
-   point @list to list
+     read::&db,&params
+     {
+          if not(dbr.security.isauth(db,@AUT_READ_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
 
+          ref entity= entity.read(db,params)
+          do prepareView(db,params,entity)
+          return entity
+     }
+     blank::&db,&params
+     {
+          new entity{}
+          do prepareView(db,params,entity)
+          return entity
+     }
+     save::&db,&params,&data
+     {
+          if not(dbr.security.isauth(db,@AUT_CREATE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+          if not(dbr.security.isauth(db,@AUT_UPDATE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+
+          data<"autologin">:if(parse.bool(@@(data,"autologin")),1,0)
+          if @@(data,"#min_users")<1{data<"min_users">:1}
+          if @@(data,"$masteruser")==""{data<"masteruser*">:@null}
+
+          ref datatpy=dbr.rec(db,"select * from sys_auth_tpy where sys_pk=@_entity_id",params)
+          if not(isnull(datatpy)){data<"id">:@@(datatpy,"id")}
+          
+          ref entity=dbr.auths.type.register(db,data)
+     
+          return entity
+
+          exception
+          {
+               error=last_error()
+               do prepareView(db,params,data)
+               do rise_error(500,error)
+          }
+     }
+     delete::&db,&params
+     {
+          if not(dbr.security.isauth(db,@AUT_DELETE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+
+          ref data=dbr.rec(db,"select * from sys_auth_tpy where sys_pk=@_entity_id",params)
+          if isnull(data){do rise_error(500,"No se encontró datos")}
+
+          do dbr.auths.type.unregister(db,@@(data,"$id"))
+          return @null
+     }
+   
+     point @delete to delete
+     point @create to save
+     point @update to save
+     point @blank to blank
+     point @read to read
+     point @list to list
 }

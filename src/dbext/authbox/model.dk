@@ -45,16 +45,20 @@ module "model"
     LEFT JOIN tuser tu3 on l.rejby=tu3.sys_pk
     where l.#<@keyfield>=@_entity_id limit 1"
 
-   list::&db,&params
-   {
+    list::&db,&params
+    {
+        if not(dbr.security.isauth(db,@AUT_ACCESS_AUTORIZACIONES)) { do rise_error(500,"No autorizado") }
+
         ref user=dbr.auths.getUser(db)
         params<"user">:@@(user,"#sys_pk")
 
         ref entity= entity.list(db,params)
         return entity
-   }
-   update::&db,&params,&data
-   {
+    }
+    update::&db,&params,&data
+    {
+        if not(dbr.security.isauth(db,@AUT_CREATE_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+
         if field.exist(data,"act")
         {
             ref auth_log=@null
@@ -69,9 +73,16 @@ module "model"
         }
         ref entity= entity.update(db,params,data)
         return entity
-   }
-   read::&db,&params
-   {
+    }
+    delete::&db,&params
+    {
+        if not(dbr.security.isauth(db,@AUT_DELETE_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+        return entity.delete(db,params)
+    }
+    read::&db,&params
+    {
+        if not(dbr.security.isauth(db,@AUT_READ_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+
         ref entity= entity.read(db,params)
         entity<"autorizaciones*">:dbr.list(db,"SELECT l.*,u.userid,u.username,date_format(l.sys_dtcreated,'%Y-%m-%d')autorizacion,
         (
@@ -84,10 +95,9 @@ module "model"
         FROM sys_auth_log_usr l
         INNER JOIN tuser u on l.auth_user=u.sys_pk where l.log=@_entity_id",params)
         return entity
-   }
+    }
    
    point @read to read
    point @create to update
    point @list to list
-
 }

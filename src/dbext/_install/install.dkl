@@ -26,6 +26,7 @@ program "instalador"
     categories_file = path.concat(path_app_info,"sys_app_category.csv")
     catalogs_file = path.concat(path_app_info,"sys_app_catalog.csv")
     shortcuts_file = path.concat(path_app_info,"sys_app_shortcut.csv")
+    // Archivo de permisos
     sitem_file = path.concat(path_initial_data,"sitem.csv")
 
     model_name = file.name(dir.name(path_install)) + ".ddm"
@@ -39,7 +40,41 @@ program "instalador"
         "globalvar.csv"
     ]')
 	// Lista de permisos iniciales
-    ref permissions_to_import = from.json('[]')
+    ref permissions_to_import = from.json('[
+        "CFO-00-000-000",
+        "CFO-00-000-001",
+        "CFO-00-000-002",
+        "CFO-00-000-003",
+        "CFO-00-000-004",
+        "GPU-00-000-000",
+        "GPU-00-000-001",
+        "GPU-00-000-002",
+        "GPU-00-000-003",
+        "GPU-00-000-004",
+        "PER-00-000-000",
+        "PER-00-000-001",
+        "PER-00-000-002",
+        "PER-00-000-003",
+        "PER-00-000-004",
+        "SAU-00-000-000",
+        "SAU-00-000-001",
+        "SAU-00-000-002",
+        "SAU-00-000-003",
+        "SAU-00-000-004",
+        "TAU-00-000-000",
+        "TAU-00-000-001",
+        "TAU-00-000-002",
+        "TAU-00-000-003",
+        "TAU-00-000-004",
+        "TUS-00-000-000",
+        "TUS-00-000-001",
+        "TUS-00-000-002",
+        "TUS-00-000-003",
+        "TUS-00-000-004",
+        "GVA-00-000-000",
+        "GVA-00-000-001",
+        "GVA-00-000-001",
+    ]')
 
     // DECLARACIÓN DE FUNCIONES
     ref lib_csv = _import_library("devkron.serialize.csv.dll")

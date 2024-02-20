@@ -5,33 +5,17 @@ module "Controller configs"
 	#include "functions.dkh"
 	#include "serialize.dkh"
 	#include "dbr.dkh"
+	#include "dbr.security.dkl"
 	#include "crudl/crudl.dk"
+	#include "./config.dk"
 
 	if @@(@http_context,"$session/user/ids") == "" {
 		@http_context<"response/headers/location"> : "/"
 		return
 	}
 
-	// _pack = @@(@http_context,"$request/get/_pack")
-	// _program = @@(@http_context,"$request/get/_program")
-	// do rise_error(0, _pack + " - " + _program)
-
 	@base_path="dbext"
 	@path_root="" // Establezca una ruta de ser necesario
-	
-	// Enmascaramiento de enrutamiento (Ejemplos)
-	// Definición de patrones de rutas con base en parámetros GET (request/get)
-	// do crudl.routes.pattern("/module/submodule/process/subprocess/")
-
-	// Comparación de rutas entrantes y asignación de parámetro _entities_type
-	// if crudl.routes.entity("inventario/movimientos/entrada/confirmar/","inventario-movs.entrada-confirmar")
-    // {
-    //    //Si es la ruta indicada, esto es @true y se asigna _entities_type
-    // }
-	// if crudl.route("inventario/movimientos/entrada/confirmar/")
-	// {
-    //    //Si es la ruta indicada esto es @true pero no se modifica _entities_type
-    // }
 
 	//No modifique a menos que sepa lo que está haciendo
 	do crudl.routes.pattern("/_program/")

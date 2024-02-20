@@ -9,6 +9,9 @@ module "model"
 
     function usergroup_create(&db,&params,&data)
     {
+        if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+        if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+
         ref res = entity.create(db,params,data)
         return res
         exception
@@ -19,6 +22,8 @@ module "model"
     }
     function usergroup_delete(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_DELETE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+
         @use_transaction = @false
 
         do dbr.begin(db)
@@ -38,12 +43,20 @@ module "model"
 
     function list(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_ACCESS_GPO_USUARIOS)) { do rise_error(500,"No autorizado") }
+
         query="SELECT sys_pk, groupid, description, notes
             FROM usergroup
             WHERE IF(IFNULL(@s,'')='', true, (groupid LIKE CONCAT('%',@s,'%') OR description LIKE CONCAT('%',@s,'%')))
             ORDER BY groupid
             LIMIT #<@default_max_rows>;"
         return dbr.list(db, ftext(query), params)
+    }
+
+    function read(&db,&params)
+    {
+        if not(dbr.security.isauth(db,@AUT_READ_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+        return entity.read(db,params)
     }
 
     function cu_error(table)
@@ -58,4 +71,5 @@ module "model"
     point @update to usergroup_create
     point @delete to usergroup_delete
     point @list to list
+    point @read to read
 }

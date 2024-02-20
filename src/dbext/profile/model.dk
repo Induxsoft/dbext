@@ -6,12 +6,16 @@ module "model"
 
     function profile_read(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_READ_PERFIL)) { do rise_error(500,"No autorizado") }
+
         ref group = dbr.rec(db, "SELECT sys_pk, groupid, description, IFNULL(notes,'') notes FROM usergroup WHERE sys_pk=@_entity_id LIMIT 1;", params)
         if not(isnull(group)) { group<"sitem_profile*">: get_group_sitem_profile(db, group) }
         return group
     }
     function profile_list(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_ACCESS_PERFILES)) { do rise_error(500,"No autorizado") }
+
         ref groups = dbr.list(db, "SELECT sys_pk, groupid, description, notes FROM usergroup;", @null)
         return groups
     }
@@ -26,6 +30,9 @@ module "model"
 
     function profile_create(&db, &params, &data)
     {
+        if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_PERFIL)) { do rise_error(500,"No autorizado") }
+        if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_PERFIL)) { do rise_error(500,"No autorizado") }
+
         ref profiles = @@(data, "&profile")
         sql_p = ""
 
@@ -64,7 +71,14 @@ module "model"
         }
     }
 
+    function profile_delete(&db,&params)
+    {
+        if not(dbr.security.isauth(db,@AUT_DELETE_PERFIL)) { do rise_error(500,"No autorizado") }
+        return entity.delete(db,params)
+    }
+
     point @read to profile_read
     point @list to profile_list
     point @create to profile_create
+    point @delete to profile_delete
 }

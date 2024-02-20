@@ -7,10 +7,14 @@ module "model"
 
     function globalvar_read(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_READ_GVAR)) { do rise_error(500,"No autorizado") }
+
         return get_category_vars(db, params)
     }
     function globalvar_list(&db, &params)
     {
+        if not(dbr.security.isauth(db,@AUT_ACCESS_GLOBALVARS)) { do rise_error(500,"No autorizado") }
+
         sql = " SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent 
                 FROM varcategory;"
 
@@ -28,6 +32,8 @@ module "model"
     }
     function globalvar_create(&db, &params, &data)
     {
+        if not(dbr.security.isauth(db,@AUT_UPDATE_GVAR)) { do rise_error(500,"No autorizado") }
+
         ref vars = @@(data, "&vars")
         
         @use_transaction = @false

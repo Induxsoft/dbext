@@ -1,0 +1,42 @@
+itemid,description,itemparent
+"FX1-00-00-000","Operaciones ERP","FX1-00-00-000"
+
+"CFO-00-000-000","Control de Folios","FX1-00-00-000"
+"CFO-00-000-001","Solo lectura","CFO-00-000-000"
+"CFO-00-000-002","Permitir Agregar Folios","CFO-00-000-001"
+"CFO-00-000-003","Permitir Modificar Folios","CFO-00-000-001"
+"CFO-00-000-004","Permitir Eliminar Folios","CFO-00-000-001"
+
+"GPU-00-000-000","Grupos de Usuarios","FX1-00-00-000"
+"GPU-00-000-001","Solo lectura","GPU-00-000-000"
+"GPU-00-000-002","Permitir Agregar grupo","GPU-00-000-000"
+"GPU-00-000-003","Permitir Modificar grupo","GPU-00-000-00"
+"GPU-00-000-004","Permitir Eliminar grupo","GPU-00-000-000"
+
+"PER-00-000-000","Perfiles","FX1-00-00-000"
+"PER-00-000-001","Solo lectura","PER-00-000-000"
+"PER-00-000-002","Permitir Agregar Perfil","PER-00-000-001"
+"PER-00-000-003","Permitir Modificar Perfil","PER-00-000-001"
+"PER-00-000-004","Permitir Eliminar Perfil","PER-00-000-001"
+
+"SAU-00-000-000","Solicitudes de autorización","FX1-00-00-000"
+"SAU-00-000-001","Solo lectura","SAU-00-000-000"
+"SAU-00-000-002","Permitir Agregar Solicitud","SAU-00-000-001"
+"SAU-00-000-003","Permitir Modificar Solicitud","SAU-00-000-001"
+"SAU-00-000-004","Permitir Eliminar Solicitud","SAU-00-000-001"
+
+"TAU-00-000-000","Tipos de autorización","FX1-00-00-000"
+"TAU-00-000-001","Solo lectura","PER-00-000-000"
+"TAU-00-000-002","Permitir Agregar Autorización","TAU-00-000-001"
+"TAU-00-000-003","Permitir Modificar Autorización","TAU-00-000-001"
+"TAU-00-000-004","Permitir Eliminar Autorización","TAU-00-000-001"
+
+"TUS-00-000-000","Usuarios","FX1-00-00-000"
+"TUS-00-000-001","Solo lectura","TUS-00-000-000"
+"TUS-00-000-002","Permitir Agregar usuario","TUS-00-000-001"
+"TUS-00-000-003","Permitir Modificar usuario","TUS-00-000-001"
+"TUS-00-000-004","Permitir Eliminar usuario","TUS-00-000-001"
+
+"GVA-00-000-000","Variables globales","FX1-00-00-000"
+"GVA-00-000-001","Solo lectura","GVA-00-000-000"
+"GVA-00-000-001","Permitir Modificar Variable Global","GVA-00-000-001"
