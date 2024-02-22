@@ -60,4 +60,58 @@ module "Gestión de folios :dbr.folios"
 
         return res
     }
+
+    module ":dbr.autocode"
+    {
+        info::cad
+        {
+            prf=""
+            sec="0"
+            new info {}
+
+            if contains(cad,"|")
+            {
+                ref a=split(cad,"|")
+                prf=list.str(a,0)
+                sec=ranydiffchars(list.str(a,1),"0","")
+            }
+
+            info<"prefix">:prf
+            info<"positions">:length(sec)
+
+            return info
+        }
+
+        new::&db,table, field, &config
+        {
+            sqlLast="select #<field> from #<table> order by #<field> desc limit 1;"
+            prf=""
+            num=@@(config,"#start")
+            if num<1 { num=1  }
+
+            if trim(@@(config,"$prefix"))!=""
+            {
+                prf=trim(@@(config,"$prefix"))+trim(@@(config,"$separator"))
+                sqlLast="select #<field> from #<table> where #<field> like '"+prf+"%' order by #<field> desc limit 1;"
+            }
+            
+            ref rec=dbr.rec(db,ftext(sqlLast),@null)
+            
+            if not(isnull(rec))
+            {
+                cod=@@(rec,"$"+field)
+                if prf!="" { cod=replace(cod,prf,"") }
+                num=val(cod)+1
+                exception{}
+            }
+
+            fmt=""
+            for i=0;i<@@(config,"#positions")
+            {
+                fmt=fmt+"0"
+            }
+
+            return prf+format(num,fmt)
+        }
+    }
 }
