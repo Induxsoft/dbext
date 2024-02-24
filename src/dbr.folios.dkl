@@ -2,7 +2,8 @@
 #!
 module "Gestión de folios :dbr.folios"
 {
-
+	@max_autocode_attemps=10
+	
     // Devuele la clave primaria correspondiente al block cuya serie y tipo de documento se indican
     id_block::&db,doctype, serie
     {
@@ -101,6 +102,7 @@ module "Gestión de folios :dbr.folios"
             {
                 cod=@@(rec,"$"+field)
                 if prf!="" { cod=replace(cod,prf,"") }
+                cod=ranydiffchars(cod,"0123456789","0")
                 num=val(cod)+1
                 exception{}
             }
@@ -110,8 +112,15 @@ module "Gestión de folios :dbr.folios"
             {
                 fmt=fmt+"0"
             }
-
-            return prf+format(num,fmt)
+	
+			for i=0;i<@max_autocode_attemps+1
+			{
+				autocode= prf+format(num,fmt)
+				if isnull(dbr.rec(db,ftext("select #<field> from #<table> where #<field>='#<autocode>' limit 1;"),@null)) { break }
+				num=num+1
+			}
+			
+			return autocode
         }
     }
 }
