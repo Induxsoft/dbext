@@ -22,12 +22,23 @@ module "model"
     }
     function get_category_vars(&db, &category)
     {
-        sql = " SELECT sys_pk, sys_recver, IFNULL(vardefault,'') vardefault, varname, IFNULL(varvalue,'') varvalue, 
-                    IFNULL(varcaption,'*Without caption') varcaption, IFNULL(varhelp,'') varhelp, IFNULL(vartype,'') vartype, 
-                    IFNULL(varinput,'{}') varinput
-                FROM globalvar
-                WHERE IFNULL(ref_varcat,'#<@id_vars_without_cat>')=@_entity_id;"
-        
+        sql = "
+        SELECT
+            sys_pk,
+            sys_recver,
+            IFNULL(vardefault,'') vardefault,
+            varname,
+            IFNULL(varvalue,'') varvalue,
+            IF(IFNULL(varcaption,'')='',
+                varname,
+                CONCAT(varcaption,' (',varname,')')
+            ) AS varcaption,
+            IFNULL(varhelp,'') varhelp,
+            IFNULL(vartype,'') vartype,
+            IFNULL(varinput,'{}') varinput
+        FROM globalvar
+        WHERE IFNULL(ref_varcat,'#<@id_vars_without_cat>')=@_entity_id;
+        "
         return dbr.list(db, ftext(sql), category)
     }
     function globalvar_create(&db, &params, &data)
