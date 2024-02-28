@@ -12,6 +12,7 @@ var globalvar =
     init()
     {
         this.tableCategories = document.querySelector('#'+this.tableCId);
+        this.setKeyboardShortcuts();
         this.setConfigTables();
         this.setTableEvents();
 
@@ -53,6 +54,20 @@ var globalvar =
                 this.tableCategories.NavTo(0,0);
             }
         }
+    },
+    setKeyboardShortcuts()
+    {
+        document.addEventListener("keydown", (e) => {
+            // console.log("key: "+ e.key + " | " + "code: " + e.code);
+            if (e.key === "Escape") {
+                e.preventDefault();
+                window.open("/","_top");
+            }
+            if (e.key === "F5") {
+                e.preventDefault();
+                window.location.reload();
+            }
+        });
     },
 
     // =============== CATEGORY
@@ -131,12 +146,87 @@ var globalvar =
     getVarControl(varData)
     {
         let control = null;
-        const varInput = (varData.varinput??'default');
-        const varValue = (varData.varvalue??'');
+        const varInput = this.getJsonDef(varData.varinput) ?? {};
+        const varValue = (varData.varvalue ?? '');
+        const ctrlType = (varInput?.control ?? 'text');
 
-        switch (varInput)
+        switch (ctrlType)
         {
-            case "default":
+            case "intcolor":
+            case "hexcolor":
+            {
+                control = main.createFullElement('input',{
+                    type: 'color',
+                    value: varValue,
+                    class: 'form-control form-control-color rounded-0',
+                    pk: varData.sys_pk,
+                }, varValue);
+                break;   
+            }
+            case "time":
+            {
+                control = main.createFullElement('input',{
+                    type: 'time',
+                    value: varValue,
+                    class: 'form-control rounded-0',
+                    pk: varData.sys_pk,
+                }, varValue);
+                break;
+            }
+            case "date":
+            {
+                control = main.createFullElement('input',{
+                    type: 'date',
+                    value: varValue,
+                    class: 'form-control rounded-0',
+                    pk: varData.sys_pk,
+                }, varValue);
+                break;
+            }
+            case "datetime":
+            {
+                control = main.createFullElement('input',{
+                    type: 'datetime-local',
+                    value: varValue,
+                    class: 'form-control rounded-0',
+                    pk: varData.sys_pk,
+                }, varValue);
+                break;
+            }
+            case "textarea":
+            {
+                control = main.createFullElement('textarea',{
+                    class: 'form-control rounded-0',
+                    pk: varData.sys_pk,
+                }, varValue);
+                break;
+            }
+            case "select":
+            {
+                let type = varInput?.source?.type ?? 'list';
+                let values = varInput?.source?.values ?? [];
+                let query = varInput?.source?.query ?? '';
+                let showfield = varInput?.source?.showfield ?? '';
+                let keyfield = varInput?.source?.keyfield ?? '';
+
+                control = main.createFullElement('select',{
+                    class: 'form-select rounded-0',
+                    pk: varData.sys_pk,
+                });
+
+                values.forEach(itm => {
+                    const option = document.createElement('option');
+                    option.value = itm[keyfield];
+                    option.text = itm[showfield];
+                    if (itm[keyfield] == varValue) option.setAttribute("selected","");
+                    
+                    control.appendChild(option);
+                    // console.log("fill control");
+                });
+
+                // console.log('case "select": [end]');
+                break;
+            }
             default:
             {
                 control = main.createFullElement('input', { 
@@ -144,33 +234,55 @@ var globalvar =
                     class:'induxsoft-form-control', 
                     pk:varData.sys_pk, 
                     value:varValue,
-                    typeEvent: this.typeEvents.inputText
                 }, varValue);
 
                 if (varValue) control.value = varValue;
                 break;
             }
         }
+        // console.log("switch-case [end]");
 
         control.classList.add('show-hint', 'var-control');
         return control.outerHTML;
+    },
+    getJsonDef(string)
+    {
+        let definition = null;
+        try {
+            definition = JSON.parse(string);
+        } catch (error) {/*ignore*/}
+        return definition;
     },
     setVarChangeEvent()
     {
         const appyEvent = (control) =>
         {
-            const type = control.getAttribute('typeEvent');
-            switch (type)
+            // const type = control.getAttribute('typeEvent');
+            switch (control.tagName.toLowerCase())
             {
-                case this.typeEvents.select:
+                case "input":
                 {
-                    control.addEventListener('change', e => { this.updateVarValue(control.getAttribute('pk'), control.value) });
+                    let Events =
+                    {
+                        text: "keyup",
+                        color: "change",
+                        time: "change",
+                        date: "change",
+                        "datetime-local": "change",
+                    }
+
+                    let event = Events[control.type];
+                    control.addEventListener(event, e => { this.updateVarValue(control.getAttribute('pk'), control.value) });
                     break;
                 }
-                case this.typeEvents.inputText:
-                default:
+                case "textarea":
                 {
                     control.addEventListener('keyup', e => { this.updateVarValue(control.getAttribute('pk'), control.value) });
+                    break;
+                }
+                case "select":
+                {
+                    control.addEventListener('change', e => { this.updateVarValue(control.getAttribute('pk'), control.value) });
                     break;
                 }
             }

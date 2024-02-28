@@ -2,5 +2,12 @@
 #!
 module "controller"
 {
-    
+    switch @@(@http_context,"$request/get/_view")
+    {
+        case "load-values"
+        {
+            point @list to load_query_values
+            break
+        }
+    }
 }

@@ -5,6 +5,11 @@ module "model"
     #include "../config.dk"
     @table_name = "globalvar"
 
+    function load_query_values(&db,&params)
+    {
+        return dbr.list(db,@@(params,"$cmd"),@null)
+    }
+
     function globalvar_read(&db, &params)
     {
         if not(dbr.security.isauth(db,@AUT_READ_GVAR)) { do rise_error(500,"No autorizado") }
@@ -15,9 +20,7 @@ module "model"
     {
         if not(dbr.security.isauth(db,@AUT_ACCESS_GLOBALVARS)) { do rise_error(500,"No autorizado") }
 
-        sql = " SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent 
-                FROM varcategory;"
-
+        sql = "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent FROM varcategory;"
         return dbr.list(db, sql, @null)
     }
     function get_category_vars(&db, &category)
