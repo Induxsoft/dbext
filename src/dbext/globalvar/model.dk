@@ -7,7 +7,7 @@ module "model"
 
     function load_query_values(&db,&params)
     {
-        return dbr.list(db,@@(params,"$cmd"),@null)
+        return dbr.list(db,url_dcode(@@(params,"$cmd")),@null)
     }
 
     function globalvar_read(&db, &params)

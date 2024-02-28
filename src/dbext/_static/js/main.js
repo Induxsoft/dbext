@@ -3,6 +3,24 @@ var main = {
     {
         
     },
+    url_encode(url)
+    {
+        let _url = btoa(url);
+        
+        _url = _url.replaceAll("=","|");
+        _url = _url.replaceAll("/","_");
+        _url = _url.replaceAll("+","-");
+        
+        return _url;
+    },
+    url_decode(url)
+    {
+        url = url.replaceAll("|","=");
+        url = url.replaceAll("_","/");
+        url = url.replaceAll("-","+");
+        
+        return atob(url);
+    },
     getValues(containerId='', includeEmpy=false)
     {
         values = {};

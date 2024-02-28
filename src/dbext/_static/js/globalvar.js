@@ -208,23 +208,38 @@ var globalvar =
                 let query = varInput?.source?.query ?? '';
                 let showfield = varInput?.source?.showfield ?? '';
                 let keyfield = varInput?.source?.keyfield ?? '';
+                
+                let idElement = "select-"+type+"-"+varData.sys_pk;
 
                 control = main.createFullElement('select',{
                     class: 'form-select rounded-0',
+                    id: idElement,
                     pk: varData.sys_pk,
                 });
 
-                values.forEach(itm => {
-                    const option = document.createElement('option');
-                    option.value = itm[keyfield];
-                    option.text = itm[showfield];
-                    if (itm[keyfield] == varValue) option.setAttribute("selected","");
-                    
-                    control.appendChild(option);
-                    // console.log("fill control");
-                });
+                const fillSelect = (data) => {
+                    data.forEach(itm => {
+                        const option = document.createElement('option');
+                        option.value = itm[keyfield];
+                        option.text = itm[showfield];
+                        if (itm[keyfield] == varValue) option.setAttribute("selected","");
+                        
+                        control.appendChild(option);
+                    });
+                }
 
-                // console.log('case "select": [end]');
+                if (type === "query")
+                {
+                    let url = "./?_view=load-values&cmd=" + main.url_encode(query);
+                    fetch(url).then(response => response.json())
+                        .then(data => fillSelect(data))
+                        .finally(() => {
+                            const element = document.getElementById(idElement);
+                            if (element) element.innerHTML = control.innerHTML;
+                        });
+                }
+                else fillSelect(values);
+
                 break;
             }
             default:
@@ -240,7 +255,6 @@ var globalvar =
                 break;
             }
         }
-        // console.log("switch-case [end]");
 
         control.classList.add('show-hint', 'var-control');
         return control.outerHTML;
