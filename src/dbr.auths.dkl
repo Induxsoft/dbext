@@ -152,7 +152,7 @@ module ":dbr.auths"
         {
             @"authorized":autorizar
             @"error":text_error
-            @"request":auth_l
+            @"request*":auth_l
         }
         return response
     }
@@ -230,11 +230,12 @@ module ":dbr.auths"
             if @@(auth_log,"#min_users")==count_auth_log_usr{update_log=@true}
         }
         //autorizado completamente
-        if @autorizar
-        {
-            do dbr.execute(db,"update sys_auth_log set authorized=1 where sys_pk=@log",auth_log_usr)
-        } 
-        else if update_log 
+        // if @autorizar
+        // {
+        //     do dbr.execute(db,"update sys_auth_log set authorized=1 where sys_pk=@log",auth_log_usr)
+        // } 
+        // else 
+        if update_log 
         {
             do dbr.execute(db,"update sys_auth_log set authorized=1 where sys_pk=@log",auth_log_usr)
             module "run_script"
