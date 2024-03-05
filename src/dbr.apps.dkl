@@ -158,6 +158,7 @@ module ":dbr.apps"
     itemaction.set::&db,&data
     {
         //sys_app_item_action
+        if not(field.exist(data,"icon16x16")){data<"icon16x16">:""} //El campo es requerido en la base de datos
         return dbr.apps.save(db, "sys_app_item_action", data)
     }
 
