@@ -35,6 +35,28 @@ module ":dbr.apps"
         }
     }
 
+    // Agrega o actualiza un conjunto de tipos de elementos sobre el que aplican acciones.
+    itemtype.import::&db,&list
+    {
+        for i = 0; i < list.count(list)
+        {
+            ref itm = list.obj(list,i)
+            do dbr.apps.itemtype.set(db,itm)
+            do print("- " + @@(itm,"$title"))
+        }
+    }
+
+    // Agrega o actualiza un conjunto de acciones.
+    itemaction.import::&db,&list
+    {
+        for i = 0; i < list.count(list)
+        {
+            ref act = list.obj(list,i)
+            do dbr.apps.itemaction.set(db,act)
+            do print("- " + @@(act,"$title"))
+        }
+    }
+
     // Agrega o actualiza la información de una categoría de aplicaciones
     category.set::&db,&data
     {
@@ -191,9 +213,9 @@ module ":dbr.apps"
         if @@(prm,"#req") == 1 && @@(prm,"item_type") == "*"
         {
             sql = "
-                SELECT * FROM ((SELECT sh.id, sh.title, sh.icon96x96 icon, sh.src href, sh._blank, sh.appid,'*' itemtype,0 req_context_item_id,'shortcut' act_type FROM sys_app_shortcut sh) 
+                SELECT * FROM ((SELECT sh.id, sh.title,SUBSTRING(sh.title,1,25) shorttitle sh.icon96x96 icon, sh.src href, sh._blank, sh.appid,'*' itemtype,0 req_context_item_id,'shortcut' act_type FROM sys_app_shortcut sh) 
                 UNION ALL 
-                (SELECT ia.id, ia.title, ia.icon16x16 icon, ia.href, ia._blank, ia.appid, ia.itemtype, ia.req_context_item_id, ia.act_type FROM sys_app_item_action ia)) v 
+                (SELECT ia.id, ia.title, ia.shorttitle, ia.icon16x16 icon, ia.href, ia._blank, ia.appid, ia.itemtype, ia.req_context_item_id, ia.act_type FROM sys_app_item_action ia)) v 
                 WHERE IF(@act_type='*', true, v.act_type=@act_type)
                     AND IF(@text='', true, (v.id LIKE CONCAT('%',@text,'%') OR v.title LIKE CONCAT('%',@text,'%')))
                 ORDER BY v.id;
@@ -202,7 +224,7 @@ module ":dbr.apps"
         else 
         {
             sql = "
-                SELECT ia.id, ia.title, ia.icon16x16 icon, ia.href, ia._blank, ia.appid, ia.itemtype, ia.req_context_item_id, ia.act_type
+                SELECT ia.id, ia.title, ia.shorttitle, ia.icon16x16 icon, ia.href, ia._blank, ia.appid, ia.itemtype, ia.req_context_item_id, ia.act_type
                 FROM sys_app_item_action ia
                     LEFT JOIN sys_app_item_type it ON ia.itemtype = it.id
                 WHERE IF(@item_type='*', true, ia.itemtype=@item_type)

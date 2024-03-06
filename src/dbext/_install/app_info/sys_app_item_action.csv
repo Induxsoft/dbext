@@ -1,0 +1,17 @@
+"id","title","shorttitle","icon16x16","href","_blank","appid","itemtype","req_context_item_id","act_type"
+
+"XB21","Agregar tipo de autorización","Agregar","","/!/dbext/authtpy/_new/","0","dbext.authtpy","tsauth","0","action"
+"XB22","Editar tipo de autorización","Editar","","/!/dbext/authtpy/@_src_context_item_id/","0","dbext.authtpy","tsauth","1","action"
+"XB23","Eliminar tipo de autorización","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","dbext.authtpy","tsauth","1","action"
+
+"XB31","Agregar folio","Agregar","","/!/dbext/blockdocs/_new/","0","dbext.blockdocs","bdock","0","action"
+"XB32","Editar folio","Editar","","/!/dbext/blockdocs/@_src_context_item_id/","0","dbext.blockdocs","bdock","1","action"
+"XB33","Eliminar folio","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","dbext.blockdocs","bdock","1","action"
+
+"XB61","Agregar Usuario","Agregar","","/!/dbext/tuser/_new/","0","dbext.tuser","user","0","action"
+"XB62","Editar Usuario","Editar","","/!/dbext/tuser/@_src_context_item_id/","0","dbext.tuser","user","1","action"
+"XB63","Eliminar Usuario","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","dbext.tuser","user","1","action"
+
+"XB71","Agregar grupo de usuarios","Agregar","","/!/dbext/usergroup/_new/","0","dbext.usergroup","gpusr","0","action"
+"XB72","Editar grupo de usuarios","Editar","","/!/dbext/usergroup/@_src_context_item_id/","0","dbext.usergroup","gpusr","1","action"
+"XB73","Eliminar grupo de usuarios","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","dbext.usergroup","gpusr","1","action"
