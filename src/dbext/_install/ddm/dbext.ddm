@@ -36,6 +36,8 @@ model "Variables globales"
         @"userid" string(120) unique required
         @"username" string(120) required
         @"pwdmd5" string(64) 
+
+        @"external" bool    //Si es true, el usuario se consiera externo
     }
     // Grupo de usuarios
     entity "usergroup"

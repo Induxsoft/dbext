@@ -139,7 +139,7 @@ module "model"
 
         query="SELECT sys_pk, userid, username
             FROM tuser
-            WHERE IF(IFNULL(@s,'')='', true, (userid LIKE CONCAT('%',@s,'%') OR username LIKE CONCAT('%',@s,'%')))
+            WHERE ifnull(external,0)=0 and IF(IFNULL(@s,'')='', true, (userid LIKE CONCAT('%',@s,'%') OR username LIKE CONCAT('%',@s,'%')))
             ORDER BY userid
             LIMIT #<@default_max_rows>;"
         return dbr.list(db, ftext(query), params)
