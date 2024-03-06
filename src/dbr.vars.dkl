@@ -2,6 +2,51 @@
 #!
 module "Variables alojadas en la base de datos :dbr.vars"
 {
+    // Obtiene y establece si no se ha establecido previamente, 
+    // un identificador único que puede usarse para comparar dos conexiones
+    // y determinar si corresponden a la misma base de datos
+
+    db_id::&db
+    {
+        id=dbr.vars.get(db,"_database_id")
+
+        if id=="" 
+        { 
+            id=uuid()
+            do dbr.vars.set(db,"_database_id",id)
+        }
+
+        return id
+    }
+
+    // Establece una variable global
+    set::&db,varname,value
+    {
+        new p{@"varname":varname}
+        ref rec=dbr.rec(db,"select * from globalvar where varname=@varname;",p)
+        if isnull(rec)
+        {
+            ref rec=record.create()
+            using rec
+            {
+                @"sys_guid":uuid()
+                @"sys_dtcreated*":dbr.sql("now()")
+                @"sys_timestamp*":dbr.sql("now()")
+                @"sys_recver":0
+                @"varname":varname
+                @"varvalue":value
+            }
+
+            do dbr.insert(db,"globalvar",rec)
+        }
+        else
+        {
+            p<"value">:value
+            do dbr.update(db,"update globalvar set varvalue=@value",p)
+        }
+        
+    }
+
     userid::&db
     {
         new p { @"sid": dbr.getSID(db) }
