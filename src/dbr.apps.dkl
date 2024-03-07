@@ -217,7 +217,7 @@ module ":dbr.apps"
                 (
                     (SELECT sh.id, sh.title, SUBSTRING(sh.title,1,25) shorttitle, sh.icon96x96 icon, sh.src href, sh._blank, sh.appid, '*' itemtype, 0 req_context_item_id,'shortcut' act_type FROM sys_app_shortcut sh)
                     UNION ALL
-                    (SELECT ia.id, ia.title, ia.shorttitle, ia.icon16x16 icon, ia.href, ia._blank, ia.appid, ia.itemtype, ia.req_context_item_id, ia.act_type FROM sys_app_item_action ia)
+                    (SELECT ia.id, ia.title, ia.shorttitle, ia.icon16x16 icon, ia.href, ia._blank, ia.appid, ia.itemtype, ia.req_context_item_id, ia.act_type FROM sys_app_item_action ia WHERE NOT IFNULL(ia.req_context_item_id,0))
                 ) v
                 WHERE IF(@act_type='*', true, v.act_type=@act_type)
                     AND IF(@text='', true, (v.id LIKE CONCAT('%',@text,'%') OR v.title LIKE CONCAT('%',@text,'%')))
