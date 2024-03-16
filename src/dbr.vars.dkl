@@ -2,6 +2,7 @@
 #!
 module "Variables alojadas en la base de datos :dbr.vars"
 {
+    #include "serialize.dkh"
     // Obtiene y establece si no se ha establecido previamente, 
     // un identificador único que puede usarse para comparar dos conexiones
     // y determinar si corresponden a la misma base de datos
@@ -207,5 +208,49 @@ module "Variables alojadas en la base de datos :dbr.vars"
 
             exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
         }
+    }
+    
+    define::&db,&vardata,catid
+    {
+        new var
+        {
+            @"sys_guid": uuid()
+            @"sys_timestamp*": dbr.sql("NOW()")
+            @"varname": @@(vardata,"$varname")
+        }
+        
+        if field.exist(vardata,"vardefault"){ var<"vardefault">: @@(vardata,"$vardefault") }
+        if field.exist(vardata,"varvalue"){ var<"varvalue">: @@(vardata,"$varvalue") }
+        if field.exist(vardata,"varcaption"){ var<"varcaption">: @@(vardata,"$varcaption") }
+        if field.exist(vardata,"varhelp"){ var<"varhelp">: @@(vardata,"$varhelp") }
+        if field.exist(vardata,"vartype"){ var<"vartype">: @@(vardata,"$vartype") }
+        if field.exist(vardata,"userenable"){ var<"userenable">: @@(vardata,"$userenable") }
+        if field.exist(vardata,"varinput"){
+            var<"varinput">: to.json(@@(vardata,"&varinput"))
+            exception{}
+        }
+        if catid != "" { 
+            var<"ref_varcat">: catid 
+        }
+
+        do dbr.insert(db,"globalvar",var)
+        do print(" - " + @@(var,"$varname"))
+
+        exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
+    }
+    categories.set::&db,id,caption,help,parent
+    {
+        new category
+        {
+            @"id": id
+            @"caption": caption
+            @"help": help
+        }
+        if parent != "" { category<"parent">: parent }
+
+        do dbr.insert(db,"varcategory",category)
+        do print(" - " + @@(category,"$id"))
+
+        exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
     }
 }
