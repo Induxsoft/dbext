@@ -216,6 +216,7 @@ module "Variables alojadas en la base de datos :dbr.vars"
         {
             @"sys_guid": uuid()
             @"sys_timestamp*": dbr.sql("NOW()")
+            @"sys_recver": 0
             @"varname": @@(vardata,"$varname")
         }
         
