@@ -197,6 +197,7 @@ module ":dbr.auths"
     }
     auth::&db,uuid,notas
     {
+        count_users=0
         update_log=@false
 
         ref auth_log=dbr.auths.getDataAuthlog(db,uuid)
