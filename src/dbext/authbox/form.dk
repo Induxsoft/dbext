@@ -21,7 +21,7 @@ module "form.dk"
     request=ifstr(@("$./http_request")!="",@("$./http_request"),"{}")
     new @auth_context
     {
-        @"database":@("&database")
+        @"database*":@("&database")
         @"request*":record.copy(from.json(request),"*")
         @"response*":record.copy(from.json(response),"*")
         @"error_info": @("$./error_info")
