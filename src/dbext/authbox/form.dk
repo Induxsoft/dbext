@@ -9,7 +9,6 @@ module "form.dk"
     do @context.begin(@crud_context)
     ref @http_context=@("&http")
     ref autorizaciones=@("&./autorizaciones")
-    // do file.wtext("C:\\Users\\Dev\\Documents\\devkrons\\devkronNet\\dbext\\t.json",to.json(@http_context))
 
     ref data = @("&./")
     entity_id = @("$parameters/_entity_id")
@@ -26,6 +25,7 @@ module "form.dk"
         @"response*":record.copy(from.json(response),"*")
         @"error_info": @("$./error_info")
         @"error":@("#./error")
+        @"auth*":data
     }
 
     view=@('$./view')
