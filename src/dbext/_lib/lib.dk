@@ -18,4 +18,18 @@ module
             }
         }
     }
+    function get_url_exit(&params,url_def)
+    {
+        url = url_def
+        if @@(params,"$exit_url") != "" 
+        { 
+            url = @@(params,"$url_exit") 
+        }
+        else if @@(params,"$exit_url_encode") != "" 
+        { 
+            url = url_dcode(@@(params,"$exit_url_encode")) 
+            exception{}
+        }
+        return url
+    }
 }

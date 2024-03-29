@@ -364,5 +364,26 @@ model "Variables globales"
         }
     }
 
+    entity "snd_provider_tpy" : "EnumModel"
+    {
+        //0-E-Mail
+        //1-TEXT
+        //2-IM
+    }
+
+    entity "snd_provider" : "TableModel"
+    {
+        @"name" string(32) unique required
+        @"tpy" ref: "snd_provider_tpy" required
+        @"entry_point" string(256)  // URL relativa de acceso a los controles del proveedor
+        @"lib" string(256) required // Ruta hacia la biblioteca que implementa las funciones de la interfaz
+    }
+
+    entity "snd_channel" : "TableModel"
+    {
+        @"prov" ref: "snd_provider" required
+        @"name" string(32) unique required
+        @"config" mmemo
+    }	
 
 }

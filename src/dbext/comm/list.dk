@@ -1,0 +1,123 @@
+#include "dkli.dkh"
+#!
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "../config.dk"
+
+    do @context.begin(@crud_context)
+
+	@_entities_type = @("$parameters/_entities_type")
+	table_id = "tbl_"+@_entities_type
+    current_url = url_encode(@DBEXT_COMM)
+
+    new table_definition
+    {
+        @"datatable*": @('&./')
+        @"table_footer": "Mostrando los primeros # canales"
+        member @"columns"
+        {
+            member @"prov_tpy_const" { @"caption":"Tipo" }
+            member @"prov_name" { @"caption":"Proveedor" }
+            member @"name" { @"caption":"Nombre del canal" }
+            member @"_actions" 
+            { 
+                @"caption":"Acciones" 
+                @"template":ftext('
+                    <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
+                        <a href="${DataRow.entry_point}${DataRow.sys_pk}/?exit_url_encode=#<current_url>" style="cursor:pointer; text-decoration: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Editar</a>
+                        <button onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})" style="cursor:pointer; border: none; outline: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Eliminar</button>
+                    </div>')
+                @"no-print":@true
+            }
+        }
+    }
+
+    header_act::
+    { 
+        #$ button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" id="btn_add_channel" "data-bs-toggle"="modal" "data-bs-target"="#modal_add_channel"){$"Agregar"}
+    }
+
+    #! point general_act to header_act
+
+    new nav_config
+    {
+        @"title": "Canales de comunicación"
+        @"buttons*": general_act
+        @"urlexit": "/"
+    }
+
+    #$ div(class="container-fluid p-0")
+    {
+        #! do uie.printV12FormBar(nav_config)
+
+        #$ div(id="work_area" class="container-section mt-1 p-2 pt-0")
+        {
+            p{$"#<@('$error/message')>"}
+
+            form(action="./" method="GET" id="form_search" class="no-print my-1 d-flex py-1")
+            {
+                "filter-text"(
+                    "id"="ft_search"
+                    "text-field"="s"
+                    "placeholder"="Buscar ..."
+                    "form"="#form_search"
+                    "value"="#<@@(@@(@crud_context,'&http/request/get'),'$s')>"
+                    "auto-submit"="true"
+                    "class"="w-100"
+                ){$""}
+            }
+            #! do uie.dbeditable(table_definition, table_id)
+        }
+
+        // Modal agregar canal
+        #$ div(class="modal fade" id="modal_add_channel" tabindex="-1" "aria-labelledby"="exampleModalLabel" "aria-hidden"="true" "data-bs-backdrop"="false")
+        {
+            div(class="modal-dialog modal modal-dialog-centered modal-dialog-scrollable mt-0")
+            {
+                div(class="modal-content induxsoft-corners p-0")
+                {
+                    div(class="modal-header p-3")
+                    {
+                        h6(class="modal-title"){$"Agregar canal"}
+                        button(type="button" class="btn-close btn-sm" "data-bs-dismiss"="modal" "aria-label"="Close"){$""}
+                    }
+                    div(class="modal-body px-4 py-5 bg-white")
+                    {
+                        div(class="mb-4")
+                        {
+                            label("for"=""){small{$"Proveedor:"}}
+                            "input-key"(
+                                "id"="ik_proveedor"
+                                "name"="proveedor"
+                                "data-key"="sys_pk"
+                                "data-search"="name"
+                                "data-text"="proveedor"
+                                "data-source"="#<@DBEXT_SEARCH_PROVEEDOR>"
+                                "box-title-text"="Seleccione un proveedor"
+                                "box-placeholder-text"="Buscar proveedor"
+                                "box-nodata-text"="No se encontraron proveedores"
+                                "columns"="name,tpy"
+                                "colcaptions"="Proveedor,Tipo"
+                                "required"="true"
+                            ){$""}
+                        }
+                        label("for"=""){small{$"Nombre:"}}
+                        input(class="induxsoft-form-control" name="nombre" required="true")
+                    }
+                    div(class="modal-footer")
+                    {
+                        button(type="button" class="btn btn-sm btn-primary" onclick="comm.add_channel()"){$"Agregar"}
+                        button(type="button" class="btn btn-sm btn-light" "data-bs-dismiss"="modal"){$"Cancelar"}
+                    }
+                }
+            }
+        }
+
+        #$ 
+        script(src="#<@JS_MAIN>"){$""}
+        script(src="#<@JS_COMM>"){$""}
+    }
+}

@@ -14,6 +14,7 @@ module "config"
     @CSS_GLOBALVAR = "/$/dbext/css/globalvar.css"
     @CSS_MAIN = "/$/dbext/css/main.css"
     @JS_AUTHBOX="/$/dbext/js/authbox.js"
+    @JS_COMM = "/$/dbext/js/comm.js"
 
     // _PACKAGE
     @DBEXT_TUSER = "/!/dbext/tuser/"
@@ -21,6 +22,7 @@ module "config"
     @DBEXT_PROFILE = "/!/dbext/profile/"
     @DBEXT_GLOBALVAR = "/!/dbext/globalvar/"
     @DBEXT_BLOCKDOCS="/!/dbext/blockdocs/"
+    @DBEXT_COMM="/!/dbext/comm/"
 
     @DBEXT_ADD_EDIT_TUSER = "/!/dbext/tuser/@id/"
     @DBEXT_ADD_EDIT_BLOCKDOCS="/!/dbext/blockdocs/@id/"
@@ -28,6 +30,8 @@ module "config"
     @DBEXT_ADD_EDIT_UUGRP = "/!/dbext/ugroups/@id/"
     @DBEXT_ADD_EDIT_PROFL = "/!/dbext/profile/@id/"
     @DBEXT_ADD_EDIT_GLVAR = "/!/dbext/globalvar/@id/"
+
+    @DBEXT_SEARCH_PROVEEDOR = "/!/dbext/comm/?_view=proveedor&s=@search"
 
     //* ======================================== [ AUTHORIZATIONS ]
     @AUT_ACCESS_FOLIOS="CFO-00-000-000"

@@ -39,7 +39,10 @@ program "instalador"
         "cdocumentos.csv",
         "blockdocumentos.csv",
         "varcategory.csv",
-        "globalvar.csv"
+        "globalvar.csv",
+        "snd_provider_tpy.csv",
+        "snd_provider.csv",
+        "snd_channel.csv"
     ]')
 	// Lista de permisos iniciales
     ref permissions_to_import = from.json('[

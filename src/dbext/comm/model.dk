@@ -1,0 +1,45 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    #include "v12.com.dkl"
+
+    @table_name = "snd_channel"
+
+    function list(&db,&params)
+    {
+        sql_channels = "
+            SELECT c.sys_pk, c.name, p.name prov_name, pt.const prov_tpy_const, p.entry_point entry_point
+            FROM snd_channel c 
+                INNER JOIN snd_provider p ON c.prov=p.sys_pk
+                INNER JOIN snd_provider_tpy pt ON p.tpy = pt.id
+            WHERE IF(IFNULL(@s,'')='', true, (c.name LIKE CONCAT('%',@s,'%') OR p.name LIKE CONCAT('%',@s,'%')))
+            ORDER BY c.name;
+        "
+        return dbr.list(db, sql_channels, params)
+    }
+
+    function create(&db,&params,&data)
+    {
+        new channel{
+            @"name": @@(data,"$nombre")
+            @"prov": @@(data,"#proveedor")
+        }
+        return v12.channel.set(db,channel)
+    }
+
+    function buscar_proveedor(&db, &params)
+    {
+        sql_provdors = "
+            SELECT p.sys_pk, p.name, pt.const tpy, CONCAT(p.name, ' (', pt.const, ')') proveedor
+            FROM snd_provider p
+                INNER JOIN snd_provider_tpy pt ON p.tpy = pt.id
+            WHERE IF(IFNULL(@s,'')='', true, p.name LIKE CONCAT('%',@s,'%'))
+            ORDER BY p.name;
+        "
+        return dbr.list(db, sql_provdors, params)
+    }
+
+    point @list to list
+    point @create to create
+}

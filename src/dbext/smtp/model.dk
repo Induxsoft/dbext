@@ -1,0 +1,6 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @table_name = "snd_channel"
+}

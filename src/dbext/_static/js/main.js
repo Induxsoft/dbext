@@ -21,7 +21,7 @@ var main = {
         
         return atob(url);
     },
-    getValues(containerId='', includeEmpy=false)
+    getValues(containerId='', includeEmpy=false, simpleRequired=false)
     {
         values = {};
         const controls = document.querySelectorAll(`#${containerId} input, #${containerId} select, #${containerId} textarea`);
@@ -35,7 +35,7 @@ var main = {
                 if (control.id != 'inputv') v = control.value;
                 else v = control.getAttribute('value');
 
-                if (v.trim() == '' && control.getAttribute('required')=='true') {
+                if (v.trim() == '' && ((simpleRequired && control.hasAttribute('required')) || control.getAttribute('required')=='true')) {
                     alert('El campo: ' + control.name + ' es requerido');
                     control.focus();
                     values = null;

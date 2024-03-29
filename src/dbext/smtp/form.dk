@@ -1,0 +1,49 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "../_lib/lib.dk"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./"),record.create())
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+
+	isNew = (@_entity_id == "_new")
+
+    // header_act::
+    // { 
+    //     #$ button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"#<@ICON_SAVE>"}
+    // }
+
+    // #! point general_act to header_act
+
+    new nav_config
+    {
+        @"title": ftext("#<ifstr(isNew,'Agregar','Editar')> canal")
+        // @"buttons*": general_act
+        @"urlexit": get_url_exit(@("&parameters"),"../")
+        member @"hidden" { @"print": @true }
+    }
+
+    #$ div(class="container")
+    {
+        form(method="POST" action="./" id="form")
+        {
+            #! do uie.printV12FormBar(nav_config)
+
+            #$ div(id="work_area" class="container-section")
+            {
+                div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+
+                input(type="hidden" name="sys_pk" value="#<@@(entity, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity, '#sys_recver')>")
+            }
+        }
+    }
+}

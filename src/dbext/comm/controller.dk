@@ -1,0 +1,14 @@
+#include "dkli.dkh"
+#!
+module "controller"
+{
+    switch @@(@http_context,"$request/get/_view")
+    {
+        case "proveedor"
+        {
+            @table_name = "snd_provider"
+            point @list to buscar_proveedor
+            break
+        }
+    }
+}
