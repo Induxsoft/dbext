@@ -28,6 +28,7 @@ program "instalador"
     shortcuts_file = path.concat(path_app_info,"sys_app_shortcut.csv")
     item_type_file = path.concat(path_app_info,"sys_app_item_type.csv")
     item_action_file = path.concat(path_app_info,"sys_app_item_action.csv")
+    vars_file = path.concat(path_app_info,"vars.json")
     // Archivo de permisos
     sitem_file = path.concat(path_initial_data,"sitem.csv")
 
@@ -194,6 +195,25 @@ program "instalador"
 
         admins_groupid = dbr.security.admins(database)
         do dbr.security.assign(database,admins_groupid,permissions_to_import)
+    }
+
+    if file.exists(vars_file)
+    {
+        do print("\nIMPORTANDO VARIABLES DE CONFIGURACIÓN")
+
+        ref categories = from.json(file.rtext(vars_file))
+        for i = 0; i < list.count(categories)
+        {
+            do print("Categoria:")
+            ref cat = list.obj(categories,i)
+            do dbr.vars.categories.set(database,@@(cat,"$id"),@@(cat,"$caption"),@@(cat,"$help"),@@(cat,"$parent"))
+            
+            do print("Variables:")
+            ref vars = ifnull(@@(cat,"&vars"), list.create())
+            for j = 0; j < list.count(vars) {
+                do dbr.vars.define(database, list.obj(vars,j), @@(cat,"$id"))
+            }
+        }
     }
 
     if dbr.is_open(database){ do dbr.close(database) }

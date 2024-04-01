@@ -2,5 +2,60 @@
 #!
 module "model"
 {
+    #include "v12.com.dkl"
     @table_name = "snd_channel"
+
+    function create_update(&db,&params,&data)
+    {
+        @use_transaction = @false
+        url_exit = @@(params,"$exit_url_encode")
+        if trim(url_exit) != "" { @url_redir = url_dcode(url_exit) }
+
+        do dbr.begin(db)
+        ref res = entity.create(db,params,data_insert(db,data))
+        do dbr.commit(db)
+
+        return res
+
+        exception
+        {
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do rise_error(0, last_error())
+        }
+    }
+    function read(&db,&params)
+    {
+        return data_read(db,params)
+    }
+
+    function data_insert(&db,&data)
+    {
+        new d {
+            @"sys_pk": @@(data,"#sys_pk")
+            @"sys_recver": @@(data,"#sys_recver")
+            @"name": @@(data,"$_name")
+        }
+
+        go foreach.fstr(index:i, key:k, value:v) with(d) {
+            do field.remove(data,k)
+        }
+        //d<"config">: to.json(data)
+        do v12.channel.config.set(db,data,@@(d,"$name"))
+        return d
+    }
+    function data_read(&db,&params)
+    {
+        ref d = dbr.rec(db,"SELECT sys_pk, sys_recver, name _name FROM snd_channel WHERE sys_pk=@_entity_id LIMIT 1;",params)
+        if isnull(d){ return record.create() }
+        ref conf = v12.channel.config.get(db,@@(d,"$_name"))
+
+        if not(isnull(conf)){
+            go foreach.fstr(index:i, key:k, value:v) with(conf) { d<k>:v }
+        }
+        return d
+    }
+
+    point @create to create_update
+    point @update to create_update
+    point @read to read
 }

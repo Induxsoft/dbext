@@ -1,0 +1,20 @@
+[
+    {
+        "id": "dbext",
+        "caption": "Utilidades del sistema",
+        "help": "Variables del paquete: dbext",
+        "vars": [
+            {
+                "varname": "dbext_comm_msg_templates",
+                "vardefault": "_templates/messages/",
+                "varvalue": "_templates/messages/",
+                "varcaption": "Directorio de plantillas COMM",
+                "varhelp": "Ruta del directorio de plantillas para comunicaciones",
+                "vartype": "string",
+                "varinput": {
+                    "control": "text"
+                }
+            }
+        ]
+    }
+]

@@ -5,44 +5,100 @@ module "form.dk"
     #include "functions.dkh"
     #include "serialize.dkh"
     #include "uielements.v12.dkl"
+    #include "../config.dk"
     #include "../_lib/lib.dk"
 
     do @context.begin(@crud_context)
 
-    ref entity = ifnull(@("&./"),record.create())
+    ref channel = ifnull(@("&./"),record.create())
 
 	@_entities_type = @("$parameters/_entities_type")
 	@_entity_id = @("$parameters/_entity_id")
-
 	isNew = (@_entity_id == "_new")
+    current_url = url_encode(current_url(@('&http'),@true))
 
-    // header_act::
-    // { 
-    //     #$ button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"#<@ICON_SAVE>"}
-    // }
+    header_act::
+    { 
+        #$ button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Guardar"){$"#<@@(@icons,'save2')>"}
+    }
 
-    // #! point general_act to header_act
+    #! point general_act to header_act
 
     new nav_config
     {
         @"title": ftext("#<ifstr(isNew,'Agregar','Editar')> canal")
-        // @"buttons*": general_act
+        @"buttons*": general_act
         @"urlexit": get_url_exit(@("&parameters"),"../")
         member @"hidden" { @"print": @true }
     }
 
     #$ div(class="container")
     {
-        form(method="POST" action="./" id="form")
+        form(method="POST" action="./?exit_url_encode=#<current_url>" id="form")
         {
             #! do uie.printV12FormBar(nav_config)
 
-            #$ div(id="work_area" class="container-section")
+            #$ div(id="work_area" class="container-section p-2")
             {
                 div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+                
+                // Campos requeridos (no remover)
+                input(type="hidden" name="sys_pk" value="#<@@(channel, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(channel, '#sys_recver')>")
+                
+                // Campos del canal (opcional)
+                div(class="mb-5")
+                {
+                    h4{$"General"}
+                    p(class="text-sm text-muted"){$"Datos generales del canal"}
 
-                input(type="hidden" name="sys_pk" value="#<@@(entity, '#sys_pk')>")
-                input(type="hidden" name="sys_recver" value="#<@@(entity, '#sys_recver')>")
+                    div(class="row align-items-center")
+                    {
+                        div(class="col-md-2"){ label(class="form-label m-0"){ h6{$"Nombre"} }}
+                        div(class="col-md-8 col-xl-5"){ input(class="induxsoft-form-control" name="_name" value="#<@@(channel,'$_name')>" required="" maxlength="32") }
+                    }
+                }
+
+                // Campos de configuración
+                div(class="mb-5")
+                {
+                    h4{$"Configuración"}
+                    p(class="text-sm text-muted"){$"Valores de configuración para la conexión del canal"}
+
+                    div(class="row align-items-center mb-3")
+                    {
+                        div(class="col-md-2"){ label(class="form-label m-0"){ h6{$"Servidor"} }}
+                        div(class="col-md-8 col-xl-5"){ input(class="induxsoft-form-control" name="server" value="#<@@(channel,'$server')>") }
+                    }
+                    div(class="row align-items-center mb-3")
+                    {
+                        div(class="col-md-2"){ label(class="form-label m-0"){ h6{$"SSL"} }}
+                        div(class="col-md-8 col-xl-5")
+                        {
+                            div(class="form-check form-switch")
+                            {
+                                input(class="form-check-input" type="checkbox" role="switch" id="check_ssl" onchange="document.getElementById('ipt_protocol').value=(this.checked?'ssl':'')" "#<ifstr(@@(channel,'$protocol')=='ssl','checked','')>"="")
+                                input(type="hidden" name="protocol" value="#<@@(channel,'$protocol')>" id="ipt_protocol")
+                                label(class="form-check-label" "for"="check_ssl"){$"Habilita el cifrado"}
+                            }
+                        }
+                    }
+                    div(class="row align-items-center mb-3")
+                    {
+                        div(class="col-md-2"){ label(class="form-label m-0"){ h6{$"Puerto"} }}
+                        div(class="col-md-8 col-xl-5"){ input(type="number" class="induxsoft-form-control" name="port" value="#<@@(channel,'$port')>") }
+                    }
+                    div(class="row align-items-center mb-3")
+                    {
+                        div(class="col-md-2"){ label(class="form-label m-0"){ h6{$"Usuario"} }}
+                        div(class="col-md-8 col-xl-5"){ input(class="induxsoft-form-control" name="user" value="#<@@(channel,'$user')>") }
+                    }
+                    div(class="row align-items-center mb-3")
+                    {
+                        div(class="col-md-2"){ label(class="form-label m-0"){ h6{$"Contraseña"} }}
+                        div(class="col-md-8 col-xl-5"){ input(type="password" class="induxsoft-form-control" name="password" value="#<@@(channel,'$password')>") }
+                    }
+                }
             }
         }
     }
