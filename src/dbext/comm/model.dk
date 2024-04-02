@@ -16,7 +16,20 @@ module "model"
             WHERE IF(IFNULL(@s,'')='', true, (c.name LIKE CONCAT('%',@s,'%') OR p.name LIKE CONCAT('%',@s,'%')))
             ORDER BY c.name;
         "
-        return dbr.list(db, sql_channels, params)
+        sql_provdors = "
+            SELECT p.sys_pk, p.name, pt.const tpy, CONCAT(p.name, ' (', pt.const, ')') proveedor
+            FROM snd_provider p
+                INNER JOIN snd_provider_tpy pt ON p.tpy = pt.id
+            ORDER BY p.name;
+        "
+
+        new res
+        {
+            @"channels*": dbr.list(db, sql_channels, params)
+            @"provdors*": dbr.list(db, sql_provdors, @null)
+        }
+        
+        return res
     }
 
     function create(&db,&params,&data)

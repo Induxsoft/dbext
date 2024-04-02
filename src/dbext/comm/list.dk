@@ -13,9 +13,23 @@ module "list.dk"
 	table_id = "tbl_"+@_entities_type
     current_url = url_encode(@DBEXT_COMM)
 
+    new sel_proveedor
+    {
+        @"datatable*": @('&./provdors')
+        @"id": "sel_proveedor"
+        new member "attributes"
+        {
+            @"class": "induxsoft-form-select"
+            @"name": "proveedor"
+            @"required": "true"
+        }
+        @"value_field": "sys_pk"
+        @"text_field": "proveedor"
+    }
+
     new table_definition
     {
-        @"datatable*": @('&./')
+        @"datatable*": @('&./channels')
         @"table_footer": "Mostrando los primeros # canales"
         member @"columns"
         {
@@ -88,21 +102,9 @@ module "list.dk"
                     {
                         div(class="mb-4")
                         {
-                            label("for"=""){small{$"Proveedor:"}}
-                            "input-key"(
-                                "id"="ik_proveedor"
-                                "name"="proveedor"
-                                "data-key"="sys_pk"
-                                "data-search"="name"
-                                "data-text"="proveedor"
-                                "data-source"="#<@DBEXT_SEARCH_PROVEEDOR>"
-                                "box-title-text"="Seleccione un proveedor"
-                                "box-placeholder-text"="Buscar proveedor"
-                                "box-nodata-text"="No se encontraron proveedores"
-                                "columns"="name,tpy"
-                                "colcaptions"="Proveedor,Tipo"
-                                "required"="true"
-                            ){$""}
+                            label("for"=""){small{$"Proveedor de comunicaciones:"}}
+                            #! do uie.dbSelect(sel_proveedor)
+                            #$
                         }
                         label("for"=""){small{$"Nombre:"}}
                         input(class="induxsoft-form-control" name="nombre" required="true")
