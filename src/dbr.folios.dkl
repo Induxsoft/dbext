@@ -13,10 +13,7 @@ module "Gestión de folios :dbr.folios"
             @"serie":serie
         }
 
-        return dbr.num(db,"select sys_pk from 
-                                blockdocumentos 
-                            where 
-                                documento=@doc and serie=@serie and activo limit 1;",p)
+        return dbr.num(db,"select sys_pk from blockdocumentos where documento=@doc and serie=@serie and activo limit 1;",p)
     }
 
     // Obtiene el siguiente folio para el block indicado
@@ -32,24 +29,30 @@ module "Gestión de folios :dbr.folios"
         if not(dbr.in_transaction(db)) { do rise_error(0,"Se requiere iniciar una transacción de bases de datos.")}
         if intentos<1 { intentos=1 }
 
-        new reg
+        new params
         {
-            @"uuid":uuid()
+            @"iblock":idblock
+        }
+
+        new foliosdocumentos
+        {
+            @"sys_pk":0
+            @"sys_guid":uuid()
             @"sys_dtcreated*":dbr.sql("now()")
             @"sys_timestamp*":dbr.sql("now()")
             @"sys_recver":0
             @"cancelado":@false
             @"fecha*":dbr.sql("now()")
-            @"block":idblock
             @"folio":folio+0
+            @"block":idblock
         }
 
         res=0
 
         for i=0;i<intentos
         {
-            do dbr.insert(db,"foliosdocumentos",reg)
-            do dbr.execute(db,"update blockdocumentos set fultimo="+str(folio)+" where sys_pk=@block",reg)
+            do dbr.insert(db,"foliosdocumentos",foliosdocumentos)
+            do dbr.execute(db,"update blockdocumentos set fultimo="+str(folio)+" where sys_pk=@iblock",params)
             res=folio
             break
             
@@ -60,6 +63,17 @@ module "Gestión de folios :dbr.folios"
         }
 
         return res
+    }
+
+    info::&db,pk_block, folio
+    {
+        new p
+        {
+            @"block":pk_block
+            @"folio":folio
+        }
+
+        return dbr.rec(db,"select sys_pk,sys_guid,cancelado,fecha,folio,block from foliosdocumentos where block=@block and folio=@folio limit 1;",p)
     }
 
     module ":dbr.autocode"
