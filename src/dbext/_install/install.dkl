@@ -39,8 +39,6 @@ program "instalador"
     ref files_to_import = from.json('[
         "cdocumentos.csv",
         "blockdocumentos.csv",
-        "varcategory.csv",
-        "globalvar.csv",
         "snd_provider_tpy.csv",
         "snd_provider.csv",
         "snd_channel.csv"
