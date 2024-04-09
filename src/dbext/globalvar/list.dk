@@ -17,7 +17,7 @@ module "list"
         @"parent":""
     }
 
-    do list.add(categories, withoutCategory)
+    // do list.add(categories, withoutCategory)
 
     #$ div
     {
@@ -44,7 +44,7 @@ module "list"
 								{
 									"edit-tr"
 									{
-										"edit-th"(type="NoEditable" field="id" style="text-align:start;"){$"Categorías"}
+										"edit-th"(type="NoEditable" field="caption" style="text-align:start;"){$"Categorías"}
 									}
 								}
 							}
