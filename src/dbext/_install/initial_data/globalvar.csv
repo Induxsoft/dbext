@@ -1,2 +1,0 @@
-"sys_guid","sys_dtcreated","sys_timestamp","sys_info","sys_user","sys_lastuser","sys_exported","sys_dtexported","sys_recver","sys_deleted","sys_lock","varname","vardefault","varvalue","varcaption","varhelp","vartype","varinput","ref_varcat","userenable"
-"3c56a5cae5e24518a3ce4585bd12ae88","2024-01-15 10:34:28","2024-01-15 10:34:28",\N,\N,\N,\N,\N,"0",\N,\N,"admins_group_id","Administradores","Administradores","Grupo de administradores","Es el ID del grupo de administradores.","string","","5","0"

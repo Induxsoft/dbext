@@ -3,7 +3,8 @@
         "id": "dbext",
         "caption": "Utilidades del sistema",
         "help": "Variables del paquete: dbext",
-        "vars": [
+        "vars": 
+        [
             {
                 "varname": "dbext_comm_msg_templates",
                 "vardefault": "_templates/messages/",
@@ -12,6 +13,18 @@
                 "varhelp": "Ruta del directorio de plantillas para comunicaciones",
                 "vartype": "string",
                 "varinput": {
+                    "control": "text"
+                }
+            },
+            {
+                "varname": "admins_group_id",
+                "vardefault": "Administradores",
+                "varvalue": "Administradores",
+                "varcaption": "Grupo de administradores",
+                "varhelp": "Es el ID del grupo de administradores.",
+                "vartype": "string",
+                "varinput": 
+                {
                     "control": "text"
                 }
             }
