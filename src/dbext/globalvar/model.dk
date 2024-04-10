@@ -20,7 +20,7 @@ module "model"
     {
         if not(dbr.security.isauth(db,@AUT_ACCESS_GLOBALVARS)) { do rise_error(500,"No autorizado") }
 
-        sql = "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent FROM varcategory;"
+        sql = "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent FROM varcategory order by caption;"
         return dbr.list(db, sql, @null)
     }
     function get_category_vars(&db, &category)
