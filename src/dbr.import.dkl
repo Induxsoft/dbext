@@ -7,7 +7,7 @@
 #!
 module "Funciones de importación de datos"
 {
-    importProducto::&db,file
+    importProductos::&db,file
     {
         if (@@(@batch_context,"$job/token") != "") {
             token = @@(@batch_context,"$job/token")
@@ -201,8 +201,20 @@ module "Funciones de importación de datos"
                                     if (id_impuestos != "") {
                                         itm<"impuestos">: id_impuestos
 
-                                        if (@@(itm,"reqlote") == "0" || @@(itm,"reqlote") == "1") {
-                                            if (@@(itm,"reqserie") == "0" || @@(itm,"reqserie") == "1") {
+                                        if (@@(itm,"reqlote") == "N" || @@(itm,"reqlote") == "S") {
+                                            if (@@(itm,"reqserie") == "N" || @@(itm,"reqserie") == "S") {
+                                                if (@@(itm,"reqlote") == "N") {
+                                                    itm<"reqlote">: 0
+                                                } else {
+                                                    itm<"reqlote">: 1
+                                                }
+
+                                                if (@@(itm,"reqserie") == "N") {
+                                                    itm<"reqserie">: 0
+                                                } else {
+                                                    itm<"reqserie">: 1
+                                                }
+                                                
                                                 id_codbar1 = dbr.str(db,"SELECT codbar1 FROM producto WHERE codbar1 = @codigobarra1",itm)
                                                 id_codbar2 = dbr.str(db,"SELECT codbar2 FROM producto WHERE codbar2 = @codigobarra2",itm)
                                                 id_codbar3 = dbr.str(db,"SELECT codbar3 FROM producto WHERE codbar3 = @codigobarra3",itm)
@@ -257,6 +269,328 @@ module "Funciones de importación de datos"
                                                             itm<"uf_sat_uniproser">: "H87"
 
                                                             do dbr.execute(db,query_insert,itm)
+                                                        }
+                                                    } else {
+                                                        if (token != "") {
+                                                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe un producto con descripción = '" + @@(itm,"descripcion") + "'")
+                                                        }
+                                                    }
+                                                } else {
+                                                    if (token != "") {
+                                                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe un producto con alguno de éstos códigos de barras: '" + @@(itm,"codigobarra1") + "', '" + @@(itm,"codigobarra2") + "', '" + @@(itm,"codigobarra3") + "'")
+                                                    }
+                                                }
+                                            } else {
+                                                if (token != "") {
+                                                    do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El valor de reqserie (" + @@(itm,"reqserie") + ") no es válido.")
+                                                }
+                                            }
+                                        } else {
+                                            if (token != "") {
+                                                do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El valor de reqlote (" + @@(itm,"reqlote") + ") no es válido.")
+                                            }
+                                        }
+                                    } else {
+                                        if (token != "") {
+                                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe un impuesto = '" + @@(itm,"impuestos") + "' con ese valor.")
+                                        }
+                                    }
+                                } else {
+                                    if (token != "") {
+                                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una valuación = '" + @@(itm,"valuacion") + "' con ese valor.")
+                                    }
+                                }
+                            } else {
+                                if (token != "") {
+                                    do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una clase = '" + @@(itm,"clase") + "' con ese valor.")
+                                }
+                            }
+                        } else {
+                            if (token != "") {
+                                do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una linea = '" + @@(itm,"linea") + "' con ese valor.")
+                            }
+                        }
+                    } else {
+                        if (token != "") {
+                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una divisa = '" + @@(itm,"divisa") + "' con ese valor.")
+                        }
+                    }
+                }
+
+                contador = contador + 1
+
+                if (contador >= div) {
+                    contador = contador - div
+                    progreso = progreso + steps
+
+                    if (token != "") {
+                        do batch.saveLog(token,"En proceso... " + str(progreso) + "%")
+                    }
+                }
+            }
+
+            if (list_size < steps) {
+                if (token != "") {
+                    do batch.saveLog(token,"En proceso... 100%")
+                }
+            }
+
+            exception 
+            {
+                do file.delete(file)
+
+                if (token != "") {
+                    do batch.saveLog(token,last_error())
+                }
+            }
+        }
+
+        do file.delete(file)
+    }
+
+    importMateriasPrimas::&db,file
+    {
+        if (@@(@batch_context,"$job/token") != "") {
+            token = @@(@batch_context,"$job/token")
+        }
+
+        if (length(@@(@batch_context,"#job/steps")) > 0) {
+            steps = @@(@batch_context,"#job/steps")
+        } else {
+            steps = 10
+        }
+
+        if (right(file,4) != ".csv") {
+            do file.delete(file)
+            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            return
+        }
+
+        ref lib_csv = _import_library("devkron.serialize.csv.dll")
+        do _map_function(lib_csv,"devkron.serialize.csv.csvHelper","CsvRead","CsvRead","System.String,System.String","*")
+
+        query1 = "SELECT codigo FROM producto WHERE codigo = @codigo"
+        query2 = "SELECT codigo FROM producto WHERE descripcion = @descripcion"
+        query3 = "SELECT sys_pk FROM divisa WHERE codigo = @divisa"
+        query4 = "SELECT sys_pk FROM linea WHERE codigo = @linea"
+        query5 = "SELECT id FROM ctipoproducto WHERE const = @tipo"
+        query6 = "SELECT id FROM cmetodosvaluacion WHERE const = @valuacion"
+        query7 = "SELECT sys_pk FROM marca WHERE codigo = @marca"
+        query8 = "SELECT sys_pk FROM departamento WHERE codigo = @departamento"
+        query9 = "SELECT codbar1 FROM producto WHERE codbar1 = @codigobarra1"
+        query10 = "SELECT codbar2 FROM producto WHERE codbar2 = @codigobarra2"
+        query11 = "SELECT codbar3 FROM producto WHERE codbar3 = @codigobarra3"
+        query12 = "
+            INSERT INTO producto
+            (codigo, descripcion, unidad, idivisa, ilinea, iclase, itipo, metodovaluacion, costoultimo, impuestos, imarca, idepartamento, codbar1, codbar2, codbar3, reqlote, reqserie, existencia, uf_sat_proser, uf_sat_uniproser, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
+            VALUES (@codigo, @descripcion, @unidad, @divisa, @linea, @clase, @tipo, @valuacion, @costoultimo, @impuestos, @marca, @departamento, @codigobarra1, @codigobarra2, @codigobarra3, @reqlote, @reqserie, @existencia, @uf_sat_proser, @uf_sat_uniproser, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
+        "
+        query13 = "
+            UPDATE producto
+            SET descripcion = @descripcion, unidad = @unidad, idivisa = @divisa, ilinea = @linea, itipo = @tipo, metodovaluacion = @valuacion, costoultimo = @costoultimo, impuestos = @impuestos, imarca = @marca, idepartamento = @departamento, codbar1 = @codigobarra1, codbar2 = @codigobarra2, codbar3 = @codigobarra3, reqlote = @reqlote, reqserie = @reqserie
+            WHERE codigo = @codigo
+        "
+
+        if file.exists(file) {
+            ref data = CsvRead(file,"")
+
+            list_size = @count(data)
+            contador = 0
+            progreso = 0
+            div = (list_size/steps)
+            
+            for i=0; i<list_size {
+                ref itm = record.caseinsensitive(@item(data,i))
+
+                codigo = length(@@(itm,"codigo"))
+                descripcion = length(@@(itm,"descripcion"))
+                unidad = length(@@(itm,"unidad"))
+                divisa = length(@@(itm,"divisa"))
+                linea = length(@@(itm,"linea"))
+                tipo = length(@@(itm,"tipo"))
+                valuacion = length(@@(itm,"valuacion"))
+                cosultimo = length(@@(itm,"costoultimo"))
+                impuestos = length(@@(itm,"impuestos"))
+                marca = length(@@(itm,"marca"))
+                departamento = length(@@(itm,"departamento"))
+                codbarra1 = length(@@(itm,"codigobarra1"))
+                codbarra2 = length(@@(itm,"codigobarra2"))
+                codbarra3 = length(@@(itm,"codigobarra3"))
+                reqlote = length(@@(itm,"reqlote"))
+                reqserie = length(@@(itm,"reqserie"))
+
+                if (codigo < 1 || codigo > 35) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código (" + @@(itm,"codigo") + ") debe ser de mínimo 1 caracter y máximo 35 caracteres.")
+                    }
+                } else if (descripcion < 1 || descripcion > 150) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La descripción (" + @@(itm,"descripcion") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
+                    }
+                } else if (unidad < 1 || unidad > 10) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La unidad (" + @@(itm,"unidad") + ") debe ser de mínimo 1 caracter y máximo 10 caracteres.")
+                    }
+                } else if (divisa < 1 || divisa > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La divisa (" + @@(itm,"divisa") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
+                    }
+                } else if (linea < 1 || linea > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La linea (" + @@(itm,"linea") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
+                    }
+                } else if (tipo < 1 || tipo > 2) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El tipo (" + @@(itm,"tipo") + ") debe ser de mínimo 1 caracter y máximo 2 caracteres.")
+                    }
+                } else if (valuacion != 1) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La valuación (" + @@(itm,"valuacion") + ") debe ser de 1 caracter.")
+                    }
+                } else if (cosultimo > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El costo último (" + @@(itm,"valuacion") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (impuestos < 1 || impuestos > 3) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El impuesto (" + @@(itm,"impuestos") + ") debe ser de mínimo 1 caracter y máximo 3 caracteres.")
+                    }
+                } else if (marca > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La marca (" + @@(itm,"marca") + ") debe ser de máximo 11 caracteres.")
+                    }
+                } else if (departamento > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El departamento (" + @@(itm,"departamento") + ") debe ser de máximo 11 caracteres.")
+                    }
+                } else if (codbarra1 > 35) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código de barras 1 (" + @@(itm,"codigobarra1") + ") debe ser de máximo 35 caracteres.")
+                    }
+                } else if (codbarra2 > 35) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código de barras 2 (" + @@(itm,"codigobarra2") + ") debe ser de máximo 35 caracteres.")
+                    }
+                } else if (codbarra3 > 35) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código de barras 3 (" + @@(itm,"codigobarra3") + ") debe ser de máximo 35 caracteres.")
+                    }
+                } else if (reqlote != 1) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El reqlote (" + @@(itm,"reqlote") + ") debe ser de 1 caracter.")
+                    }
+                } else if (reqserie != 1) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El reqserie (" + @@(itm,"reqserie") + ") debe ser de 1 caracter.")
+                    }
+                } else {
+                    id_divisa = dbr.str(db,query3,itm)
+
+                    if (id_divisa != "") {
+                        itm<"divisa">: id_divisa
+                        id_linea = dbr.str(db,query4,itm)
+
+                        if (id_linea != "") {
+                            itm<"linea">: id_linea
+
+                            if (@@(itm,"tipo") == "I") { itm<"tipo">: "cInventariable" }
+                            if (@@(itm,"tipo") == "NI") { itm<"tipo">: "cNo_inventariable" }
+
+                            if (@@(itm,"tipo") == "cInventariable" || @@(itm,"tipo") == "cNo_inventariable") {
+                                id_tipo = dbr.str(db,query5,itm)
+                                itm<"tipo">: id_tipo
+
+                                if (@@(itm,"valuacion") == "1") { itm<"valuacion">: "PEPS" }
+                                if (@@(itm,"valuacion") == "2") { itm<"valuacion">: "UEPS" }
+                                if (@@(itm,"valuacion") == "3") { itm<"valuacion">: "Promedio" }
+                                if (@@(itm,"valuacion") == "4") { itm<"valuacion">: "Identificado" }
+                                if (@@(itm,"valuacion") == "5") { itm<"valuacion">: "Ninguno" }
+
+                                id_valuacion = dbr.str(db,query6,itm)
+
+                                if (id_valuacion != "") {
+                                    itm<"valuacion">: id_valuacion
+
+                                    if (@@(itm,"valuacion") == "99") {
+                                        itm<"tipo">: "1"
+                                    } else {
+                                        itm<"tipo">: "2"
+                                    }
+
+                                    if (@@(itm,"impuestos") == "G16") { itm<"impuestos">: "IVA 16% (México)" }
+                                    if (@@(itm,"impuestos") == "G0") { itm<"impuestos">: "IVA 0% (México)" }
+                                    if (@@(itm,"impuestos") == "IIE") { itm<"impuestos">: "IVA-IEPS (México)" }
+                                    if (@@(itm,"impuestos") == "E") { itm<"impuestos">: "Exento" }
+
+                                    id_impuestos = dbr.str(db,"SELECT sys_pk FROM cfgimpuesto WHERE nombre = @impuestos",itm)
+
+                                    if (id_impuestos != "") {
+                                        itm<"impuestos">: id_impuestos
+
+                                        if (@@(itm,"reqlote") == "N" || @@(itm,"reqlote") == "S") {
+                                            if (@@(itm,"reqserie") == "N" || @@(itm,"reqserie") == "S") {
+
+                                                if (@@(itm,"reqlote") == "N") {
+                                                    itm<"reqlote">: 0
+                                                } else {
+                                                    itm<"reqlote">: 1
+                                                }
+
+                                                if (@@(itm,"reqserie") == "N") {
+                                                    itm<"reqserie">: 0
+                                                } else {
+                                                    itm<"reqserie">: 1
+                                                }
+
+                                                id_codbar1 = dbr.str(db,query9,itm)
+                                                id_codbar2 = dbr.str(db,query10,itm)
+                                                id_codbar3 = dbr.str(db,query11,itm)
+
+                                                if (id_codbar1 == "" && id_codbar2 == "" && id_codbar3 == "") {
+                                                    duplicated = dbr.str(db,query1,itm)
+                                                    desc_duplicated = dbr.str(db,query2,itm)
+
+                                                    if (desc_duplicated == @@(itm,"codigo") || desc_duplicated == "") {
+                                                        id_marca = dbr.str(db,query7,itm)
+                                                        id_departamento = dbr.str(db,query8,itm)
+
+                                                        if (id_marca == "") {
+                                                            if (token != "") {
+                                                                do batch.saveLog(token,"No existe una marca (" + @@(itm,"marca") + ") con ese valor. Se le ha asignado nulo.")
+                                                            }
+                                                            
+                                                            itm<"marca*">: @null
+                                                        } else {
+                                                            itm<"marca">: id_marca
+                                                        }
+
+                                                        if (id_departamento == "") {
+                                                            if (token != "") {
+                                                                do batch.saveLog(token,"No existe un departamento (" + @@(itm,"departamento") + ") con ese valor. Se le ha asignado nulo.")
+                                                            }
+
+                                                            itm<"departamento*">: @null
+                                                        } else { itm<"departamento">: id_departamento }
+
+
+                                                        if (@@(itm,"costoultimo") == "") { itm<"costoultimo">: 0 }
+                                                        if (@@(itm,"codigobarra1") == "") { itm<"codigobarra1*">: @null }
+                                                        if (@@(itm,"codigobarra2") == "") { itm<"codigobarra2*">: @null }
+                                                        if (@@(itm,"codigobarra3") == "") { itm<"codigobarra3*">: @null }
+
+                                                        if (duplicated != "") {
+                                                            do dbr.execute(db,query13,itm)
+                                                        } else {
+                                                            itm<"sys_guid">: uuid()
+                                                            itm<"sys_dtcreated*">: now()
+                                                            itm<"sys_timestamp*">: now()
+                                                            itm<"sys_recver">: 0
+                                                            itm<"clase">: 1
+                                                            itm<"existencia">: 0
+                                                            itm<"uf_sat_proser">: "01010101"
+                                                            itm<"uf_sat_uniproser">: "H87"
+
+                                                            do dbr.execute(db,query12,itm)
                                                         }
                                                     } else {
                                                         if (token != "") {
