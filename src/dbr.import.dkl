@@ -872,4 +872,633 @@ module "Funciones de importación de datos"
 
         do file.delete(file)
     }
+
+    importCbMarca::&db,file
+    {
+        if (@@(@batch_context,"$job/token") != "") {
+            token = @@(@batch_context,"$job/token")
+        }
+
+        if (length(@@(@batch_context,"#job/steps")) > 0) {
+            steps = @@(@batch_context,"#job/steps")
+        } else {
+            steps = 10
+        }
+
+        if (right(file,4) != ".csv") {
+            do file.delete(file)
+            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            return
+        }
+
+        ref lib_csv = _import_library("devkron.serialize.csv.dll")
+        do _map_function(lib_csv,"devkron.serialize.csv.csvHelper","CsvRead","CsvRead","System.String,System.String","*")
+
+        query1 = "SELECT codigo FROM marca WHERE codigo = @codigo"
+        query2 = "SELECT codigo FROM marca WHERE descripcion = @descripcion"
+        query3 = "INSERT INTO marca (codigo, descripcion, sys_guid, sys_dtcreated, sys_timestamp, sys_recver) VALUES (@codigo, @descripcion, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)"
+        query4 = "UPDATE marca SET descripcion = @descripcion WHERE codigo = @codigo"
+
+        if file.exists(data_file) {
+            ref data = CsvRead(data_file,"")
+            do file.delete(data_file)
+
+            list_size = @count(data)
+            contador = 0
+            progreso = 0
+            div = (list_size/steps)
+            
+            for i=0; i<list_size {
+                ref itm = record.caseinsensitive(@item(data,i))
+
+                codigo = length(@@(itm,"codigo"))
+                descripcion = length(@@(itm,"descripcion"))
+
+                if (codigo < 1 || codigo > 5) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código (" + @@(itm,"codigo") + ") debe ser de mínimo 1 caracter y máximo 15 caracteres.")
+                    }
+                } else if (descripcion < 1 || descripcion > 50) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La descripción (" + @@(itm,"descripcion") + ") debe ser de mínimo 1 caracter y máximo 50 caracteres.")
+                    }
+                } else {
+                    duplicated =  dbr.str(db,query1,itm)
+                    desc_duplicated = dbr.str(db,query2,itm)
+
+                    if (desc_duplicated == @@(itm,"codigo") || desc_duplicated == "") {
+                        if (duplicated != "") {
+                            do dbr.execute(db,query4,itm)
+                        } else {
+                            itm<"sys_guid">: uuid()
+                            itm<"sys_dtcreated*">: now()
+                            itm<"sys_timestamp*">: now()
+                            itm<"sys_recver">: 0
+
+                            do dbr.execute(db,query3,itm)
+                        }
+                    } else {
+                        if (token != "") {
+                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe una marca con descripción = '" + @@(itm,"descripcion") + "'")
+                        }
+                    }
+                }
+
+                contador = contador + 1
+
+                if (contador >= div) {
+                    contador = contador - div
+                    progreso = progreso + steps
+
+                    if (token != "") {
+                        do batch.saveLog(token,"En proceso... " + str(progreso) + "%")
+                    }
+                }
+            }
+
+            if (list_size < steps) {
+                if (token != "") {
+                    do batch.saveLog(token,"En proceso... 100%")
+                }
+            }
+
+            exception 
+            {
+                do file.delete(file)
+
+                if (token != "") {
+                    do batch.saveLog(token,last_error())
+                }
+            }
+        }
+    }
+
+    importCbDepartamento::&db,file
+    {
+        if (@@(@batch_context,"$job/token") != "") {
+            token = @@(@batch_context,"$job/token")
+        }
+
+        if (length(@@(@batch_context,"#job/steps")) > 0) {
+            steps = @@(@batch_context,"#job/steps")
+        } else {
+            steps = 10
+        }
+
+        if (right(file,4) != ".csv") {
+            do file.delete(file)
+            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            return
+        }
+
+        ref lib_csv = _import_library("devkron.serialize.csv.dll")
+        do _map_function(lib_csv,"devkron.serialize.csv.csvHelper","CsvRead","CsvRead","System.String,System.String","*")
+
+        query1 = "SELECT codigo FROM departamento WHERE codigo = @codigo"
+        query2 = "SELECT codigo FROM departamento WHERE descripcion = @descripcion"
+        query3 = "INSERT INTO departamento (codigo, descripcion, sys_guid, sys_dtcreated, sys_timestamp, sys_recver) VALUES (@codigo, @descripcion, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)"
+        query4 = "UPDATE departamento SET descripcion = @descripcion WHERE codigo = @codigo"
+
+        if file.exists(data_file) {
+            ref data = CsvRead(data_file,"")
+            do file.delete(data_file)
+
+            list_size = @count(data)
+            contador = 0
+            progreso = 0
+            div = (list_size/steps)
+            
+            for i=0; i<list_size {
+                ref itm = record.caseinsensitive(@item(data,i))
+
+                codigo = length(@@(itm,"codigo"))
+                descripcion = length(@@(itm,"descripcion"))
+
+                if (codigo < 1 || codigo > 5) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código (" + @@(itm,"codigo") + ") debe ser de mínimo 1 caracter y máximo 15 caracteres.")
+                    }
+                } else if (descripcion < 1 || descripcion > 50) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La descripción (" + @@(itm,"descripcion") + ") debe ser de mínimo 1 caracter y máximo 50 caracteres.")
+                    }
+                } else {
+                    duplicated =  dbr.str(db,query1,itm)
+                    desc_duplicated = dbr.str(db,query2,itm)
+
+                    if (desc_duplicated == @@(itm,"codigo") || desc_duplicated == "") {
+                        if (duplicated != "") {
+                            do dbr.execute(db,query4,itm)
+                        } else {
+                            itm<"sys_guid">: uuid()
+                            itm<"sys_dtcreated*">: now()
+                            itm<"sys_timestamp*">: now()
+                            itm<"sys_recver">: 0
+
+                            do dbr.execute(db,query3,itm)
+                        }
+                    } else {
+                        if (token != "") {
+                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe un departamento con descripción = '" + @@(itm,"descripcion") + "'")
+                        }
+                    }
+                }
+
+                contador = contador + 1
+
+                if (contador >= div) {
+                    contador = contador - div
+                    progreso = progreso + steps
+
+                    if (token != "") {
+                        do batch.saveLog(token,"En proceso... " + str(progreso) + "%")
+                    }
+                }
+            }
+
+            if (list_size < steps) {
+                if (token != "") {
+                    do batch.saveLog(token,"En proceso... 100%")
+                }
+            }
+
+            exception 
+            {
+                do file.delete(file)
+
+                if (token != "") {
+                    do batch.saveLog(token,last_error())
+                }
+            }
+        }
+    }
+
+    importClientes::&db,file
+    {
+        if (@@(@batch_context,"$job/token") != "") {
+            token = @@(@batch_context,"$job/token")
+        }
+
+        if (length(@@(@batch_context,"#job/steps")) > 0) {
+            steps = @@(@batch_context,"#job/steps")
+        } else {
+            steps = 10
+        }
+
+        if (right(file,4) != ".csv") {
+            do file.delete(file)
+            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            return
+        }
+
+        ref lib_csv = _import_library("devkron.serialize.csv.dll")
+        do _map_function(lib_csv,"devkron.serialize.csv.csvHelper","CsvRead","CsvRead","System.String,System.String","*")
+
+        query1 = "SELECT codigo FROM cliente WHERE codigo = @codigo"
+        query2 = "SELECT codigo FROM cliente WHERE nombre = @nombre"
+        query3 = "SELECT sys_pk FROM divisa WHERE codigo = @divisa"
+        query4 = "SELECT sys_pk FROM tipocliente WHERE codigo = @tipo"
+        query5 = "SELECT sys_pk FROM ciudad WHERE codigo = @ciudad"
+        query6 = "SELECT sys_pk FROM domicilio WHERE sys_guid = @sys_guid"
+        query7 = "
+            INSERT INTO domicilio
+            (iciudad, direccion, codpos, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
+            VALUES (@iciudad, @direccion, @cp, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
+        "
+        query8 = "
+            INSERT INTO cliente
+            (codigo, nombre, idivisa, tipo, domicilio1, rfc, telefonos, email, website, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
+            VALUES (@codigo, @nombre, @idivisa, @tipo, @direccion, @rfc, @telefono, @email, @website, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
+        "
+        query9 = "
+            UPDATE cliente
+            SET nombre = @nombre, idivisa = @idivisa, tipo = @tipo, rfc = @rfc, telefonos = @telefono, email = @email, website = @website
+            WHERE codigo = @codigo
+        "
+        query10 = "
+            UPDATE domicilio
+            SET iciudad = @iciudad, direccion = @direccion, codpos = @cp
+            WHERE sys_pk = @id_domicilio
+        "
+
+        if file.exists(file) {
+            ref data = CsvRead(file,"")
+
+            list_size = @count(data)
+            contador = 0
+            progreso = 0
+            div = (list_size/steps)
+            
+            for i=0; i<list_size {
+                ref itm = record.caseinsensitive(@item(data,i))
+
+                codigo = length(@@(itm,"codigo"))
+                nombre = length(@@(itm,"nombre"))
+                divisa = length(@@(itm,"divisa"))
+                tipo = length(@@(itm,"tipo"))
+                ciudad = length(@@(itm,"ciudad"))
+                direccion = length(@@(itm,"direccion"))
+                cp = length(@@(itm,"cp"))
+                rfc = length(@@(itm,"rfc"))
+                tel = length(@@(itm,"telefono"))
+                email = length(@@(itm,"email"))
+                website = length(@@(itm,"website"))
+
+                if (codigo < 1 || codigo > 35) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código (" + @@(itm,"codigo") + ") debe ser de mínimo 1 caracter y máximo 35 caracteres.")
+                    }
+                } else if (nombre < 1 || nombre > 150) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El nombre (" + @@(itm,"nombre") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
+                    }
+                } else if (divisa < 1 || divisa > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La divisa (" + @@(itm,"divisa") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
+                    }
+                } else if (tipo < 1 || tipo > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El tipo (" + @@(itm,"tipo") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
+                    }
+                } else if (ciudad < 1 || ciudad > 100) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La ciudad (" + @@(itm,"ciudad") + ") debe ser de mínimo 1 caracter y máximo 100 caracteres.")
+                    }
+                } else if (direccion < 1 || direccion > 1024) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La dirección (" + @@(itm,"direccion") + ") debe ser de mínimo 1 caracter y máximo 1024 caracteres.")
+                    }
+                } else if (cp < 1 || cp > 10) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El CP (" + @@(itm,"cp") + ") debe ser de mínimo 1 caracter y máximo 10 caracteres.")
+                    }
+                } else if (rfc < 1 || rfc > 15) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El RFC (" + @@(itm,"ciudad") + ") debe ser de mínimo 1 caracter y máximo 15 caracteres.")
+                    }
+                } else if (tel < 1 || tel > 150) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El teléfono (" + @@(itm,"telefono") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
+                    }
+                } else if (email < 1 || email > 80) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El email (" + @@(itm,"email") + ") debe ser de mínimo 1 caracter y máximo 80 caracteres.")
+                    }
+                } else if (website < 1 || website > 150) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El website (" + @@(itm,"website") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
+                    }
+                } else {
+                    id_divisa = dbr.str(db,query3,itm)
+
+                    if (id_divisa != "") {
+                        itm<"idivisa">: id_divisa
+                        id_tipo = dbr.str(db,query4,itm)
+
+                        if (id_tipo != "") {
+                            itm<"tipo">: id_tipo
+                            id_ciudad = dbr.str(db,query5,itm)
+
+                            if (id_ciudad != "") {
+                                itm<"iciudad">: id_ciudad
+                                itm<"direccion">: "||" + @@(itm,"direccion") + "|||"
+
+                                duplicated =  dbr.str(db,query1,itm)
+                                nombre_duplicated = dbr.str(db,query2,itm)
+
+                                if (nombre_duplicated == @@(itm,"codigo") || nombre_duplicated == "") {
+                                    if (duplicated != "") {
+                                        do dbr.execute(db,query9,itm)
+
+                                        id_domicilio = dbr.str(db,"SELECT domicilio1 FROM cliente WHERE codigo =" + @@(itm,"codigo"),@null)
+                                        itm<"id_domicilio">: id_domicilio
+
+                                        do dbr.execute(db,query10,itm)
+                                    } else {
+                                        itm<"sys_guid">: uuid()
+                                        itm<"sys_dtcreated*">: now()
+                                        itm<"sys_timestamp*">: now()
+                                        itm<"sys_recver">: 0
+
+                                        do dbr.execute(db,query7,itm)
+
+                                        id_domicilio = dbr.str(db,query6,itm)
+                                        itm<"direccion">: id_domicilio
+
+                                        do dbr.execute(db,query8,itm)
+                                    }
+                                } else {
+                                    if (token != "") {
+                                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe un cliente con nombre = '" + @@(itm,"nombre") + "'")
+                                    }
+                                }
+                            } else {
+                                if (token != "") {
+                                    do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una ciudad (" + @@(itm,"ciudad") + ") con ese valor.")
+                                }
+                            }
+                        } else {
+                            if (token != "") {
+                                do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe un tipo (" + @@(itm,"tipo") + ") con ese valor.")
+                            }
+                        }
+                    } else {
+                        if (token != "") {
+                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una divisa (" + @@(itm,"divisa") + ") con ese valor.")
+                        }
+                    }
+                }
+
+                contador = contador + 1
+
+                if (contador >= div) {
+                    contador = contador - div
+                    progreso = progreso + steps
+
+                    if (token != "") {
+                        do batch.saveLog(token,"En proceso... " + str(progreso) + "%")
+                    }
+                }
+            }
+
+            if (list_size < steps) {
+                if (token != "") {
+                    do batch.saveLog(token,"En proceso... 100%")
+                }
+            }
+
+            exception 
+            {
+                do file.delete(file)
+
+                if (token != "") {
+                    do batch.saveLog(token,last_error())
+                }
+            }
+        }
+
+        do file.delete(file)
+    }
+
+    importProveedores::&db,file
+    {
+        if (@@(@batch_context,"$job/token") != "") {
+            token = @@(@batch_context,"$job/token")
+        }
+
+        if (length(@@(@batch_context,"#job/steps")) > 0) {
+            steps = @@(@batch_context,"#job/steps")
+        } else {
+            steps = 10
+        }
+
+        if (right(file,4) != ".csv") {
+            do file.delete(file)
+            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            return
+        }
+
+        ref lib_csv = _import_library("devkron.serialize.csv.dll")
+        do _map_function(lib_csv,"devkron.serialize.csv.csvHelper","CsvRead","CsvRead","System.String,System.String","*")
+
+        query1 = "SELECT codigo FROM proveedor WHERE codigo = @codigo"
+        query2 = "SELECT codigo FROM proveedor WHERE nombre = @nombre"
+        query3 = "SELECT sys_pk FROM divisa WHERE codigo = @divisa"
+        query4 = "SELECT id FROM ctasasiva WHERE const = @tasaiva"
+        query5 = "SELECT sys_pk FROM tipoproveedor WHERE codigo = @tipo"
+        query6 = "SELECT sys_pk FROM ciudad WHERE codigo = @ciudad"
+        query7 = "SELECT sys_pk FROM domicilio WHERE sys_guid = @sys_guid"
+        query8 = "
+            INSERT INTO domicilio
+            (iciudad, direccion, codpos, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
+            VALUES (@iciudad, @direccion, @cp, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
+        "
+        query9 = "
+            INSERT INTO proveedor
+            (codigo, nombre, idivisa, tasaiva, tipo, domicilio1, rfc, telefonos, email, website, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
+            VALUES (@codigo, @nombre, @idivisa, @tasaiva, @tipo, @direccion, @rfc, @telefono, @email, @website, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
+        "
+        query10 = "
+            UPDATE proveedor
+            SET nombre = @nombre, idivisa = @idivisa, tasaiva = @tasaiva, tipo = @tipo, rfc = @rfc, telefonos = @telefono, email = @email, website = @website
+            WHERE codigo = @codigo
+        "
+        query11 = "
+            UPDATE domicilio
+            SET iciudad = @iciudad, direccion = @direccion, codpos = @cp
+            WHERE sys_pk = @id_domicilio
+        "
+
+        if file.exists(file) {
+            ref data = CsvRead(file,"")
+
+            list_size = @count(data)
+            contador = 0
+            progreso = 0
+            div = (list_size/steps)
+            
+            for i=0; i<list_size {
+                ref itm = record.caseinsensitive(@item(data,i))
+
+                codigo = length(@@(itm,"codigo"))
+                nombre = length(@@(itm,"nombre"))
+                divisa = length(@@(itm,"divisa"))
+                tasaiva = length(@@(itm,"tasaiva"))
+                tipo = length(@@(itm,"tipo"))
+                ciudad = length(@@(itm,"ciudad"))
+                direccion = length(@@(itm,"direccion"))
+                cp = length(@@(itm,"cp"))
+                rfc = length(@@(itm,"rfc"))
+                tel = length(@@(itm,"telefono"))
+                email = length(@@(itm,"email"))
+                website = length(@@(itm,"website"))
+
+                if (codigo < 1 || codigo > 35) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código (" + @@(itm,"codigo") + ") debe ser de mínimo 1 caracter y máximo 35 caracteres.")
+                    }
+                } else if (nombre < 1 || nombre > 150) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El nombre (" + @@(itm,"nombre") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
+                    }
+                } else if (divisa < 1 || divisa > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La divisa (" + @@(itm,"divisa") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
+                    }
+                } else if (tasaiva < 1 || tasaiva > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La tasa IVA (" + @@(itm,"tasaiva") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
+                    }
+                } else if (tipo < 1 || tipo > 11) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El tipo (" + @@(itm,"tipo") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
+                    }
+                } else if (ciudad < 1 || ciudad > 100) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La ciudad (" + @@(itm,"ciudad") + ") debe ser de mínimo 1 caracter y máximo 100 caracteres.")
+                    }
+                } else if (direccion < 1 || direccion > 1024) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La dirección (" + @@(itm,"direccion") + ") debe ser de mínimo 1 caracter y máximo 1024 caracteres.")
+                    }
+                } else if (cp < 1 || cp > 10) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El CP (" + @@(itm,"cp") + ") debe ser de mínimo 1 caracter y máximo 10 caracteres.")
+                    }
+                } else if (rfc < 1 || rfc > 15) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El RFC (" + @@(itm,"ciudad") + ") debe ser de mínimo 1 caracter y máximo 15 caracteres.")
+                    }
+                } else if (tel < 1 || tel > 150) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El teléfono (" + @@(itm,"telefono") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
+                    }
+                } else if (email < 1 || email > 80) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El email (" + @@(itm,"email") + ") debe ser de mínimo 1 caracter y máximo 80 caracteres.")
+                    }
+                } else if (website < 1 || website > 150) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El website (" + @@(itm,"website") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
+                    }
+                } else {
+                    id_divisa = dbr.str(db,query3,itm)
+
+                    if (id_divisa != "") {
+                        itm<"idivisa">: id_divisa
+                        id_tasaiva = dbr.str(db,query4,itm)
+
+                        if (id_tasaiva != "") {
+                            itm<"tasaiva">: id_tasaiva
+                            id_tipo = dbr.str(db,query5,itm)
+
+                            if (id_tipo != "") {
+                                itm<"tipo">: id_tipo
+                                id_ciudad = dbr.str(db,query6,itm)
+
+                                if (id_ciudad != "") {
+                                    itm<"iciudad">: id_ciudad
+                                    itm<"direccion">: "||" + @@(itm,"direccion") + "|||" 
+
+                                    duplicated =  dbr.str(db,query1,itm)
+                                    nombre_duplicated = dbr.str(db,query2,itm)
+
+                                    if (nombre_duplicated == @@(itm,"codigo") || nombre_duplicated == "") {
+                                        if (duplicated != "") {
+                                            do dbr.execute(db,query10,itm)
+
+                                            id_domicilio = dbr.str(db,"SELECT domicilio1 FROM proveedor WHERE codigo =" + @@(itm,"codigo"),@null)
+                                            itm<"id_domicilio">: id_domicilio
+
+                                            do dbr.execute(db,query11,itm)
+                                        } else {
+                                            itm<"sys_guid">: uuid()
+                                            itm<"sys_dtcreated*">: now()
+                                            itm<"sys_timestamp*">: now()
+                                            itm<"sys_recver">: 0
+
+                                            do dbr.execute(db,query8,itm)
+
+                                            id_domicilio = dbr.str(db,query7,itm)
+                                            itm<"direccion">: id_domicilio
+
+                                            do dbr.execute(db,query9,itm)
+                                        }
+                                    } else {
+                                        if (token != "") {
+                                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe un cliente con nombre = '" + @@(itm,"nombre") + "'")
+                                        }
+                                    }
+                                } else {
+                                    if (token != "") {
+                                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una ciudad (" + @@(itm,"ciudad") + ") con ese valor.")
+                                    }
+                                }
+                            } else {
+                                if (token != "") {
+                                    do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe un tipo (" + @@(itm,"tipo") + ") con ese valor.")
+                                }
+                            }
+                        } else {
+                            if (token != "") {
+                                do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una tasa IVA (" + @@(itm,"tasaiva") + ") con ese valor.")
+                            }
+                        }
+                    } else {
+                        if (token != "") {
+                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una divisa (" + @@(itm,"divisa") + ") con ese valor.")
+                        }
+                    }
+                }
+
+                contador = contador + 1
+
+                if (contador >= div) {
+                    contador = contador - div
+                    progreso = progreso + steps
+
+                    if (token != "") {
+                        do batch.saveLog(token,"En proceso... " + str(progreso) + "%")
+                    }
+                }
+            }
+
+            if (list_size < steps) {
+                if (token != "") {
+                    do batch.saveLog(token,"En proceso... 100%")
+                }
+            }
+
+            exception 
+            {
+                do file.delete(file)
+
+                if (token != "") {
+                    do batch.saveLog(token,last_error())
+                }
+            }
+        }
+
+        do file.delete(file)
+    }
 }
