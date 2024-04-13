@@ -193,11 +193,23 @@ var globalvar =
                 }, varValue);
                 break;
             }
+            case "memo":
             case "textarea":
             {
                 control = main.createFullElement('textarea',{
                     class: 'form-control rounded-0',
                     pk: varData.sys_pk,
+                }, varValue);
+                break;
+            }
+            case "number":
+            case "decimal":
+            {
+                control = main.createFullElement('input', { 
+                    type:'number', 
+                    value:varValue,
+                    class:'induxsoft-form-control', 
+                    pk:varData.sys_pk,
                 }, varValue);
                 break;
             }
@@ -278,6 +290,7 @@ var globalvar =
                 {
                     let Events =
                     {
+                        number: "change",
                         text: "keyup",
                         color: "change",
                         time: "change",
