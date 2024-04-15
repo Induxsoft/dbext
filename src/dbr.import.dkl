@@ -585,12 +585,12 @@ module "Funciones de importación de datos"
         query11 = "SELECT codbar3 FROM producto WHERE codbar3 = @codigobarra3"
         query12 = "
             INSERT INTO producto
-            (codigo, descripcion, unidad, idivisa, ilinea, iclase, itipo, metodovaluacion, costoultimo, impuestos, imarca, idepartamento, codbar1, codbar2, codbar3, reqlote, reqserie, existencia, uf_sat_proser, uf_sat_uniproser, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
-            VALUES (@codigo, @descripcion, @unidad, @divisa, @linea, @clase, @tipo, @valuacion, @costoultimo, @impuestos, @marca, @departamento, @codigobarra1, @codigobarra2, @codigobarra3, @reqlote, @reqserie, @existencia, @uf_sat_proser, @uf_sat_uniproser, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
+            (codigo, descripcion, unidad, factorb, unidadb, idivisa, ilinea, iclase, itipo, metodovaluacion, costoultimo, impuestos, imarca, idepartamento, codbar1, codbar2, codbar3, reqlote, reqserie, existencia, uf_sat_proser, uf_sat_uniproser, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
+            VALUES (@codigo, @descripcion, @unidad, @factor, @unidadcompra, @divisa, @linea, @clase, @tipo, @valuacion, @costoultimo, @impuestos, @marca, @departamento, @codigobarra1, @codigobarra2, @codigobarra3, @reqlote, @reqserie, @existencia, @uf_sat_proser, @uf_sat_uniproser, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
         "
         query13 = "
             UPDATE producto
-            SET descripcion = @descripcion, unidad = @unidad, idivisa = @divisa, ilinea = @linea, itipo = @tipo, metodovaluacion = @valuacion, costoultimo = @costoultimo, impuestos = @impuestos, imarca = @marca, idepartamento = @departamento, codbar1 = @codigobarra1, codbar2 = @codigobarra2, codbar3 = @codigobarra3, reqlote = @reqlote, reqserie = @reqserie
+            SET descripcion = @descripcion, unidad = @unidad, factorb = @factor, unidadb = @unidadcompra, idivisa = @divisa, ilinea = @linea, itipo = @tipo, metodovaluacion = @valuacion, costoultimo = @costoultimo, impuestos = @impuestos, imarca = @marca, idepartamento = @departamento, codbar1 = @codigobarra1, codbar2 = @codigobarra2, codbar3 = @codigobarra3, reqlote = @reqlote, reqserie = @reqserie
             WHERE codigo = @codigo
         "
 
@@ -608,6 +608,8 @@ module "Funciones de importación de datos"
                 codigo = length(@@(itm,"codigo"))
                 descripcion = length(@@(itm,"descripcion"))
                 unidad = length(@@(itm,"unidad"))
+                factor = length(@@(itm,"factor"))
+                unidadcompra = length(@@(itm,"unidadcompra"))
                 divisa = length(@@(itm,"divisa"))
                 linea = length(@@(itm,"linea"))
                 tipo = length(@@(itm,"tipo"))
@@ -633,6 +635,14 @@ module "Funciones de importación de datos"
                 } else if (unidad < 1 || unidad > 10) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La unidad (" + @@(itm,"unidad") + ") debe ser de mínimo 1 caracter y máximo 10 caracteres.")
+                    }
+                } else if (factor < 1 || factor > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El factor (" + @@(itm,"factor") + ") debe ser de mínimo 1 caracter y máximo 27 caracteres.")
+                    }
+                } else if (unidadcompra < 1 || unidadcompra > 10) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La unidad de compra (" + @@(itm,"unidadcompra") + ") debe ser de mínimo 1 caracter y máximo 10 caracteres.")
                     }
                 } else if (divisa < 1 || divisa > 11) {
                     if (token != "") {
@@ -1341,22 +1351,22 @@ module "Funciones de importación de datos"
         query7 = "SELECT sys_pk FROM domicilio WHERE sys_guid = @sys_guid"
         query8 = "
             INSERT INTO domicilio
-            (iciudad, direccion, codpos, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
-            VALUES (@iciudad, @direccion, @cp, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
+            (iciudad, direccion, colonia, codpos, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
+            VALUES (@ciudad, @direccion, @colonia, @cp, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
         "
         query9 = "
             INSERT INTO proveedor
-            (codigo, nombre, idivisa, tasaiva, tipo, domicilio1, rfc, telefonos, email, website, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
-            VALUES (@codigo, @nombre, @idivisa, @tasaiva, @tipo, @direccion, @rfc, @telefono, @email, @website, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
+            (codigo, nombre, idivisa, tipo, domicilio1, tasaiva, rfc, telefonos, email, website, sys_guid, sys_dtcreated, sys_timestamp, sys_recver)
+            VALUES (@codigo, @nombre, @idivisa, @tipo, @direccion, @tasaiva, @rfc, @telefono, @email, @website, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)
         "
         query10 = "
             UPDATE proveedor
-            SET nombre = @nombre, idivisa = @idivisa, tasaiva = @tasaiva, tipo = @tipo, rfc = @rfc, telefonos = @telefono, email = @email, website = @website
+            SET nombre = @nombre, idivisa = @idivisa, tipo = @tipo, tasaiva = @tasaiva, rfc = @rfc, telefonos = @telefono, email = @email, website = @website
             WHERE codigo = @codigo
         "
         query11 = "
             UPDATE domicilio
-            SET iciudad = @iciudad, direccion = @direccion, codpos = @cp
+            SET iciudad = @ciudad, direccion = @direccion, colonia = @colonia, codpos = @cp
             WHERE sys_pk = @id_domicilio
         "
 
@@ -1374,11 +1384,12 @@ module "Funciones de importación de datos"
                 codigo = length(@@(itm,"codigo"))
                 nombre = length(@@(itm,"nombre"))
                 divisa = length(@@(itm,"divisa"))
-                tasaiva = length(@@(itm,"tasaiva"))
                 tipo = length(@@(itm,"tipo"))
                 ciudad = length(@@(itm,"ciudad"))
                 direccion = length(@@(itm,"direccion"))
+                colonia = length(@@(itm,"colonia"))
                 cp = length(@@(itm,"cp"))
+                tasaiva = length(@@(itm,"tasaiva"))
                 rfc = length(@@(itm,"rfc"))
                 tel = length(@@(itm,"telefono"))
                 email = length(@@(itm,"email"))
@@ -1396,39 +1407,43 @@ module "Funciones de importación de datos"
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La divisa (" + @@(itm,"divisa") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
                     }
-                } else if (tasaiva < 1 || tasaiva > 11) {
-                    if (token != "") {
-                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La tasa IVA (" + @@(itm,"tasaiva") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
-                    }
                 } else if (tipo < 1 || tipo > 11) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El tipo (" + @@(itm,"tipo") + ") debe ser de mínimo 1 caracter y máximo 11 caracteres.")
                     }
-                } else if (ciudad < 1 || ciudad > 100) {
+                } else if (ciudad > 100) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La ciudad (" + @@(itm,"ciudad") + ") debe ser de mínimo 1 caracter y máximo 100 caracteres.")
                     }
-                } else if (direccion < 1 || direccion > 1024) {
+                } else if (direccion > 1024) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La dirección (" + @@(itm,"direccion") + ") debe ser de mínimo 1 caracter y máximo 1024 caracteres.")
                     }
-                } else if (cp < 1 || cp > 10) {
+                } else if (colonia > 150) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La colonia (" + @@(itm,"colonia") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
+                    }
+                } else if (cp > 10) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El CP (" + @@(itm,"cp") + ") debe ser de mínimo 1 caracter y máximo 10 caracteres.")
                     }
-                } else if (rfc < 1 || rfc > 15) {
+                } else if (tasaiva != 1) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La tasa IVA (" + @@(itm,"tasaiva") + ") debe ser de mínimo y máximo 1 caracter.")
+                    }
+                } else if (rfc > 15) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El RFC (" + @@(itm,"ciudad") + ") debe ser de mínimo 1 caracter y máximo 15 caracteres.")
                     }
-                } else if (tel < 1 || tel > 150) {
+                } else if (tel > 150) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El teléfono (" + @@(itm,"telefono") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
                     }
-                } else if (email < 1 || email > 80) {
+                } else if (email > 80) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El email (" + @@(itm,"email") + ") debe ser de mínimo 1 caracter y máximo 80 caracteres.")
                     }
-                } else if (website < 1 || website > 150) {
+                } else if (website > 150) {
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El website (" + @@(itm,"website") + ") debe ser de mínimo 1 caracter y máximo 150 caracteres.")
                     }
@@ -1437,6 +1452,10 @@ module "Funciones de importación de datos"
 
                     if (id_divisa != "") {
                         itm<"idivisa">: id_divisa
+
+                        if (@@(itm,"tasaiva") == "F") { itm<"tasaiva">: "cFrontera" }
+                        if (@@(itm,"tasaiva") == "I") { itm<"tasaiva">: "cInterior" }
+
                         id_tasaiva = dbr.str(db,query4,itm)
 
                         if (id_tasaiva != "") {
@@ -1445,44 +1464,45 @@ module "Funciones de importación de datos"
 
                             if (id_tipo != "") {
                                 itm<"tipo">: id_tipo
-                                id_ciudad = dbr.str(db,query6,itm)
+                                nombre_duplicated = dbr.str(db,query2,itm)
 
-                                if (id_ciudad != "") {
-                                    itm<"iciudad">: id_ciudad
+                                if (nombre_duplicated == @@(itm,"codigo") || nombre_duplicated == "") {
+                                    duplicated =  dbr.str(db,query1,itm)
+                                    id_ciudad = dbr.str(db,query6,itm)
+
+                                    if (id_ciudad == "") {
+                                        if (token != "") {
+                                            do batch.saveLog(token,"No existe una ciudad con el código = '" + @@(itm,"ciudad") + "'. Se le ha asignado nulo.")
+                                        }
+
+                                        itm<"ciudad*">: @null
+                                    } else { itm<"ciudad">: id_ciudad }
+
                                     itm<"direccion">: "||" + @@(itm,"direccion") + "|||" 
 
-                                    duplicated =  dbr.str(db,query1,itm)
-                                    nombre_duplicated = dbr.str(db,query2,itm)
+                                    if (duplicated != "") {
+                                        do dbr.execute(db,query10,itm)
 
-                                    if (nombre_duplicated == @@(itm,"codigo") || nombre_duplicated == "") {
-                                        if (duplicated != "") {
-                                            do dbr.execute(db,query10,itm)
+                                        id_domicilio = dbr.str(db,"SELECT domicilio1 FROM proveedor WHERE codigo = @codigo",itm)
+                                        itm<"id_domicilio">: id_domicilio
 
-                                            id_domicilio = dbr.str(db,"SELECT domicilio1 FROM proveedor WHERE codigo =" + @@(itm,"codigo"),@null)
-                                            itm<"id_domicilio">: id_domicilio
-
-                                            do dbr.execute(db,query11,itm)
-                                        } else {
-                                            itm<"sys_guid">: uuid()
-                                            itm<"sys_dtcreated*">: now()
-                                            itm<"sys_timestamp*">: now()
-                                            itm<"sys_recver">: 0
-
-                                            do dbr.execute(db,query8,itm)
-
-                                            id_domicilio = dbr.str(db,query7,itm)
-                                            itm<"direccion">: id_domicilio
-
-                                            do dbr.execute(db,query9,itm)
-                                        }
+                                        do dbr.execute(db,query11,itm)
                                     } else {
-                                        if (token != "") {
-                                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe un cliente con nombre = '" + @@(itm,"nombre") + "'")
-                                        }
+                                        itm<"sys_guid">: uuid()
+                                        itm<"sys_dtcreated*">: now()
+                                        itm<"sys_timestamp*">: now()
+                                        itm<"sys_recver">: 0
+
+                                        do dbr.execute(db,query8,itm)
+                                        
+                                        id_domicilio = dbr.str(db,query7,itm)
+                                        itm<"direccion">: id_domicilio
+
+                                        do dbr.execute(db,query9,itm)
                                     }
                                 } else {
                                     if (token != "") {
-                                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. No existe una ciudad (" + @@(itm,"ciudad") + ") con ese valor.")
+                                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe un proveedor con nombre = '" + @@(itm,"nombre") + "'")
                                     }
                                 }
                             } else {
