@@ -30,8 +30,8 @@ module "Funciones de importación de datos"
 
         query1 = "SELECT codigo FROM linea WHERE codigo = @codigo"
         query2 = "SELECT codigo FROM linea WHERE descripcion = @descripcion"
-        query3 = "INSERT INTO linea (clase, codigo, color, descripcion, sys_guid, sys_dtcreated, sys_timestamp, sys_recver) VALUES (@clase, @codigo, @color, @descripcion, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)"
-        query4 = "UPDATE linea SET descripcion = @descripcion WHERE codigo = @codigo"
+        query3 = "INSERT INTO linea (codigo, descripcion, comision1, comision2, comision3, comision4, comision5, clase, color, sys_guid, sys_dtcreated, sys_timestamp, sys_recver) VALUES (@codigo, @descripcion, @comision1, @comision2, @comision3, @comision4, @comision5, @clase, @color, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver)"
+        query4 = "UPDATE linea SET descripcion = @descripcion, comision1 = @comision1, comision2 = @comision2, comision3 = @comision3, comision4 = @comision4, comision5 = @comision5 WHERE codigo = @codigo"
 
         if file.exists(file) {
             ref data = CsvRead(file,"")
@@ -47,6 +47,11 @@ module "Funciones de importación de datos"
 
                 codigo = length(@@(itm,"codigo"))
                 descripcion = length(@@(itm,"descripcion"))
+                comision1 = length(@@(itm,"comision1"))
+                comision2 = length(@@(itm,"comision2"))
+                comision3 = length(@@(itm,"comision3"))
+                comision4 = length(@@(itm,"comision4"))
+                comision5 = length(@@(itm,"comision5"))
 
                 if (codigo < 1 || codigo > 15) {
                     if (token != "") {
@@ -56,11 +61,38 @@ module "Funciones de importación de datos"
                     if (token != "") {
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La descripción (" + @@(itm,"descripcion") + ") debe ser de mínimo 1 caracter y máximo 50 caracteres.")
                     }
+                } else if (comision1 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 1 (" + @@(itm,"comision1") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (comision2 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 2 (" + @@(itm,"comision2") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (comision3 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 3 (" + @@(itm,"comision3") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (comision4 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 4 (" + @@(itm,"comision4") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (comision5 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 5 (" + @@(itm,"comision5") + ") debe ser de máximo 27 caracteres.")
+                    }
                 } else {
-                    duplicated =  dbr.str(db,query1,itm)
                     desc_duplicated = dbr.str(db,query2,itm)
 
                     if (desc_duplicated == @@(itm,"codigo") || desc_duplicated == "") {
+                        duplicated =  dbr.str(db,query1,itm)
+
+                        if (@@(itm,"comision1") == "") { itm<"comision1*">: @null }
+                        if (@@(itm,"comision2") == "") { itm<"comision2*">: @null }
+                        if (@@(itm,"comision3") == "") { itm<"comision3*">: @null }
+                        if (@@(itm,"comision4") == "") { itm<"comision4*">: @null }
+                        if (@@(itm,"comision5") == "") { itm<"comision5*">: @null }
+
                         if (duplicated != "") {
                             do dbr.execute(db,query4,itm)
                         } else {
@@ -159,10 +191,11 @@ module "Funciones de importación de datos"
                         do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La descripción (" + @@(itm,"descripcion") + ") debe ser de mínimo 1 caracter y máximo 50 caracteres.")
                     }
                 } else {
-                    duplicated =  dbr.str(db,query1,itm)
                     desc_duplicated = dbr.str(db,query2,itm)
 
                     if (desc_duplicated == @@(itm,"codigo") || desc_duplicated == "") {
+                        duplicated =  dbr.str(db,query1,itm)
+
                         if (duplicated != "") {
                             do dbr.execute(db,query4,itm)
                         } else {
@@ -706,10 +739,10 @@ module "Funciones de importación de datos"
                         if (id_linea != "") {
                             itm<"linea">: id_linea
 
-                            if (@@(itm,"tipo") == "I") { itm<"tipo">: "cInventariable" }
                             if (@@(itm,"tipo") == "NI") { itm<"tipo">: "cNo_inventariable" }
+                            if (@@(itm,"tipo") == "I") { itm<"tipo">: "cInventariable" }
 
-                            if (@@(itm,"tipo") == "cInventariable" || @@(itm,"tipo") == "cNo_inventariable") {
+                            if (@@(itm,"tipo") == "cNo_inventariable" || @@(itm,"tipo") == "cInventariable") {
                                 id_tipo = dbr.str(db,query5,itm)
                                 itm<"tipo">: id_tipo
 
@@ -726,9 +759,9 @@ module "Funciones de importación de datos"
 
                                     if (@@(itm,"valuacion") == "99") {
                                         itm<"tipo">: "1"
-                                    } else {
+                                    } /* else {
                                         itm<"tipo">: "2"
-                                    }
+                                    } */
 
                                     if (@@(itm,"impuestos") == "G16") { itm<"impuestos">: "IVA 16% (México)" }
                                     if (@@(itm,"impuestos") == "G0") { itm<"impuestos">: "IVA 0% (México)" }
