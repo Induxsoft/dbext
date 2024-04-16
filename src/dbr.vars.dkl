@@ -233,8 +233,11 @@ module "Variables alojadas en la base de datos :dbr.vars"
         if catid != "" { 
             var<"ref_varcat">: catid 
         }
-
-        do dbr.insert(db,"globalvar",var)
+        
+        varname=dbr.str(db,"select varname from globalvar where varname=@varname",var)
+        if trim(varname)==""{do dbr.insert(db,"globalvar",var)}
+        else{do dbr.update(db,"globalvar",var,"varname=@varname",var)}
+        
         do print(" - " + @@(var,"$varname"))
 
         exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
@@ -249,7 +252,10 @@ module "Variables alojadas en la base de datos :dbr.vars"
         }
         if parent != "" { category<"parent">: parent }
 
-        do dbr.insert(db,"varcategory",category)
+        id=dbr.str(db,"select id from varcategory where id=@id",category)
+        if trim(id)==""{do dbr.insert(db,"varcategory",category)}
+        else{do dbr.update(db,"varcategory",category,"id=@id",category)}
+
         do print(" - " + @@(category,"$id"))
 
         exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
