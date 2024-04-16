@@ -247,9 +247,9 @@ module "Variables alojadas en la base de datos :dbr.vars"
         new category
         {
             @"id": id
-            @"caption": caption
-            @"help": help
         }
+        if trim(caption)!=""{category<"caption">:caption}
+        if trim(help)!=""{category<"help">:help}
         if parent != "" { category<"parent">: parent }
 
         id=dbr.str(db,"select id from varcategory where id=@id",category)
