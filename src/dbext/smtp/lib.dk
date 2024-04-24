@@ -6,14 +6,8 @@ module "lib"
     #include "serialize.dkh"
     #include "webcl.dkh"
 
-    function sendMessage(&config,&message)
+    function sendMessage(&config,&message,&remplace_template)
     {
-        new remplace_template
-        {
-            @"asunto": @@(message,"asunto")
-            @"text": "Texto de prueba"
-        }
-
         go foreach.fstr(index:i, key:k, value:v) with(remplace_template) {
             message<"message">: replace(@@(message,"message"), "@"+k, v)
         }
