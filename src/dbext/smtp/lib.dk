@@ -1,12 +1,12 @@
 #include "dkli.dkh"
 #!
-module "lib"
+module ":lib"
 {
     #include "functions.dkh"
     #include "serialize.dkh"
     #include "webcl.dkh"
 
-    function sendMessage(&config,&message,&remplace_template)
+    function sendMessage(&config, &message, &remplace_template)
     {
         go foreach.fstr(index:i, key:k, value:v) with(remplace_template) {
             message<"message">: replace(@@(message,"message"), "@"+k, v)
@@ -18,7 +18,7 @@ module "lib"
             @"port": @@(config,"$port")
             @"user": @@(config,"$user")
             @"password": @@(config,"$password")
-            @"from": "Prueba <"+@@(config,"$user")+">"
+            @"from": @@(message,"$subject") + " <"+@@(config,"$user")+">"
             @"to": @@(message,"$to")
             @"subject": @@(message,"$subject")
             @"body": @@(message,"$message")
@@ -29,8 +29,9 @@ module "lib"
         if @@(message,"$cco") != "" { send<"cco">: @@(message,"$cco") }
         if @@(message,"$cc") != "" { send<"cc">: @@(message,"$cc") }
 
-        do rise_error(0,to.json(send))
-
         do smtp.send(send)
     }
+
+    ref c = @com_context
+    do sendMessage(@@(c,'&config'), @@(c,'&message'), @@(c,'&replace'))
 }
