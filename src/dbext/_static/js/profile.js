@@ -12,6 +12,7 @@ var profile =
         this.setConfigTables();
         this.setTableEvents();
         this.saveProfileBackup(this.tableProfile.DataArray);
+        this.setAjustPanelOneEvent();
     },
     setConfigTables()
     {
@@ -53,6 +54,42 @@ var profile =
             this.tableProfile.Events[this.tableProfile.EdiTable.Const.Events.FieldUpdated] = (e) =>
             {
                 this.showDirtyControls();
+            }
+        }
+    },
+    setAjustPanelOneEvent()
+    {
+        const line = document.querySelector('#ajust_panel_one');
+        if (line)
+        {
+            let pageX, panel, panelWidth;
+            
+            line.onclick = (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            line.onmousedown = (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                
+                panel = e.target.parentElement;
+                panel.style.transition = 'none';
+                pageX = e.pageX;
+                panelWidth = panel.offsetWidth;
+            }
+            document.onmousemove = (e) => {
+                e.stopPropagation();
+                if (panel) {
+                    let diffX = (e.pageX - pageX);
+                    panel.style.width = (panelWidth + diffX)+'px';
+                }
+            }
+            document.onmouseup = (e) => {
+                e.stopPropagation();
+                if (panel) panel.style.transition = '.5s';
+                panel = undefined;
+                pageX = undefined;
+                panelWidth = undefined;
             }
         }
     },
