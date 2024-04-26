@@ -53,7 +53,7 @@ module "list"
                 }
                 div(id="ajust_panel_one"){ $"" }
             }
-            div(id="sectionTwo")
+            div(id="sectionTwo" style="z-index: 100;")
             {
                 div(class="border-bottom bg-white")
                 {
@@ -84,7 +84,7 @@ module "list"
                         }
                     }
                 }
-                div(class="p-4")
+                div(class="p-4 bg-white")
                 {
                     h5(class="mb-3"){$"Opciones"}
                     div(id="varsFormControls" class="d-none")
