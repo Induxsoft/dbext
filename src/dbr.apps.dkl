@@ -184,6 +184,13 @@ module ":dbr.apps"
         return dbr.apps.save(db, "sys_app_item_action", data)
     }
 
+    // Obtiene la información de una acción
+    itemaction.get::&db,id
+    {
+        new params { @"id": id }
+        return dbr.rec(db,"SELECT * FROM sys_app_item_action WHERE id = @id", params)
+    }
+
     //Elimina una acción
     itemaction.delete::&db,id
     {
