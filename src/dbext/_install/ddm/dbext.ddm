@@ -257,6 +257,7 @@ model "Variables globales"
     {
         @"id" string(32) key
         @"title" string(255) required
+        @"view_url" string(1024) //URL de consulta, en donde @_entity_id representa el id del elemento
     }
 
     entity "sys_group_app_shortcut"
