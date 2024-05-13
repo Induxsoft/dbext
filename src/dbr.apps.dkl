@@ -172,11 +172,7 @@ module ":dbr.apps"
         
         exist_url = (dbr.str(db,"SELECT view_url FROM sys_app_item_type WHERE id = @det_id",params) != "")
         
-        if not(exist_url) { do dbr.execute(db,"INSERT INTO sys_app_item_type (view_url) VALUE @view_url",params) }
-        else
-        {
-            if parse.bool(override) { do dbr.execute(db,"UPDATE sys_app_item_type SET view_url = @view_url WHERE id = @det_id",params) }
-        }
+        if (override && exist_url) || not(exist_url) { do dbr.execute(db,"UPDATE sys_app_item_type SET view_url = @view_url WHERE id = @det_id",params) }
     }
 
     itemtype.prepare_url::url,_entity_id
