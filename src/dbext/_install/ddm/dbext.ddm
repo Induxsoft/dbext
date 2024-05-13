@@ -260,6 +260,26 @@ model "Variables globales"
         @"view_url" string(1024) //URL de consulta, en donde @_entity_id representa el id del elemento
     }
 
+    //Relación entre dos instancias de tipos de elementos de datos
+    entity "sys_dte_rel": "TableModel"
+    {
+        @"dte1" ref:"sys_app_item_type" required
+        @"id1" int required
+        @"ref1" string(50)
+        @"dte2" ref:"sys_app_item_type" required
+        @"id2" int required
+        @"ref2" string(50)
+        @"text" string(128)
+        
+        index "sys_dte_rel_uq1"
+        {
+            field "dte1"
+            field "id1"
+            field "dte2"
+            field "id2"
+        }
+    }
+
     entity "sys_group_app_shortcut"
     {
         @"shortcut" ref:"sys_app_shortcut" required
