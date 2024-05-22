@@ -99,18 +99,34 @@ module ":dbr.apps"
 
     log::&db,&log_entry
     {
-        ref log = record.copy(log_entry,"action,element,element_id,path,user,denied,unauth,error,error_message,context")
-        using log
+        using log_entry
         {
             @"id": 0
-            @"ts*": now()
+            @"ts*": dbr.sql("now()")
         }
-        do dbr.insert(db,"sys_action_log",log)
+        
+        do dbr.insert(db,"sys_action_log",log_entry)
     }
 
     action.create_context::action_id
     {
         new params { @"action_id": action_id }
+        
+        ref db = @@(@http_context,"&session/idp/database")
+
+        /*codeblock
+        {
+            qname = trim(@@(@http_context,"$session/idp/qname"))
+
+            if isnull(db) || not(dbr.is_open(db)) { ref db:dbr.open(qname) }
+            do dbr.rec(db,"select 1 as success;",@null)
+
+            exception
+            {
+                do clear_exceptions()
+                ref db:dbr.open(qname)
+            }
+        }*/
 
         new @@_action_context
         {
@@ -124,11 +140,11 @@ module ":dbr.apps"
 
             new member @"context"
             {
-                @"parameters*": ifnull(@@(http_context,"&request/get"),record.create())
-                @"input*": ifnull(@@(http_context,"&request/post"),record.create())
+                @"parameters*": ifnull(@@(@http_context,"&request/get"),record.create())
+                @"input*": ifnull(@@(@http_context,"&request/post"),record.create())
                 @"output*": @null
                 @"error*": @null
-                @"database*": @@(@http_context,"&session/idp/database")
+                @"database*": db
                 @"http*": @http_context
             }
         }
@@ -163,8 +179,9 @@ module ":dbr.apps"
 
     action.pre::action_id
     {
+        do errordet(@false)
         //Establecer @@_action_context si aun no está establecida
-        if not(isset("@@_action_context")){ do dbr.apps.action.create_context() }
+        if not(isset("@@_action_context")){ do dbr.apps.action.create_context(action_id) }
 
         ref db = @@(@@_action_context,"&context/database")
         new params { @"action_id": action_id }
@@ -184,7 +201,7 @@ module ":dbr.apps"
                 }
             }
             
-            if not(@isauth) { do rise_error(598,"Denegado por falta de privilegio requerido: " + action_id) }
+            if not(isauth) { do rise_error(598,"Denegado por falta de privilegio requerido: " + action_id) }
         }
 
         //Lanzar evento
@@ -197,6 +214,7 @@ module ":dbr.apps"
 
     action.pos::&output
     {
+        do errordet(@false)
         ref db = @@(@@_action_context,"&context/database")
 
         //Actualizar output de @@_action_context
@@ -227,6 +245,7 @@ module ":dbr.apps"
 
     action.ext::&output
     {
+        do errordet(@false)
         ref db = @@(@@_action_context,"&context/database")
 
         //Actualizar output de @@_action_context
@@ -241,12 +260,13 @@ module ":dbr.apps"
 
     action.log::
     {
+        ref db = @@(@@_action_context,"&context/database")
         //Cuando ocurre un error
         new log
         {
             @"action": @@(@@_action_context,"$action")
             @"element": @@(@@_action_context,"$element")
-            @"element_id": if(@@(@@_action_context,"#element_id")==0, @@(output,"#sys_pk"), @@(@@_action_context,"#element_id"))
+            @"element_id": @@(@@_action_context,"#element_id")
             @"path": dbr.apps.action.get_path()
             @"user": @@(@http_context, "$session/user/uid")
             @"denied": if(last_error_code()==598, @true, @false)
