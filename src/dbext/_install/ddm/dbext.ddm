@@ -405,6 +405,33 @@ model "Variables globales"
         @"prov" ref: "snd_provider" required
         @"name" string(32) unique required
         @"config" mmemo
-    }	
+    }
 
+    entity "sys_action_log"
+    {
+        @"id" int key required autoincrement
+        @"ts" datetime required
+        @"action" string(32) 
+        @"element" string(32)
+        @"element_id" int
+        @"path" string(512)
+        @"user" string(50)
+        @"denied" bool
+        @"unauth" bool
+        @"error" bool
+        @"error_message" memo
+        @"context" lmemo
+    }
+
+    entity "sys_priv_alias"
+    {
+        @"priv_id" string(45) required
+        @"priv_id_alias" string(45) required
+
+        index "sys_priv_alias_uq1" unique
+        {
+            field "priv_id"
+            field "priv_id_alias"
+        }
+    }
 }

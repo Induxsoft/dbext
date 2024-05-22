@@ -97,6 +97,167 @@ module ":dbr.apps"
         return dbr.execute(db, "DELETE FROM sys_app_catalog WHERE app_id=@id", prm)
     }
 
+    log::&db,&log_entry
+    {
+        ref log = record.copy(log_entry,"action,element,element_id,path,user,denied,unauth,error,error_message,context")
+        using log
+        {
+            @"id": 0
+            @"ts*": now()
+        }
+        do dbr.insert(db,"sys_action_log",log)
+    }
+
+    action.create_context::action_id
+    {
+        new params { @"action_id": action_id }
+
+        new @@_action_context
+        {
+            @"action": action_id
+            @"element": dbr.str(db,"SELECT itemtype FROM sys_app_item_action WHERE id = @action_id LIMIT 1",params)
+            @"element_id": parse.num(@@(@http_context,"$request/get/_entity_id"))
+            @"add_auths": ""
+            @"auth_dis": @false
+            @"event_dis": @false
+            @"event_data*": @null
+
+            new member @"context"
+            {
+                @"parameters*": ifnull(@@(http_context,"&request/get"),record.create())
+                @"input*": ifnull(@@(http_context,"&request/post"),record.create())
+                @"output*": @null
+                @"error*": @null
+                @"database*": @@(@http_context,"&session/idp/database")
+                @"http*": @http_context
+            }
+        }
+
+        if list.count(list.create_from_fields(@@(@@_action_context,"&context/input"))) < 1 {
+            @@_action_context<"context/input*"> : from.json(field.dstr(@http_context,"request/post_string","{}"))
+        }
+
+        return @@_action_context
+    }
+
+    action.get_path::
+    {
+        pack=@@(@http_context,"$request/get/_pack")
+		program=@@(@http_context,"$request/get/_program")
+		view=@@(@http_context,"$request/get/_view")
+		
+		if view=="" && pack!="" && program !=""
+		{
+			if @@(@http_context,"$request/get/_entity_id")=="" { view="list" }
+			else if @@(@http_context,"$request/get/_entity_id")=="_new" { view="form new" }
+			else { view="form" }
+		}
+		strseal=pack+"/"+program+"/"+view
+		strseal=replace(strseal,"///","")
+		strseal=trim(replace(strseal,"//",""))
+
+        return strseal
+
+        exception{ return "" }
+    }
+
+    action.pre::action_id
+    {
+        //Establecer @@_action_context si aun no está establecida
+        if not(isset("@@_action_context")){ do dbr.apps.action.create_context() }
+
+        ref db = @@(@@_action_context,"&context/database")
+        new params { @"action_id": action_id }
+
+        //Verificar privilegio
+        if not(dbr.security.isauth(db,action_id)) 
+        {
+            ref priv_id_alias = dbr.list(db,"SELECT priv_id_alias FROM sys_priv_alias WHERE priv_id = @action_id",params)
+
+            isauth = @false
+            for i = 0; i < list.count(priv_id_alias); i+1
+            {
+                if dbr.security.isauth(db,list.str(priv_id_alias,i))
+                {
+                    isauth = @true
+                    break
+                }
+            }
+            
+            if not(@isauth) { do rise_error(598,"Denegado por falta de privilegio requerido: " + action_id) }
+        }
+
+        //Lanzar evento
+        ref evdata = ifnull(@@(@@_action_context,"&event_data"), @@(@@_action_context,"&context"))
+        sender_id = @@(@@_action_context,"$element")
+        event_id = "pre_"+@@(@@_action_context,"$action")
+
+        do dbr.events.fire(db,sender_id,event_id,evdata)
+    }
+
+    action.pos::&output
+    {
+        ref db = @@(@@_action_context,"&context/database")
+
+        //Actualizar output de @@_action_context
+        @@_action_context<"context/output*"> : output
+
+        //Lanzar evento
+        ref evdata = ifnull(@@(@@_action_context,"&event_data"), @@(@@_action_context,"&context"))
+        sender_id = @@(@@_action_context,"$element")
+        event_id = "pos_"+@@(@@_action_context,"$action")
+        do dbr.events.fire(db,sender_id,event_id,evdata)
+
+        //Establecer log (denied=false, error=false)
+        new log
+        {
+            @"action": @@(@@_action_context,"$action")
+            @"element": @@(@@_action_context,"$element")
+            @"element_id": if(@@(@@_action_context,"#element_id")==0, @@(output,"#sys_pk"), @@(@@_action_context,"#element_id"))
+            @"path": dbr.apps.action.get_path()
+            @"user": @@(@http_context, "$session/user/uid")
+            @"denied": @false
+            @"unauth": @false
+            @"error": @false
+            @"error_message": ""
+        }
+
+        do dbr.apps.log(db,log)
+    }
+
+    action.ext::&output
+    {
+        ref db = @@(@@_action_context,"&context/database")
+
+        //Actualizar output de @@_action_context
+        @@_action_context<"context/output*"> : output
+
+        //Lanzar evento
+        ref evdata = ifnull(@@(@@_action_context,"&event_data"), @@(@@_action_context,"&context"))
+        sender_id = @@(@@_action_context,"$element")
+        event_id = "ext_"+@@(@@_action_context,"$action")
+        do dbr.events.fire(db,sender_id,event_id,evdata)
+    }
+
+    action.log::
+    {
+        //Cuando ocurre un error
+        new log
+        {
+            @"action": @@(@@_action_context,"$action")
+            @"element": @@(@@_action_context,"$element")
+            @"element_id": if(@@(@@_action_context,"#element_id")==0, @@(output,"#sys_pk"), @@(@@_action_context,"#element_id"))
+            @"path": dbr.apps.action.get_path()
+            @"user": @@(@http_context, "$session/user/uid")
+            @"denied": if(last_error_code()==598, @true, @false)
+            @"unauth": if(last_error_code()==599, @true, @false)
+            @"error": if(last_error_code()==598 || last_error_code()==599, @false, @true)
+            @"error_message": last_error()
+            // @"context": to.json(@@(@@_action_context,"&context"))
+        }
+        do dbr.apps.log(db,log)
+    }
+
     //Agrega o actualiza un acceso directo
     shortcut.set::&db,&data
     {
