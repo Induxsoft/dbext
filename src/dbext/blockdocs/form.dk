@@ -25,7 +25,7 @@ module "form.dk"
         }
         @"value_field":"id"
         @"text_field":"descripcion"
-        @"selected":@('./documento')
+        @"selected":@('#./documento')
     }
     #$
     div(class="container")

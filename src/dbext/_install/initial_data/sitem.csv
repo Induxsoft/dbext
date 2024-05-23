@@ -14,10 +14,13 @@ XB32,Editar folio,dbext.blockdocs
 XB33,Eliminar folio,dbext.blockdocs
 dbext.globalvar,Administración de variables globales,dbext
 XB40,Variables globales,dbext.globalvar
-XB41,Crear variables globales,dbext.globalvar
-XB42,Editar variables globales,dbext.globalvar
+XB41,Actualizar variables globales,dbext.globalvar
+XB42,Actualizar variables globales,dbext.globalvar
 dbext.profile,Editor de perfiles de seguridad,dbext
 XB50,Perfiles,dbext.profile
+XB51,Actualizar perfiles,dbext.profile
+XB52,Actualizar perfiles,dbext.profile
+XB53,Eliminar perfil,dbext.profile
 dbext.tuser,Catalogo de usuarios,dbext
 XB60,Usuarios,dbext.tuser
 XB61,Agregar Usuario,dbext.tuser

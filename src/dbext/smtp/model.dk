@@ -7,22 +7,72 @@ module "model"
 
     function create_update(&db,&params,&data)
     {
-        @use_transaction = @false
+        // @use_transaction = @false
+
         url_exit = @@(params,"$exit_url_encode")
         if trim(url_exit) != "" { @url_redir = url_dcode(url_exit) }
 
-        do dbr.begin(db)
+        // do dbr.begin(db)
         ref res = entity.create(db,params,data_insert(db,data))
-        do dbr.commit(db)
+        // do dbr.commit(db)
 
         return res
 
+        // exception
+        // {
+        //     if dbr.in_transaction(db) { do dbr.rollback(db) }
+        //     do rise_error(0, last_error())
+        // }
+    }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB81")
+        do dbr.begin(db)
+
+        ref result = create_update(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
         exception
         {
-            if dbr.in_transaction(db) { do dbr.rollback(db) }
-            do rise_error(0, last_error())
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
         }
     }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB82")
+        do dbr.begin(db)
+
+        ref result = create_update(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
     function read(&db,&params)
     {
         return data_read(db,params)
@@ -55,7 +105,7 @@ module "model"
         return d
     }
 
-    point @create to create_update
-    point @update to create_update
+    point @create to create //create_update
+    point @update to update //create_update
     point @read to read
 }

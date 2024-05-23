@@ -52,7 +52,7 @@ module "list"
                             @"template":ftext('
                                 <div class="d-flex gap-2 justify-content-center">
                                     <a href="#<@TYPE_AUTH_BOX>${DataRow.sys_pk}/" class="btn btn-sm btn-light">Editar</a>
-                                    <button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})">Cancelar</button>
+                                    <button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})">Eliminar</button>
                                 </div>
                             ')
                         }

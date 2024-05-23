@@ -75,12 +75,16 @@ module ""
         do dbr.commit(db)
         do dbr.apps.action.ext(result)
 
+        return result
+
         exception
         {
             do errordet(@false)
             if dbr.in_transaction(db){ do dbr.rollback(db) }
+            code = last_error_code()
+            error = last_error()
             do dbr.apps.action.log()
-            do rise_error(last_error_code(),last_error())
+            do rise_error(code,error)
         }
     }
 
@@ -96,6 +100,8 @@ module ""
         do dbr.apps.action.pos(result)
         do dbr.commit(db)
         do dbr.apps.action.ext(result)
+
+        return result
 
         exception
         {
@@ -120,6 +126,8 @@ module ""
         do dbr.apps.action.pos(result)
         do dbr.commit(db)
         do dbr.apps.action.ext(result)
+
+        return result
 
         exception
         {

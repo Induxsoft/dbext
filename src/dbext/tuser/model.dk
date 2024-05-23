@@ -12,10 +12,10 @@ module "model"
 
     function tuser_create(&db,&params,&data)
     {
-        if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_USUARIO)) { do rise_error(500,"No autorizado") }
-        if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_USUARIO)) { do rise_error(500,"No autorizado") }
+        // if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_USUARIO)) { do rise_error(500,"No autorizado") }
+        // if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_USUARIO)) { do rise_error(500,"No autorizado") }
 
-        @use_transaction = @false
+        // @use_transaction = @false
         ref groups = @null
 
         if field.exist(data,"groups")
@@ -29,18 +29,68 @@ module "model"
             data<"pwdmd5">:toupper(md5(@@(data,"pwd")))
         }
 
-        do dbr.begin(db)
+        // do dbr.begin(db)
+
         ref res = record.caseinsensitive(entity.create(db,params,data))
         if not(isnull(groups)) && list.count(groups) > 0 { do tuser_add_to_groups(db, groups, @@(res,"#sys_pk")) }
-        do dbr.commit(db)
+        
+        // do dbr.commit(db)
 
         return res
 
         exception
         {
-            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            // if dbr.in_transaction(db) { do dbr.rollback(db) }
             do cu_error("usuario")
             do rise_error(500, last_error())
+        }
+    }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB61")
+        do dbr.begin(db)
+
+        ref result = tuser_create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@true)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB62")
+        do dbr.begin(db)
+
+        ref result = tuser_create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
         }
     }
 
@@ -73,7 +123,8 @@ module "model"
 
     function tuser_read(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_READ_USUARIO)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_READ_USUARIO)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant("XB60")
 
         ref res = entity.read(db, params)
         if not(isnull(res)) 
@@ -82,13 +133,29 @@ module "model"
             res<"groups*">: get_user_groups(db, @@(res, "#sys_pk"))
         }
         return res
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
 
     function tuser_blank(&db, &params)
     {
+        do dbr.apps.action.grant("XB60")
+
         new res {}
         res<"groups*">: get_user_groups(db, @@(res, "#sys_pk"))
         return res
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
 
     function get_user_groups(&db, user_pk)
@@ -114,28 +181,35 @@ module "model"
 
     function tuser_delete(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_DELETE_USUARIO)) { do rise_error(500,"No autorizado") }
-
+        // if not(dbr.security.isauth(db,@AUT_DELETE_USUARIO)) { do rise_error(500,"No autorizado") }
         @use_transaction = @false
 
+        do dbr.apps.action.pre("XB63")
         do dbr.begin(db)
+
         do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@_entity_id;", params)
         do dbr.execute(db, "DELETE FROM uservar WHERE fuser=@_entity_id;", params)
         do entity.delete(db, params)
+        
+        do dbr.apps.action.pos(@null)
         do dbr.commit(db)
+        do dbr.apps.action.ext(@null)
 
         return @true
         
         excepcion
         {
+            do errordet(@false)
             if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do dbr.apps.action.log()
             do rise_error(500, last_error())
         }
     }
 
     function list(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_ACCESS_USUARIOS)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_ACCESS_USUARIOS)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant("XB60")
 
         query="SELECT sys_pk, userid, username
             FROM tuser
@@ -143,6 +217,13 @@ module "model"
             ORDER BY userid
             LIMIT #<@default_max_rows>;"
         return dbr.list(db, ftext(query), params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
 
     function cu_error(table)
@@ -153,8 +234,8 @@ module "model"
         do valide_duplicate(fields, table, last_error(), last_error_code())
     }
 
-    point @create to tuser_create
-    point @update to tuser_create
+    point @create to create //tuser_create
+    point @update to update //tuser_create
     point @read to tuser_read
     point @list to list
     point @blank to tuser_blank

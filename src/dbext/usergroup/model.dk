@@ -9,41 +9,99 @@ module "model"
 
     function usergroup_create(&db,&params,&data)
     {
-        if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
-        if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+        // if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+        // if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
 
         ref res = entity.create(db,params,data)
         return res
+        
         exception
         {
             do cu_error("grupo de usuario")
             do rise_error(last_error_code(), last_error())
         }
     }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB71")
+        do dbr.begin(db)
+
+        ref result = usergroup_create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB72")
+        do dbr.begin(db)
+
+        ref result = usergroup_create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
     function usergroup_delete(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_DELETE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_DELETE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
 
         @use_transaction = @false
 
+        do dbr.apps.action.pre("XB73")
         do dbr.begin(db)
+
         do dbr.execute(db, "DELETE FROM profile WHERE usergroup=@_entity_id;", params)
         do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE groups=@_entity_id;", params)
         do entity.delete(db, params)
+
+        do dbr.apps.action.pos(@null)
         do dbr.commit(db)
+        do dbr.apps.action.ext(@null)
 
         return @true
         
         excepcion
         {
+            do errordet(@false)
             if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do dbr.apps.action.log()
             do rise_error(500, last_error())
         }
     }
 
     function list(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_ACCESS_GPO_USUARIOS)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_ACCESS_GPO_USUARIOS)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant("XB70")
 
         query="SELECT sys_pk, groupid, description, notes
             FROM usergroup
@@ -51,12 +109,28 @@ module "model"
             ORDER BY groupid
             LIMIT #<@default_max_rows>;"
         return dbr.list(db, ftext(query), params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
 
     function read(&db,&params)
     {
-        if not(dbr.security.isauth(db,@AUT_READ_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_READ_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant("XB70")
+
         return entity.read(db,params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
 
     function cu_error(table)
@@ -67,8 +141,8 @@ module "model"
         do valide_duplicate(fields, table, last_error(), last_error_code())
     }
 
-    point @create to usergroup_create
-    point @update to usergroup_create
+    point @create to create //usergroup_create
+    point @update to update //usergroup_create
     point @delete to usergroup_delete
     point @list to list
     point @read to read

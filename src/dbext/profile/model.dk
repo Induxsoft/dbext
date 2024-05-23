@@ -6,18 +6,34 @@ module "model"
 
     function profile_read(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_READ_PERFIL)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_READ_PERFIL)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant("XB50")
 
         ref group = dbr.rec(db, "SELECT sys_pk, groupid, description, IFNULL(notes,'') notes FROM usergroup WHERE sys_pk=@_entity_id LIMIT 1;", params)
         if not(isnull(group)) { group<"sitem_profile*">: get_group_sitem_profile(db, group) }
         return group
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
     function profile_list(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_ACCESS_PERFILES)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_ACCESS_PERFILES)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant("XB50")
 
         ref groups = dbr.list(db, "SELECT sys_pk, groupid, description, notes FROM usergroup;", @null)
         return groups
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
     function get_group_sitem_profile(&db, &group)
     {
@@ -30,8 +46,8 @@ module "model"
 
     function profile_create(&db, &params, &data)
     {
-        if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_PERFIL)) { do rise_error(500,"No autorizado") }
-        if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_PERFIL)) { do rise_error(500,"No autorizado") }
+        // if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_PERFIL)) { do rise_error(500,"No autorizado") }
+        // if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_PERFIL)) { do rise_error(500,"No autorizado") }
 
         ref profiles = @@(data, "&profile")
         sql_p = ""
@@ -54,31 +70,99 @@ module "model"
             sql_p = rremove(sql_p,1) + ";"
         }
 
-        @use_transaction = @false
+        // @use_transaction = @false
 
-        do dbr.begin(db)
+        // do dbr.begin(db)
         // eliminamos los registros de la configuración actual
         do dbr.execute(db, "DELETE FROM profile WHERE usergroup=@_entity_id", params)
         // Insertamos la nueva configuración si se recibió
         if trim(sql_p) != "" { do dbr.execute(db, sql_p, @null) }
-        do dbr.commit(db)
+        // do dbr.commit(db)
 
-        exception
+        /* exception
         {
             if dbr.in_transaction(db) { do dbr.rollback(db) }
             do errordet(@false)
 			do rise_error(last_error_code(),last_error())
+        } */
+    }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB51")
+        do dbr.begin(db)
+
+        ref result = profile_create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB52")
+        do dbr.begin(db)
+
+        ref result = profile_create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
         }
     }
 
     function profile_delete(&db,&params)
     {
-        if not(dbr.security.isauth(db,@AUT_DELETE_PERFIL)) { do rise_error(500,"No autorizado") }
-        return entity.delete(db,params)
+        // if not(dbr.security.isauth(db,@AUT_DELETE_PERFIL)) { do rise_error(500,"No autorizado") }
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB53")
+        do dbr.begin(db)
+
+        ref result = entity.delete(db,params)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
 
     point @read to profile_read
     point @list to profile_list
-    point @create to profile_create
+    point @create to create //profile_create
+    point @update to update //profile_create
     point @delete to profile_delete
 }
