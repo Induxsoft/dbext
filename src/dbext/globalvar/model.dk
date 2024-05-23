@@ -12,16 +12,32 @@ module "model"
 
     function globalvar_read(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_READ_GVAR)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_READ_GVAR)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant("XB40")
 
         return get_category_vars(db, params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
     function globalvar_list(&db, &params)
     {
-        if not(dbr.security.isauth(db,@AUT_ACCESS_GLOBALVARS)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_ACCESS_GLOBALVARS)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant("XB40")
 
         sql = "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent FROM varcategory order by caption;"
         return dbr.list(db, sql, @null)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
     function get_category_vars(&db, &category)
     {
@@ -44,14 +60,15 @@ module "model"
         "
         return dbr.list(db, ftext(sql), category)
     }
+
     function globalvar_create(&db, &params, &data)
     {
-        if not(dbr.security.isauth(db,@AUT_UPDATE_GVAR)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_UPDATE_GVAR)) { do rise_error(500,"No autorizado") }
 
         ref vars = @@(data, "&vars")
         
-        @use_transaction = @false
-        do dbr.begin(db)
+        // @use_transaction = @false
+        // do dbr.begin(db)
 
         if not(isnull(vars)) && list.count(vars) > 0
         {
@@ -63,19 +80,73 @@ module "model"
             }
         }
 
-        do dbr.commit(db)
+        // do dbr.commit(db)
         return vars
         
-        exception
+        /* exception
         {
             if dbr.in_transaction(db) { do dbr.rollback(db) }
             do errordet(@false)
 			do rise_error(last_error_code(),last_error())
+        } */
+    }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB41")
+        do dbr.begin(db)
+
+        ref result = globalvar_create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
         }
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB42")
+        do dbr.begin(db)
+
+        ref result = globalvar_create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function delete(&db,&params)
+    {
+        do rise_error(500,"Acción no implementada")
     }
 
     point @read to globalvar_read
     point @list to globalvar_list
-    point @create to globalvar_create
-    point @update to globalvar_create
+    point @create to create
+    point @update to update
+    point @delete to delete
 }

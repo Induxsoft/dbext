@@ -8,6 +8,8 @@ module "model"
 
     function list(&db,&params)
     {
+        do dbr.apps.action.grant("XB80")
+
         sql_channels = "
             SELECT c.sys_pk, c.name, p.name prov_name, pt.const prov_tpy_const, p.entry_point entry_point
             FROM snd_channel c 
@@ -30,15 +32,86 @@ module "model"
         }
         
         return res
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
 
     function create(&db,&params,&data)
     {
-        new channel{
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB81")
+        do dbr.begin(db)
+
+        new channel
+        {
             @"name": @@(data,"$nombre")
             @"prov": @@(data,"#proveedor")
         }
-        return v12.channel.set(db,channel)
+        ref result = v12.channel.set(db,channel)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB82")
+        do dbr.begin(db)
+
+        ref result = entity.update(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function delete(&db,&params)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB83")
+        do dbr.begin(db)
+
+        ref result = entity.delete(db,params)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
     }
 
     function buscar_proveedor(&db, &params)
@@ -55,4 +128,6 @@ module "model"
 
     point @list to list
     point @create to create
+    point @update to update
+    point @delete to delete
 }

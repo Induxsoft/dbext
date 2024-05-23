@@ -22,30 +22,54 @@ module "model"
      }
      list::&db,&params
      {
-          if not(dbr.security.isauth(db,@AUT_ACCESS_TIPO_AUTORIZACIONES)) { do rise_error(500,"No autorizado") }
+          // if not(dbr.security.isauth(db,@AUT_ACCESS_TIPO_AUTORIZACIONES)) { do rise_error(500,"No autorizado") }
+          do dbr.apps.action.grant("XB20")
 
           ref entity= entity.list(db,params)
           return entity
+
+          exception
+          {
+               do errordet(@false)
+               do dbr.apps.action.log()
+               do rise_error(last_error_code(),last_error())
+          }
      }
    
      read::&db,&params
      {
-          if not(dbr.security.isauth(db,@AUT_READ_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+          // if not(dbr.security.isauth(db,@AUT_READ_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+          do dbr.apps.action.grant("XB20")
 
           ref entity= entity.read(db,params)
           do prepareView(db,params,entity)
           return entity
+
+          exception
+          {
+               do errordet(@false)
+               do dbr.apps.action.log()
+               do rise_error(last_error_code(),last_error())
+          }
      }
      blank::&db,&params
      {
+          do dbr.apps.action.grant("XB20")
           new entity{}
           do prepareView(db,params,entity)
           return entity
+
+          exception
+          {
+               do errordet(@false)
+               do dbr.apps.action.log()
+               do rise_error(last_error_code(),last_error())
+          }
      }
      save::&db,&params,&data
      {
-          if not(dbr.security.isauth(db,@AUT_CREATE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
-          if not(dbr.security.isauth(db,@AUT_UPDATE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+          // if not(dbr.security.isauth(db,@AUT_CREATE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+          // if not(dbr.security.isauth(db,@AUT_UPDATE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
 
           data<"autologin">:if(parse.bool(@@(data,"autologin")),1,0)
           if @@(data,"#min_users")<1{data<"min_users">:1}
@@ -65,20 +89,81 @@ module "model"
                do rise_error(500,error)
           }
      }
+
+     create::&db,&params,&data
+     {
+          @use_transaction = @false
+
+          do dbr.apps.action.pre("XB21")
+          do dbr.begin(db)
+
+          ref result = save(db,params,data)
+
+          do dbr.apps.action.pos(result)
+          do dbr.commit(db)
+          do dbr.apps.action.ext(result)
+
+          exception
+          {
+               do errordet(@false)
+               if dbr.in_transaction(db){ do dbr.rollback(db) }
+               do dbr.apps.action.log()
+               do rise_error(last_error_code(),last_error())
+          }
+     }
+
+     update::&db,&params,&data
+     {
+          @use_transaction = @false
+
+          do dbr.apps.action.pre("XB22")
+          do dbr.begin(db)
+
+          ref result = save(db,params,data)
+
+          do dbr.apps.action.pos(result)
+          do dbr.commit(db)
+          do dbr.apps.action.ext(result)
+
+          exception
+          {
+               do errordet(@false)
+               if dbr.in_transaction(db){ do dbr.rollback(db) }
+               do dbr.apps.action.log()
+               do rise_error(last_error_code(),last_error())
+          }
+     }
+
      delete::&db,&params
      {
-          if not(dbr.security.isauth(db,@AUT_DELETE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+          @use_transaction = @false
+          // if not(dbr.security.isauth(db,@AUT_DELETE_TIPO_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+
+          do dbr.apps.action.pre("XB23")
+          do dbr.begin(db)
 
           ref data=dbr.rec(db,"select * from sys_auth_tpy where sys_pk=@_entity_id",params)
           if isnull(data){do rise_error(500,"No se encontró datos")}
-
           do dbr.auths.type.unregister(db,@@(data,"$id"))
+
+          do dbr.apps.action.pos(data)
+          do dbr.commit(db)
+          do dbr.apps.action.ext(data)
+
           return @null
+
+          exception
+          {
+               do errordet(@false)
+               if dbr.in_transaction(db){ do dbr.rollback(db) }
+               do dbr.apps.action.log()
+               do rise_error(last_error_code(),last_error())
+          }
      }
    
      point @delete to delete
-     point @create to save
-     point @update to save
+     point @create to create
+     point @update to update
      point @blank to blank
      point @read to read
      point @list to list

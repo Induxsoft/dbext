@@ -1,42 +1,35 @@
-itemid,description,itemparent
-"FX1-00-00-000","Operaciones ERP","FX1-00-00-000"
-
-"CFO-00-000-000","Control de Folios","FX1-00-00-000"
-"CFO-00-000-001","Solo lectura","CFO-00-000-000"
-"CFO-00-000-002","Permitir Agregar Folios","CFO-00-000-001"
-"CFO-00-000-003","Permitir Modificar Folios","CFO-00-000-001"
-"CFO-00-000-004","Permitir Eliminar Folios","CFO-00-000-001"
-
-"GPU-00-000-000","Grupos de Usuarios","FX1-00-00-000"
-"GPU-00-000-001","Solo lectura","GPU-00-000-000"
-"GPU-00-000-002","Permitir Agregar grupo","GPU-00-000-000"
-"GPU-00-000-003","Permitir Modificar grupo","GPU-00-000-00"
-"GPU-00-000-004","Permitir Eliminar grupo","GPU-00-000-000"
-
-"PER-00-000-000","Perfiles","FX1-00-00-000"
-"PER-00-000-001","Solo lectura","PER-00-000-000"
-"PER-00-000-002","Permitir Agregar Perfil","PER-00-000-001"
-"PER-00-000-003","Permitir Modificar Perfil","PER-00-000-001"
-"PER-00-000-004","Permitir Eliminar Perfil","PER-00-000-001"
-
-"SAU-00-000-000","Solicitudes de autorización","FX1-00-00-000"
-"SAU-00-000-001","Solo lectura","SAU-00-000-000"
-"SAU-00-000-002","Permitir Agregar Solicitud","SAU-00-000-001"
-"SAU-00-000-003","Permitir Modificar Solicitud","SAU-00-000-001"
-"SAU-00-000-004","Permitir Eliminar Solicitud","SAU-00-000-001"
-
-"TAU-00-000-000","Tipos de autorización","FX1-00-00-000"
-"TAU-00-000-001","Solo lectura","PER-00-000-000"
-"TAU-00-000-002","Permitir Agregar Autorización","TAU-00-000-001"
-"TAU-00-000-003","Permitir Modificar Autorización","TAU-00-000-001"
-"TAU-00-000-004","Permitir Eliminar Autorización","TAU-00-000-001"
-
-"TUS-00-000-000","Usuarios","FX1-00-00-000"
-"TUS-00-000-001","Solo lectura","TUS-00-000-000"
-"TUS-00-000-002","Permitir Agregar usuario","TUS-00-000-001"
-"TUS-00-000-003","Permitir Modificar usuario","TUS-00-000-001"
-"TUS-00-000-004","Permitir Eliminar usuario","TUS-00-000-001"
-
-"GVA-00-000-000","Variables globales","FX1-00-00-000"
-"GVA-00-000-001","Solo lectura","GVA-00-000-000"
-"GVA-00-000-001","Permitir Modificar Variable Global","GVA-00-000-001"
+﻿itemid,description,itemparent
+dbext,Utilidades generales,\0
+dbext.authbox,Bandeja de autorizaciones,dbext
+XB10,Bandeja de autorizaciones,dbext.authbox
+dbext.authtpy,Catálogo de tipos de solicitudes de autorización,dbext
+XB20,Tipos de autorizaciones,dbext.authtpy
+XB21,Agregar tipo de autorización,dbext.authtpy
+XB22,Editar tipo de autorización,dbext.authtpy
+XB23,Eliminar tipo de autorización,dbext.authtpy
+dbext.blockdocs,Blocks de documentos,dbext
+XB30,Control de folios,dbext.blockdocs
+XB31,Agregar folio,dbext.blockdocs
+XB32,Editar folio,dbext.blockdocs
+XB33,Eliminar folio,dbext.blockdocs
+dbext.globalvar,Administración de variables globales,dbext
+XB40,Variables globales,dbext.globalvar
+XB41,Crear variables globales,dbext.globalvar
+XB42,Editar variables globales,dbext.globalvar
+dbext.profile,Editor de perfiles de seguridad,dbext
+XB50,Perfiles,dbext.profile
+dbext.tuser,Catalogo de usuarios,dbext
+XB60,Usuarios,dbext.tuser
+XB61,Agregar Usuario,dbext.tuser
+XB62,Editar Usuario,dbext.tuser
+XB63,Eliminar Usuario,dbext.tuser
+dbext.usergroup,Cátalogos de grupos de usuarios,dbext
+XB70,Grupos de usuarios,dbext.usergroup
+XB71,Agregar grupo de usuarios,dbext.usergroup
+XB72,Editar grupo de usuarios,dbext.usergroup
+XB73,Eliminar grupo de usuarios,dbext.usergroup
+dbext.comm,Canales de comunicación,dbext
+XB80,Canales de comunicación,dbext.comm
+XB81,Crear canal de comunicación,dbext.comm
+XB82,Editar canal de comunicación,dbext.comm
+XB83,Eliminar canal de comunicación,dbext.comm

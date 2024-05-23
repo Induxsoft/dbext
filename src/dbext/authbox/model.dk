@@ -47,7 +47,8 @@ module "model"
 
     list::&db,&params
     {
-        if not(dbr.security.isauth(db,@AUT_ACCESS_AUTORIZACIONES)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_ACCESS_AUTORIZACIONES)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant(@AUT_ACCESS_AUTORIZACIONES)
 
         ref user=dbr.auths.getUser(db)
         params<"user">:@@(user,"#sys_pk")
@@ -57,7 +58,7 @@ module "model"
     }
     update::&db,&params,&data
     {
-        if not(dbr.security.isauth(db,@AUT_CREATE_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_CREATE_AUTORIZACION)) { do rise_error(500,"No autorizado") }
 
         if field.exist(data,"act")
         {
@@ -76,12 +77,13 @@ module "model"
     }
     delete::&db,&params
     {
-        if not(dbr.security.isauth(db,@AUT_DELETE_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_DELETE_AUTORIZACION)) { do rise_error(500,"No autorizado") }
         return entity.delete(db,params)
     }
     read::&db,&params
     {
-        if not(dbr.security.isauth(db,@AUT_READ_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+        // if not(dbr.security.isauth(db,@AUT_READ_AUTORIZACION)) { do rise_error(500,"No autorizado") }
+        do dbr.apps.action.grant(@AUT_ACCESS_AUTORIZACIONES)
 
         ref entity= entity.read(db,params)
         entity<"autorizaciones*">:dbr.list(db,"SELECT l.*,u.userid,u.username,date_format(l.sys_dtcreated,'%Y-%m-%d')autorizacion,

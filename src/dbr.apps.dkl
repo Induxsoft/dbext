@@ -158,9 +158,15 @@ module ":dbr.apps"
 
     action.get_path::
     {
-        pack=@@(@http_context,"$request/get/_pack")
-		program=@@(@http_context,"$request/get/_program")
-		view=@@(@http_context,"$request/get/_view")
+        if not(isset("@http_context")) { return ""}
+        if not(field.exist(@http_context,"request/get")) { return "" }
+
+        if not(field.exist(@http_context,"request/get/_pack")) { pack="" }
+        else { pack=@@(@http_context,"$request/get/_pack") }
+        if not(field.exist(@http_context,"request/get/_program")) { program="" }
+        else { program=@@(@http_context,"$request/get/_program") }
+        if not(field.exist(@http_context,"request/get/_view")) { view="" }
+        else { view=@@(@http_context,"$request/get/_view") }
 		
 		if view=="" && pack!="" && program !=""
 		{
@@ -174,16 +180,15 @@ module ":dbr.apps"
 
         return strseal
 
-        exception{ return "" }
+        exception { return "" }
     }
 
-    action.pre::action_id
+    action.grant::action_id
     {
-        do errordet(@false)
         //Establecer @@_action_context si aun no está establecida
         if not(isset("@@_action_context")){ do dbr.apps.action.create_context(action_id) }
 
-        ref db = @@(@@_action_context,"&context/database")
+        ref db = @@(@http_context,"&session/idp/database")
         new params { @"action_id": action_id }
 
         //Verificar privilegio
@@ -203,6 +208,14 @@ module ":dbr.apps"
             
             if not(isauth) { do rise_error(598,"Denegado por falta de privilegio requerido: " + action_id) }
         }
+    }
+
+    action.pre::action_id
+    {
+        do errordet(@false)
+
+        //Verificar privilegio
+        do dbr.apps.action.grant(action_id)
 
         //Lanzar evento
         ref evdata = ifnull(@@(@@_action_context,"&event_data"), @@(@@_action_context,"&context"))
