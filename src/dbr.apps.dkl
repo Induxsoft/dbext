@@ -217,6 +217,8 @@ module ":dbr.apps"
         //Verificar privilegio
         do dbr.apps.action.grant(action_id)
 
+        ref db = @@(@@_action_context,"&context/database")
+
         //Lanzar evento
         ref evdata = ifnull(@@(@@_action_context,"&event_data"), @@(@@_action_context,"&context"))
         sender_id = @@(@@_action_context,"$element")
