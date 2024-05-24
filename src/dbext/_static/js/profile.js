@@ -129,7 +129,8 @@ var profile =
     setProfileData(data)
     {
         this.tableProfile.DataArray = data;
-        this.tableProfile._printRows();
+        this.tableProfile._printTreeData();
+        // this.tableProfile._printRows();
     },
     getGroupProfileInfo(group)
     {
@@ -149,14 +150,17 @@ var profile =
     },
     saveProfileBackup(profileData)
     {
-        this.profileDataBackup = JSON.parse(JSON.stringify(profileData));
+        // this.profileDataBackup = JSON.parse(JSON.stringify(profileData));
+        this.tableProfile.backup();
     },
     isDirtyProfile()
     {
-        let isDirty = false;
-        if (!isDirty && this.tableProfile.DataArray && this.profileDataBackup)
-            isDirty = (JSON.stringify(this.tableProfile.DataArray) !== JSON.stringify(this.profileDataBackup));
-        return isDirty;
+        // let isDirty = false;
+        // if (!isDirty && this.tableProfile.DataArray && this.profileDataBackup)
+        //     isDirty = (JSON.stringify(this.tableProfile.DataArray) !== JSON.stringify(this.profileDataBackup));
+        // return isDirty;
+        
+        return this.tableProfile.IsDirty;
     },
     showDirtyControls()
     {
@@ -168,15 +172,21 @@ var profile =
     },
     saveSecureSchema()
     {
-        let data = {
+        let data = 
+        {
             profile: (this.tableProfile?.DataArray?.filter(d => d.active==='Sí')?.map(d => ({item:d.sys_pk, guid:d.sys_guid}))??[])
         }
+
+        /* console.log(this.tableProfile.DataArray);
+        console.log((this.tableProfile?.DataArray?.filter(d => d.active==='No')?.map(d => ({item:d.sys_pk, guid:d.sys_guid}))??[]));
+        return; */
 
         let endpoint = this.url.replace('@id',this.groupSelected.sys_pk);
 
         InduxsoftCrudlModel.InvokeService(endpoint, data,
             success => { 
                 console.log(success);
+                this.tableProfile.DataArray.forEach((v,i) => this.tableProfile.setIsDirty(i,false));
                 this.saveProfileBackup(this.tableProfile.DataArray);
                 this.showDirtyControls();
             },
@@ -188,8 +198,10 @@ var profile =
     },
     discardSecureSchema()
     {
-        this.tableProfile.DataArray = JSON.parse(JSON.stringify(this.profileDataBackup));
-        this.tableProfile._printRows();
+        // this.tableProfile.DataArray = JSON.parse(JSON.stringify(this.profileDataBackup));
+        this.tableProfile.restore();
+        this.tableProfile._printTreeData();
+        // this.tableProfile._printRows();
         this.showDirtyControls();
     }
 }

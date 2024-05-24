@@ -37,9 +37,20 @@ module "model"
     }
     function get_group_sitem_profile(&db, &group)
     {
-        sql = " SELECT s.sys_pk, IFNULL(p.sys_guid,'') sys_guid, s.itemid, s.description, s.itemparent, IF(IFNULL(p.item,0)=0,'No','Sí') active
-                FROM sitem s
-	            LEFT JOIN (SELECT item, sys_guid FROM profile WHERE usergroup=@sys_pk) p ON s.sys_pk = p.item;"
+        sql = "
+        SELECT
+            s.sys_pk,
+            IFNULL(p.sys_guid,'') sys_guid,
+            s.itemid,
+            s.description,
+            s.itemparent,
+            IF(IFNULL(p.item,0)=0,'No','Sí') active
+        FROM sitem s
+	        LEFT JOIN (SELECT item, sys_guid FROM profile WHERE usergroup=@sys_pk) p ON s.sys_pk = p.item
+        ORDER BY
+            s.itemparent,
+            s.sys_pk
+        "
 
         return dbr.list(db, sql, group)
     }
@@ -94,13 +105,11 @@ module "model"
         do dbr.apps.action.pre("XB51")
         do dbr.begin(db)
 
-        ref result = profile_create(db,params,data)
+        do profile_create(db,params,data)
 
-        do dbr.apps.action.pos(result)
+        do dbr.apps.action.pos(@null)
         do dbr.commit(db)
-        do dbr.apps.action.ext(result)
-
-        return result
+        do dbr.apps.action.ext(@null)
 
         exception
         {
@@ -118,13 +127,11 @@ module "model"
         do dbr.apps.action.pre("XB52")
         do dbr.begin(db)
 
-        ref result = profile_create(db,params,data)
+        do profile_create(db,params,data)
 
-        do dbr.apps.action.pos(result)
+        do dbr.apps.action.pos(@null)
         do dbr.commit(db)
-        do dbr.apps.action.ext(result)
-
-        return result
+        do dbr.apps.action.ext(@null)
 
         exception
         {
