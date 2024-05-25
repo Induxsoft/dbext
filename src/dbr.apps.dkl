@@ -150,7 +150,10 @@ module ":dbr.apps"
         }
 
         if list.count(list.create_from_fields(@@(@@_action_context,"&context/input"))) < 1 {
-            @@_action_context<"context/input*"> : from.json(field.dstr(@http_context,"request/post_string","{}"))
+            post_string = trim(field.dstr(@http_context,"request/post_string","{}"))
+            if post_string == "" { post_string = "{}" }
+            
+            @@_action_context<"context/input*"> : from.json(post_string)
         }
 
         return @@_action_context
