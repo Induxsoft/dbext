@@ -1,5 +1,51 @@
 [
     {
+        "id": "general",
+        "caption": "@General",
+        "help": "Configuraciones comunes a todos los paquetes"
+    },
+    {
+        "id": "impresion",
+        "caption": "Impresion",
+        "help": "Información de encabezado y pie de página para los informes.",
+        "parent":"general",
+        "vars":
+        [
+            {
+                "varname": "FXCA108",
+                "vardefault": "Título",
+                "varvalue": "Título",
+                "varcaption": "Título para las impresiones",
+                "vartype": "string",
+                "varinput": { "control": "text" }
+            },
+            {
+                "varname": "FXCA109",
+                "vardefault": "Sub-título",
+                "varvalue": "Sub-título",
+                "varcaption": "Sub-título para las impresiones",
+                "vartype": "string",
+                "varinput": { "control": "text" }
+            },
+            {
+                "varname": "FXCA110",
+                "vardefault": "Sub-título alterno",
+                "varvalue": "Sub-título alterno",
+                "varcaption": "Sub-título alterno para las impresiones",
+                "vartype": "string",
+                "varinput": { "control": "text" }
+            },
+            {
+                "varname": "FXCA111",
+                "vardefault": "Pie de página",
+                "varvalue": "Pie de página",
+                "varcaption": "Pie de página para las impresiones",
+                "vartype": "string",
+                "varinput": { "control": "text" }
+            }
+        ]
+    },
+    {
         "id": "dbext",
         "caption": "Utilidades del sistema",
         "help": "Variables del paquete: dbext",
