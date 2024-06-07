@@ -251,6 +251,15 @@ var globalvar =
                 }, varValue);
                 break;
             }
+            case "button":
+            {
+                const caption = varData.caption;
+                control = main.createFullElement('a',{
+                    href:varValue,
+                    class:'btn btn-link border-primary card-link'
+                }, caption);
+                break;
+            }
             case "select":
             {
                 let type = varInput?.source?.type ?? 'list';

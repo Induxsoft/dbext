@@ -52,6 +52,10 @@ module "model"
                 varname,
                 CONCAT(varcaption,' (',varname,')')
             ) AS varcaption,
+            IF(IFNULL(varcaption,'')='',
+                varname,
+                varcaption
+            ) AS caption,
             IFNULL(varhelp,'') varhelp,
             IFNULL(vartype,'') vartype,
             IFNULL(varinput,'{}') varinput
