@@ -221,6 +221,13 @@ module ":dbr.auths"
             @"authorized": 1
             @"asmaster":@@(auth_log,"#masteruser")>0
         }
+
+        ref check_user_auth=dbr.rec(db,"select * from sys_auth_log_usr where log=@log and auth_user=@auth_user limit 1",auth_log_usr)
+        if not(isnull(check_user_auth))
+        {
+            do rise_error(500,"El usuario ya ha autorizado la solicitud, intente con otro usuario.\n\n  - Solo pueden autorizar los usuarios que pertenecen al grupo de usuario configurado en el `Tipo de autorización`.")
+        }
+
         do dbr.auths.sys_fields(auth_log_usr)
         do dbr.insert(db,"sys_auth_log_usr",auth_log_usr)
 
