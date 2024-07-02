@@ -10,13 +10,37 @@ module "Extensiones DBR para gestión de permisos:dbr.security"
 			from sitem si inner join profile p on p.item=si.sys_pk inner join user_usergroup_ ug on ug.groups=p.usergroup inner join sys_session ses on ses.iuser=ug.users
 			where ses.sys_guid=@sid and si.itemid=@privid and ifnull(ses.sys_deleted,0)=0 limit 1;"
 		
+		det=""
+		det_id=""
+		if contains(privid,":")
+		{
+			ref parts=split(privid,":")
+			privid=list.str(parts,0)
+			if list.count(parts)>1 { det=list.str(parts,1)}
+			if list.count(parts)>2 { det_id=list.str(parts,2)}
+		}
+
 		new p
 		{
 			@"sid":dbr.getSID(db)
 			@"privid":privid
 		}
 
-		return dbr.num(db,sql,p)
+		res= dbr.num(db,sql,p)
+
+		if not(res) && det!="" && det_id!=""
+		{
+			sql="select ifnull(s.sys_pk,0) 
+					from sitem_det_usr s inner join det_usr d on s.ref_det_usr=d.sys_pk 
+						inner join sys_session ses on ses.iuser=d.ref_user 
+					where s.itemid=@privid and ifnull(ses.sys_deleted,0)=0 and d.ref_det=@det and d.detid=@det_id limit 1;"
+			
+			det, det_id >> p
+
+			res= dbr.num(db,sql,p)
+		}
+
+		return res
 		exception { return 0 }
 	}
 
