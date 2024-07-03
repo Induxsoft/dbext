@@ -11,13 +11,13 @@ module "Extensiones DBR para gestión de permisos:dbr.security"
 			where ses.sys_guid=@sid and si.itemid=@privid and ifnull(ses.sys_deleted,0)=0 limit 1;"
 		
 		det=""
-		det_id=""
+		det_id=0
 		if contains(privid,":")
 		{
 			ref parts=split(privid,":")
 			privid=list.str(parts,0)
 			if list.count(parts)>1 { det=list.str(parts,1)}
-			if list.count(parts)>2 { det_id=list.str(parts,2)}
+			if list.count(parts)>2 { det_id=parse.int(list.str(parts,2))}
 		}
 
 		new p
