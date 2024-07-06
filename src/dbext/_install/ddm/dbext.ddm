@@ -407,6 +407,33 @@ model "Variables globales"
         @"config" mmemo
     }
 
+    entity "det_usr" : "TableModel"
+    {
+        @"ref_user" ref:"tuser" required
+        @"ref_det" ref:"sys_app_item_type" required
+        @"detid" int required //Clave primaria del DET en específico
+        @"detinfo" string(150)
+        
+        index "det_usr_uq1" unique
+        {
+            field "ref_user"
+            field "ref_det"
+            field "detid"
+        }
+    }
+
+    entity "sitem_det_usr" : "TableModel"
+    {
+        @"ref_det_usr" ref:"det_usr" required
+        @"itemid" string ref:"sitem" ["itemid"] required
+        
+        index "sitem_det_usr_uq1" unique
+        {
+            field "ref_det_usr"
+            field "itemid"
+        }
+    }
+
     entity "sys_action_log"
     {
         @"id" int key required autoincrement
