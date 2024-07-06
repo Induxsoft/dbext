@@ -9,6 +9,7 @@ module "dbr.notif"
     }*/
     dbr.notif.send::&db,&data
     {
+        start_transaction = @false
         /* data = 
         {
             title:"Título de la notificación (requerido)",
@@ -44,14 +45,19 @@ module "dbr.notif"
 
         ref users = __dbr.notif.get.userspk(db, ifnull(@@(data,"&to"), list.create()))
         
-        do dbr.begin(db)
+        if not(dbr.in_transaction(db)) {
+            do dbr.begin(db)
+            start_transaction = @true
+        }
+
         do dbr.insert(db, "sys_notif", sys_notif)
         
         new prm { @"notif_id": @@(sys_notif,"sys_guid") }
         ref notif = dbr.rec(db, "SELECT sys_pk FROM sys_notif WHERE sys_guid=@notif_id LIMIT 1;", prm)
 
         do __dbr.notif.insert.sys_notif_usr(db, users, @@(notif, "#sys_pk"))
-        do dbr.commit(db)
+        
+        if start_transaction { do dbr.commit(db) }
 
         new response
         {
