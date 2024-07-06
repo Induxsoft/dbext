@@ -16,8 +16,8 @@ module "Extensiones DBR para gestión de permisos:dbr.security"
 		{
 			ref parts=split(privid,":")
 			privid=list.str(parts,0)
-			if list.count(parts)>1 { det=list.str(parts,1)}
-			if list.count(parts)>2 { det_id=parse.int(list.str(parts,2))}
+			if list.count(parts)>1 { det=list.str(parts,1) }
+			if list.count(parts)>2 { det_id=parse.num(list.str(parts,2)) }
 		}
 
 		new p
@@ -28,7 +28,7 @@ module "Extensiones DBR para gestión de permisos:dbr.security"
 
 		res= dbr.num(db,sql,p)
 
-		if not(res) && det!="" && det_id!=""
+		if not(res) && det!="" && det_id>0
 		{
 			sql="select ifnull(s.sys_pk,0) 
 					from sitem_det_usr s inner join det_usr d on s.ref_det_usr=d.sys_pk 
