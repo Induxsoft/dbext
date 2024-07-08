@@ -1,0 +1,70 @@
+#include "dkli.dkh"
+#!
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+	@_entities_type = @("$parameters/_entities_type")
+	table_id = "tbl_"+@_entities_type
+
+    new table_definition
+    {
+        @"datatable*": ifnull(@("&./data"),list.create())
+        member @"columns"
+        {
+            member @"username" { @"caption": "Usuario" }
+            member @"itemtype" { @"caption": "Tipo de elemento" }
+			member @"detid" { @"caption": "Id elemento" }
+            member @"detinfo" { @"caption": "Información" }
+        }
+        @"table_footer": "Mostrando los primeros # registros"
+    }
+
+    new nav_config
+    {
+        @"title": "Privilegios por Tipo de Elementos de Datos"
+        @"buttons*": @null
+        @"urlexit": "/"
+        @"main": "XB81,XB82,XB83"
+        @"actions*": ifnull(@("&./itemactions"),list.create())
+        @"reports*": ifnull(@("&./itemreports"),list.create())
+        @"jscurrentcontext": "getCurrentContext"
+    }
+
+    #$ div(class="container-fluid p-0")
+    {
+        #! do uie.printV12FormBar(nav_config)
+
+        #$ div(id="work_area" class="container-section mt-1 p-2 pt-0")
+        {
+            form(action="./" method="GET" id="form_filter" class="no-print my-1 d-flex py-1")
+            {
+                "filter-text"(
+                    "id"="fil_text"
+                    "text-field"="fil_text"
+                    "placeholder"="Buscar ..."
+                    "form"="#form_filter"
+                    "value"="#<@('$parameters/fil_text')>"
+                    "auto-submit"="true"
+                    "class"="w-100"
+                ){$""}
+            }
+            #! do uie.dbeditable(table_definition,table_id)
+        }
+
+		#$
+		script(type="text/javascript")
+		{$'
+			function getCurrentContext()
+			{
+				const table = document.getElementById("#<table_id>");
+				const id = (table?.DataArray[table.CurrentRowIndex()]?.sys_pk ?? "");
+    			return { item_id:id, context: {} }
+			}
+		'}
+    }
+}

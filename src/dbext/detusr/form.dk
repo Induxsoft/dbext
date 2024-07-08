@@ -1,0 +1,47 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./entity"),record.create())
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+
+	is_new = (@_entity_id == "_new")
+
+    new nav_config
+    {
+        @"title": ifstr(is_new,"Agregar","Editar") + " privilegio"
+        @"buttons*": @null
+        // @"urlexit": "/!/dbext/detusr/"
+        member @"hidden" { @"print": @true }
+    }
+
+    #$ div(class="container")
+    {
+        #! do uie.printV12FormBar(nav_config)
+        #$ div(class="container-section" id="work_area")
+        {
+            div(class="alert alert-danger overflow-auto mb-2 #<ifstr(@('$error/message')!='','','d-none')>" id="frm_alerts"){$"#<@('error/message')>"}
+            form(method="POST" action="./" id="form-detusr")
+            {
+                input(type="hidden" name="sys_pk" value="#<@@(entity, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity, '#sys_recver')>")
+                ##
+                do uie.print_from_url_field()
+                ##
+
+                div(class="row")
+                {
+                    $""
+                }
+            }
+        }
+    }
+}

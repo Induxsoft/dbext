@@ -31,6 +31,7 @@ module "Controller configs"
 	do crudl.routes.entity("/authtpy/","authtpy")
 	do crudl.routes.entity("/comm/","comm")
 	do crudl.routes.entity("/smtp/","smtp")
+	do crudl.routes.entity("/detusr/","detusr")
 
 	@dbmvc_path="crudl/"
 	

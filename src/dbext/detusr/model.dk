@@ -1,0 +1,107 @@
+#include "dkli.dkh"
+#!
+module "Privilegios por Tipo de Elementos de Datos.:detusr"
+{
+    @table_name = "det_usr"
+    @keyfield = "sys_pk"
+    @sys_fields = "sys_pk,sys_guid,sys_dtcreated,sys_timestamp,sys_info,sys_user,sys_lastuser,sys_exported,sys_dtexported,sys_recver,sys_deleted,sys_lock"
+
+    @list_query = "
+    SELECT
+        usr.username,
+        CONCAT(det.id,' ',det.title) AS itemtype,
+        t1.detid,
+        t1.detinfo
+    FROM det_usr AS t1
+        INNER JOIN tuser AS usr ON t1.ref_user = usr.sys_pk
+        INNER JOIN sys_app_item_type AS det ON t1.ref_det = det.id
+    WHERE NOT IFNULL(t1.sys_deleted,0)
+        #<conditions>
+    LIMIT #<@default_max_rows>
+    "
+
+    @read_query = "
+    SELECT
+        usr.username,
+        CONCAT(det.id,' ',det.title) AS itemtype,
+        t1.detid,
+        t1.detinfo
+    FROM det_usr AS t1
+        INNER JOIN tuser AS usr ON t1.ref_user = usr.sys_pk
+        INNER JOIN sys_app_item_type AS det ON t1.ref_det = det.id
+    WHERE t1.#<@keyfield> = @_entity_id
+    "
+
+    function prepareView(&db,&params,&data)
+    {
+        // code...
+    }
+
+    function evaluateFilters(&params)
+    {
+        conditions = ""
+
+        if trim(@@(params,"$fil_text")) != "" {
+            conditions = conditions + "
+            AND (t1.detinfo LIKE CONCAT('%',@fil_text,'%')
+                OR usr.username LIKE CONCAT('%',@fil_text,'%')
+                OR det.title LIKE CONCAT('%',@fil_text,'%')
+            )"
+        }
+
+        @list_query = ftext(@list_query)
+    }
+
+    function list(&db,&params)
+    {
+        do detusr.evaluateFilters(params)
+
+        new data
+        {
+            @"data*": entity.list(db,params)
+            @"itemactions*": dbr.apps.itemactions(db,"DET08A","action","",0)
+            @"itemreports*": dbr.apps.itemactions(db,"DET08A","report","",0)
+        }
+
+        return data
+    }
+
+    function read(&db,&params)
+    {
+        new data
+        {
+            @"entity*": entity.read(db,params)
+        }
+        do detusr.prepareView(db,params,data)
+        return data
+    }
+
+    function blank(&db,&params)
+    {
+        ref data = record.create()
+        do detusr.prepareView(db,params,data)
+        return data
+    }
+
+    function catch(&db,&params,&data)
+    {
+        do errordet(@false)
+        if isnull(data){ ref data:record.create() }
+        if dbr.in_transaction(db){ do dbr.rollback(db) }
+
+        code = last_error_code()
+        error = last_error()
+
+        ref FormData = record.copy(data,"*")
+        do record.clear(data)
+        data<"form*"> : FormData
+
+        if isset("@@_action_context"){ do dbr.apps.action.log() }
+        do detusr.prepareView(db,params,data)
+        do rise_error(code,error)
+    }
+
+    point @list to detusr.list
+    point @read to detusr.read
+    point @blank to detusr.blank
+}
