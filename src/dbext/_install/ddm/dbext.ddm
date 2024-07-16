@@ -260,6 +260,22 @@ model "Variables globales"
         @"view_url" string(1024) //URL de consulta, en donde @_entity_id representa el id del elemento
     }
 
+    entity "sys_app_item_type_finder"
+    {
+        @"det" ref:"sys_app_item_type" required 
+        @"class" string(45) required // * -Valor por defecto
+        @"sql_query" memo required
+        @"keyfield" string(45) required
+        @"textfield" string(45) required
+        @"primarykey" string(45) required
+        
+        index "sys_app_item_type_finder_idx1" unique
+        {
+            field "det"
+            field "class"
+        }
+    }
+
     //Relación entre dos instancias de tipos de elementos de datos
     entity "sys_dte_rel": "TableModel"
     {

@@ -28,6 +28,20 @@
 
 .no-shadow{box-shadow: none !important;}
 
+.disabled-all * a,
+.disabled-all * input,
+.disabled-all * select,
+.disabled-all * textarea,
+.disabled-all * button:not([role="tab"]),
+.disabled-all * input-key,
+.disabled-all * edit-table
+{
+    pointer-events: none;
+    user-select: none;
+    background-color: #e9ecef;
+    opacity: 1;
+}
+
 @media screen and (max-width: 750px) 
 {
 	.pack-m-card{grid-template-columns: repeat(auto-fill, minmax(80vw, 1fr)) !important;}

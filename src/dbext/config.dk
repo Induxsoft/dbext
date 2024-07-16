@@ -15,6 +15,12 @@ module "config"
     @CSS_MAIN = "/$/dbext/css/main.css"
     @JS_AUTHBOX="/$/dbext/js/authbox.js"
     @JS_COMM = "/$/dbext/js/comm.js"
+    @JS_DETUSR = "/$/dbext/js/detusr.js"
+
+    @URL_BUSCAR_USUARIO = "/!/dbext/detusr/?_view=search-usr&search=@search"
+    @URL_BUSCAR_TIPO_ELEMENTO = "/!/dbext/detusr/?_view=search-det&search=@search"
+    @URL_BUSCAR_ELEMENTO = "/!/dbext/detusr/?_view=search-itm&search=@search&det=@det"
+    @URL_BUSCAR_SITEM = "/!/dbext/detusr/?_view=search-sitem&search=@search"
 
     // _PACKAGE
     @DBEXT_TUSER = "/!/dbext/tuser/"

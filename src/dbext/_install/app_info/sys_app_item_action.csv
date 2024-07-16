@@ -13,3 +13,6 @@ XB72,Editar grupo de usuarios,Editar,,/!/dbext/usergroup/@_src_context_item_id/,
 XB73,Eliminar grupo de usuarios,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,dbext.usergroup,DET027,1,action
 XB82,Editar canal de comunicación,Editar,,/!/dbext/smpt/@_src_context_item_id/?exit_url_encode=LyEvZGJleHQvY29tbS8|,0,dbext.comm,DET00C,1,action
 XB83,Eliminar canal de comunicación,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,dbext.comm,DET00C,1,action
+XB91,Agregar relación de usuario con elemento de datos,Agregar,,/!/dbext/detusr/_new/,0,dbext.detusr,DET08A,0,action
+XB92,Agregar privilegio de usuario sobre elemento de datos,Privilegios,,/!/dbext/detusr/@_src_context_item_id/,0,dbext.detusr,DET08A,1,action
+XB93,Eliminar relación y privilegios de usuario por DET,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,dbext.detusr,DET08A,1,action

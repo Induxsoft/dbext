@@ -1,0 +1,42 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    switch @@(@http_context,"$request/get/_view")
+    {
+        case "search-usr"
+        {
+            point @list to detusr.buscarUsuario
+            point @read to detusr.buscarUsuario
+            break
+        }
+        case "search-det"
+        {
+            point @list to detusr.buscarTipoElemento
+            point @read to detusr.buscarTipoElemento
+            break
+        }
+        case "search-itm"
+        {
+            point @list to detusr.buscarElemento
+            point @read to detusr.buscarElemento
+            break
+        }
+        case "search-sitem"
+        {
+            point @list to detusr.buscarPrivilegio
+            break
+        }
+        case "det-has-finder"
+        {
+            point @list to detusr.DETHasFinder
+            point @read to detusr.DETHasFinder
+            break
+        }
+        default
+        {
+            @form_view = "form.agregar.dk"
+            if @@(@http_context,"$request/get/_entity_id") != "_new" { @form_view = "form.permisos.dk" }
+        }
+    }
+}

@@ -1,0 +1,104 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "dbext/config.dk"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./entity"),record.create())
+    ref dtusr = ifnull(@("&./dtusr"),record.create())
+    ref dtdet = ifnull(@("&./dtdet"),record.create())
+    ref dtitm = ifnull(@("&./dtitm"),record.create())
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+
+    detid = @@(entity,"#detid")
+    detinfo = @@(entity,"$detinfo")
+    if field.exist(@("&."),"form") {
+        detid = @("#./form/detid")
+        detinfo = @("$./form/detinfo")
+    }
+
+    function fn_print_buttons()
+    {
+        #$
+        button(class="btn btn-sm btn-main-action border-secondary rounded-0" type="submit" id="btn_submit"){$"Guardar"}
+        #!
+    }
+    point nav_buttons to fn_print_buttons
+    new nav_config
+    {
+        @"title": "Agregar relación de usuario"
+        @"buttons*": nav_buttons
+        @"urlexit": @DBEXT_DETUSR
+        member @"hidden" { @"print": @true }
+    }
+
+    #$ div(class="container")
+    {
+        link(rel="stylesheet" href="#<@CSS_MAIN>")
+        div(class="container-section" id="work_area")
+        {
+            form(method="POST" action="./" id="frm_detusr")
+            {
+                ##
+                do uie.printV12FormBar(nav_config)
+                do uie.print_from_url_field()
+                ##
+                div(class="alert alert-danger overflow-auto mb-2 #<ifstr(@('$error/message')!='','','d-none')>" id="form_alerts"){$"#<@('error/message')>"}
+
+                input(type="hidden" name="sys_pk" value="#<@@(entity, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity, '#sys_recver')>")
+
+                div(class="row mb-2")
+                {
+                    label(class="col-form-label col-lg-2 col-md-2 fw-bold"){$"Usuario:"}
+                    div(class="col-lg-10 col-md-10") {
+                        "input-key"(name="ref_user" id="ik_usr" "data-key"="sys_pk" "data-search"="userid" "data-text"="username" "data-source"="#<@URL_BUSCAR_USUARIO>" "data-value"="#<to.json(dtusr)>" columns="userid,username" colcaptions="Id,Nombre" required="true"){$""}
+                    }
+                }
+
+                div(class="row mb-2")
+                {
+                    label(class="col-form-label col-lg-2 col-md-2 fw-bold"){$"T. Elemento:"}
+                    div(class="col-lg-10 col-md-10") {
+                        "input-key"(name="ref_det" id="ik_det" "data-key"="id" "data-search"="id" "data-text"="title" "data-source"="#<@URL_BUSCAR_TIPO_ELEMENTO>" "data-value"="#<to.json(dtdet)>" columns="id,title" colcaptions="Id,Nombre" required="true"){$""}
+                    }
+                }
+
+                div(class="row mb-2")
+                {
+                    label(class="col-form-label col-lg-2 col-md-2 fw-bold"){$"Elemento:"}
+                    div(class="col-lg-10 col-md-10")
+                    {
+                        div(id="div_itm" hidden="")
+                        {
+                            "input-key"(id="ik_itm" "data-key"="sys_pk" "data-search"="codigo" "data-text"="descripcion" "data-source"="#<@URL_BUSCAR_ELEMENTO>" "data-value"="#<to.json(dtitm)>" "hidden-input"="false" columns="codigo,descripcion" colcaptions="Código,Descripción"){$""}
+                        }
+
+                        fieldset(class="row gx-1" id="div_itm_fields" disabled="")
+                        {
+                            div(class="col-lg-4 col-md-4"){ input(class="form-control rounded-0" type="number" name="detid" value="#<detid>" id="txt_detid" min="1" max="2147483647" step="1" required="") }
+                            div(class="col-lg-8 col-md-8"){ input(class="form-control rounded-0" type="text" name="detinfo" value="#<detinfo>" id="txt_detinfo" maxlength="150") }
+                        }
+                    }
+                }
+            }
+        }
+
+        script(src="#<@JS_DETUSR>"){$""}
+        script(type="text/javascript")
+        {$'
+        document.addEventListener("DOMContentLoaded", () => {
+            detusr.GET = #<to.json(@("&parameters"))>;
+            detusr.new.formId = "frm_detusr";
+            detusr.new.init();
+        });
+        '}
+    }
+}

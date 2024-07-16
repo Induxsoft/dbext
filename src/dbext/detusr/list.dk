@@ -11,6 +11,40 @@ module "list.dk"
 	@_entities_type = @("$parameters/_entities_type")
 	table_id = "tbl_"+@_entities_type
 
+    new fil_usr
+    {
+        @"datatable*": ifnull(@("&./list_usr"),list.create())
+        @"id": "fil_usr"
+        member "attributes"
+        {
+            @"name": "fil_usr"
+            @"class": "induxsoft-form-select"
+            @"onchange": "filter(this)"
+        }
+        @"value_field": "sys_pk"
+        @"text_field": "username"
+        @"first_value": "-1"
+        @"first_text": "(Todos los usuarios)"
+        @"selected": @("#parameters/fil_usr")
+    }
+
+    new fil_det
+    {
+        @"datatable*": ifnull(@("&./list_det"),list.create())
+        @"id": "fil_det"
+        member "attributes"
+        {
+            @"name": "fil_det"
+            @"class": "induxsoft-form-select"
+            @"onchange": "filter(this)"
+        }
+        @"value_field": "id"
+        @"text_field": "title"
+        @"first_value": "*"
+        @"first_text": "(Todos los elementos)"
+        @"selected": @("#parameters/fil_det")
+    }
+
     new table_definition
     {
         @"datatable*": ifnull(@("&./data"),list.create())
@@ -18,7 +52,7 @@ module "list.dk"
         {
             member @"username" { @"caption": "Usuario" }
             member @"itemtype" { @"caption": "Tipo de elemento" }
-			member @"detid" { @"caption": "Id elemento" }
+			// member @"detid" { @"caption": "Id elemento" }
             member @"detinfo" { @"caption": "Información" }
         }
         @"table_footer": "Mostrando los primeros # registros"
@@ -26,10 +60,10 @@ module "list.dk"
 
     new nav_config
     {
-        @"title": "Privilegios por Tipo de Elementos de Datos"
+        @"title": "Privilegios sobre entidades"
         @"buttons*": @null
         @"urlexit": "/"
-        @"main": "XB81,XB82,XB83"
+        @"main": "XB91,XB92,XB93"
         @"actions*": ifnull(@("&./itemactions"),list.create())
         @"reports*": ifnull(@("&./itemreports"),list.create())
         @"jscurrentcontext": "getCurrentContext"
@@ -41,17 +75,28 @@ module "list.dk"
 
         #$ div(id="work_area" class="container-section mt-1 p-2 pt-0")
         {
-            form(action="./" method="GET" id="form_filter" class="no-print my-1 d-flex py-1")
+            form(action="./" method="GET" id="form_filter" class="hide-on-print mb-1")
             {
-                "filter-text"(
-                    "id"="fil_text"
-                    "text-field"="fil_text"
-                    "placeholder"="Buscar ..."
-                    "form"="#form_filter"
-                    "value"="#<@('$parameters/fil_text')>"
-                    "auto-submit"="true"
-                    "class"="w-100"
-                ){$""}
+                div(class="d-flex align-items-center gap-2 flex-wrap w-100 py-1")
+                {
+                    div(class="d-flex gap-2")
+                    {
+                        div{ #! do uie.dbSelect(fil_usr) } #$
+                        div{ #! do uie.dbSelect(fil_det) } #$
+                    }
+                    div(class="flex-grow-1")
+                    {
+                        "filter-text"(
+                            "id"="fil_text"
+                            "text-field"="fil_text"
+                            "placeholder"="Buscar ..."
+                            "form"="#form_filter"
+                            "value"="#<@('$parameters/fil_text')>"
+                            "auto-submit"="true"
+                            "class"="w-100"
+                        ){$""}
+                    }
+                }
             }
             #! do uie.dbeditable(table_definition,table_id)
         }
@@ -59,6 +104,9 @@ module "list.dk"
 		#$
 		script(type="text/javascript")
 		{$'
+            function filter(rf) { rf.form.submit(); }
+            function between(val,min,max) { return (val >= min && val <= max); }
+
 			function getCurrentContext()
 			{
 				const table = document.getElementById("#<table_id>");

@@ -1,0 +1,134 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "dbext/config.dk"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./entity"),record.create())
+    ref dtusr = ifnull(@("&./dtusr"),record.create())
+    ref dtdet = ifnull(@("&./dtdet"),record.create())
+    ref dtitm = ifnull(@("&./dtitm"),record.create())
+    ref sitems = ifnull(@("&./sitems"),list.create())
+
+    // do rise_error(0,to.json(@("&.")))
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+
+	is_new = (@_entity_id == "_new")
+
+    function fixEdtDataArray(&list,length)
+    {
+        add = (length - list.count(list))
+        repeat add
+        {
+            do list.add(list,record.create())
+        }
+    }
+
+    do fixEdtDataArray(sitems,10)
+
+    function fn_print_buttons()
+    {
+        #$
+        button(class="btn btn-sm btn-main-action border-secondary rounded-0" type="button" id="btn_submit"){$"Guardar"}
+        #!
+    }
+    point nav_buttons to fn_print_buttons
+    new nav_config
+    {
+        @"title": "Agregar privilegio de usuario"
+        @"buttons*": nav_buttons
+        @"urlexit": @DBEXT_DETUSR
+        member @"hidden" { @"print": @true }
+    }
+
+    #$ div(class="container")
+    {
+        link(rel="stylesheet" href="#<@CSS_MAIN>")
+        #! do uie.printV12FormBar(nav_config)
+        #$ div(class="container-section" id="work_area")
+        {
+            div(class="alert alert-danger overflow-auto mb-2 #<ifstr(@('$error/message')!='','','d-none')>" id="form_alerts"){$"#<@('error/message')>"}
+            form(method="POST" action="./" id="frm_detusr")
+            {
+                input(type="hidden" name="sys_pk" value="#<@@(entity, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity, '#sys_recver')>")
+                ##
+                do uie.print_from_url_field()
+                ##
+
+                div(class="row mb-2")
+                {
+                    label(class="col-form-label col-lg-2 col-md-2 fw-bold"){$"Usuario:"}
+                    div(class="col-lg-10 col-md-10") {
+                        input(class="form-control-plaintext rounded-0" type="text" name="" value="#<@@(entity,'$username')>" id="txt_usr" disabled="")
+                    }
+                }
+                div(class="row mb-2")
+                {
+                    label(class="col-form-label col-lg-2 col-md-2 fw-bold"){$"T. Elemento:"}
+                    div(class="col-lg-10 col-md-10") {
+                        input(class="form-control-plaintext rounded-0" type="text" name="" value="#<@@(entity,'$itemtype')>" id="txt_det" disabled="")
+                    }
+                }
+                div(class="row mb-2")
+                {
+                    label(class="col-form-label col-lg-2 col-md-2 fw-bold"){$"Elemento:"}
+                    div(class="col-lg-10 col-md-10") {
+                        input(class="form-control-plaintext rounded-0" type="text" name="" value="#<@@(entity,'$detinfo')>" id="txt_itm" disabled="")
+                    }
+                }
+            }
+
+            div(class="d-flex justify-content-end align-items-center border-top gap-1 py-1 px-2" id="tbl_action_bar")
+            {
+                small(class="flex-grow-1 text-muted"){$"Lista de privilegios"}
+
+                button(class="btn btn-sm border rounded-0" type="button" id="btn_add_row" title="Agregar permiso"){$"Agregar"}
+                button(class="btn btn-sm border rounded-0" type="button" id="btn_del_row" title="Eliminar permiso"){$"Quitar"}
+            }
+            div(class="" id="div_tbl_sitems" style="width:auto; min-width:100%; max-height:55vh; display:flex;")
+            {
+                "edit-table"(id="tbl_sitems" data="#<to.json(sitems)>" "auto-confirm"="true" style="width:100%;"
+                "row-height"="1.2rem"
+                "control-styles"="
+                    tr th { font-size:.9rem; outline:none !important; font-weight:500 !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -o-text-overflow:ellipsis; }
+                    tr td { font-size:.8rem; }
+                    #__table_input { font-size:unset !important; }
+                ")
+                {
+                    "edit-thead"
+                    {
+                        "edit-tr"
+                        {
+                            "edit-th"(type="NoEditable" field="itemid"){$"PrivId"}
+                            "edit-th"(type="NoEditable" field="description"){$"Descripción"}
+                        }
+                    }
+                }
+            }
+
+            div
+            {
+                "input-key"(id="ik_sitems" "data-key"="itemid" "data-search"="itemid" "data-text"="description" "data-source"="#<@URL_BUSCAR_SITEM>" columns="itemid,description" colcaptions="Código,Descripción" "box-title-text"="Seleccione un privilegio de la lista" "control-styles"="#container{display:none !important;}"){$""}
+            }
+        }
+
+        script(src="#<@JS_DETUSR>"){$""}
+        script(type="text/javascript")
+        {$'
+        document.addEventListener("DOMContentLoaded", () => {
+            detusr.GET = #<to.json(@("&parameters"))>;
+            detusr.edt.formId = "frm_detusr";
+            detusr.edt.tableId = "tbl_sitems";
+            detusr.edt.init();
+        });
+        '}
+    }
+}

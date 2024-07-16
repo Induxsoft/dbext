@@ -12,6 +12,16 @@ XB30,Control de folios,dbext.blockdocs
 XB31,Agregar folio,dbext.blockdocs
 XB32,Editar folio,dbext.blockdocs
 XB33,Eliminar folio,dbext.blockdocs
+dbext.comm,Canales de comunicación,dbext
+XB80,Canales de comunicación,dbext.comm
+XB81,Crear canal de comunicación,dbext.comm
+XB82,Editar canal de comunicación,dbext.comm
+XB83,Eliminar canal de comunicación,dbext.comm
+dbext.detusr,Privilegios por tipo de elemento de datos,dbext
+XB90,Privilegios de usuario por Tipo de Elementos de Datos,dbext.detusr
+XB91,Agregar relación de usuario con elemento de datos,dbext.detusr
+XB92,Agregar privilegio de usuario sobre elemento de datos,dbext.detusr
+XB93,Eliminar relación y privilegios de usuario por DET,dbext.detusr
 dbext.globalvar,Administración de variables globales,dbext
 XB40,Variables globales,dbext.globalvar
 XB41,Actualizar variables globales,dbext.globalvar
@@ -31,8 +41,3 @@ XB70,Grupos de usuarios,dbext.usergroup
 XB71,Agregar grupo de usuarios,dbext.usergroup
 XB72,Editar grupo de usuarios,dbext.usergroup
 XB73,Eliminar grupo de usuarios,dbext.usergroup
-dbext.comm,Canales de comunicación,dbext
-XB80,Canales de comunicación,dbext.comm
-XB81,Crear canal de comunicación,dbext.comm
-XB82,Editar canal de comunicación,dbext.comm
-XB83,Eliminar canal de comunicación,dbext.comm

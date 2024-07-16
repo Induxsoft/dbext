@@ -6,8 +6,15 @@ module "Privilegios por Tipo de Elementos de Datos.:detusr"
     @keyfield = "sys_pk"
     @sys_fields = "sys_pk,sys_guid,sys_dtcreated,sys_timestamp,sys_info,sys_user,sys_lastuser,sys_exported,sys_dtexported,sys_recver,sys_deleted,sys_lock"
 
+    @create_fields = @sys_fields + ",ref_user,ref_det,detid,detinfo"
+    @update_fields = @sys_fields
+    
+    @create_exclude_fields = "sys_lastuser"
+    @update_exclude_fields = "sys_pk,sys_guid,sys_dtcreated,sys_user"
+
     @list_query = "
     SELECT
+        t1.sys_pk,
         usr.username,
         CONCAT(det.id,' ',det.title) AS itemtype,
         t1.detid,
@@ -22,19 +29,159 @@ module "Privilegios por Tipo de Elementos de Datos.:detusr"
 
     @read_query = "
     SELECT
-        usr.username,
-        CONCAT(det.id,' ',det.title) AS itemtype,
+        t1.sys_pk,
+        t1.sys_recver,
+        t1.ref_user,
+        t1.ref_det,
         t1.detid,
-        t1.detinfo
+        t1.detinfo,
+        usr.username,
+        CONCAT(det.id,' - ',det.title) AS itemtype
     FROM det_usr AS t1
         INNER JOIN tuser AS usr ON t1.ref_user = usr.sys_pk
         INNER JOIN sys_app_item_type AS det ON t1.ref_det = det.id
     WHERE t1.#<@keyfield> = @_entity_id
     "
 
+    @childs_query = "
+    SELECT
+        t1.sys_pk,
+        t1.sys_recver,
+        t1.ref_det_usr,
+        t2.itemid,
+        t2.description
+    FROM sitem_det_usr AS t1
+        INNER JOIN sitem AS t2 ON t1.itemid = t2.itemid
+    WHERE t1.ref_det_usr = IFNULL(@sys_pk,@_entity_id)
+    "
+
+    function buscarUsuario(&db,&params)
+    {
+        sql_search = "SELECT sys_pk, userid, username FROM tuser WHERE #<conditions>"
+        conditions = ""
+
+        if trim(@@(params,"$search")) != ""
+        {
+            conditions = "
+                NOT IFNULL(sys_deleted,0)
+                AND (username LIKE CONCAT('%',@search,'%') OR userid LIKE CONCAT('%',@search,'%'))
+            "
+            return dbr.list(db,ftext(sql_search),params)
+        }
+        if @@(params,"$id")!="" || @@(params,"$ref_user")!="" || @@(params,"$_entity_id")!=""
+        {
+            conditions = "(
+                sys_pk = COALESCE(@id, @ref_user, @_entity_id)
+                OR sys_guid = COALESCE(@id, @ref_user, @_entity_id)
+                OR userid = COALESCE(@id, @ref_user, @_entity_id)
+            )
+            LIMIT 1
+            "
+            return dbr.rec(db,ftext(sql_search),params)
+        }
+        
+        return list.create()
+    }
+
+    function buscarTipoElemento(&db,&params)
+    {
+        sql_search = "SELECT id, title FROM sys_app_item_type WHERE #<conditions>"
+        conditions = ""
+
+        if trim(@@(params,"$search")) != "" {
+            conditions = "(title LIKE CONCAT('%',@search,'%') OR id LIKE CONCAT('%',@search,'%'))"
+            return dbr.list(db,ftext(sql_search),params)
+        }
+        if @@(params,"$id")!="" || @@(params,"$ref_det")!="" || @@(params,"$_entity_id")!="" {
+            conditions = "id = COALESCE(@id, @ref_det, @_entity_id) LIMIT 1"
+            return dbr.rec(db,ftext(sql_search),params)
+        }
+
+        return list.create()
+    }
+
+    function buscarElemento(&db,&params)
+    {
+        ref finder = dbr.rec(db,"SELECT * FROM sys_app_item_type_finder WHERE det = IFNULL(@det,@ref_det) AND class = '*'",params)
+        sql = @@(finder,"$sql_query")
+        // key = @@(finder,"$primarykey")
+        // val = @@(finder,"$keyfield")
+        // txt = @@(finder,"$textfield")
+        // conditions = ""
+
+        if trim(@@(params,"$search")) != "" {
+            // conditions = ftext("(#<val> LIKE CONCAT('%',@search,'%') OR #<txt> LIKE CONCAT('%',@search,'%'))")
+            return dbr.list(db,ftext(sql),params)
+        }
+        if @@(params,"$id")!="" || @@(params,"$detid")!="" || @@(params,"$_entity_id")!="" {
+            // conditions = ftext("#<key> = COALESCE(@id, @detid, @_entity_id) LIMIT 1")
+            pk = @@(params,"#id")
+            if pk < 1 { pk = @@(params,"#detid") }
+            if pk < 1 { pk = @@(params,"#_entity_id") }
+            params<"primarykey"> : pk
+            return dbr.rec(db,ftext(sql),params)
+        }
+
+        return list.create()
+    }
+
+    function buscarPrivilegio(&db,&params)
+    {
+        sql_search = "SELECT itemid, description FROM sitem WHERE #<conditions>"
+        conditions = ""
+
+        if trim(@@(params,"$search")) != ""
+        {
+            conditions = "
+                NOT IFNULL(sys_deleted,0)
+                AND (description LIKE CONCAT('%',@search,'%') OR itemid LIKE CONCAT('%',@search,'%'))
+            "
+            return dbr.list(db,ftext(sql_search),params)
+        }
+
+        return list.create()
+    }
+
+    function DETHasFinder(&db,&params)
+    {
+        ref finder = dbr.rec(db,"SELECT * FROM sys_app_item_type_finder WHERE det = IFNULL(@det,@_entity_id) AND class = '*'",params)
+        new response
+        {
+            @"hasfinder": not(isnull(finder))
+            @"finder*": finder
+        }
+
+        return response
+    }
+
     function prepareView(&db,&params,&data)
     {
-        // code...
+        namespace "detusr"
+
+        ref entity = dbr.rec(db,ftext(@read_query),params)
+
+        if field.exist(data,"form")
+        {
+            ref_user = @@(data,"$form/ref_user")
+            ref_det = @@(data,"$form/ref_det")
+            detid = @@(data,"$form/detid")
+        }
+        else
+        {
+            ref_user = @@(entity,"$form/ref_user")
+            ref_det = @@(entity,"$form/ref_det")
+            detid = @@(entity,"$form/detid")
+        }
+        ref_user, ref_det, detid >> args
+
+        using data
+        {
+            @"entity*": entity
+            @"dtusr*": buscarUsuario(db,args)
+            @"dtdet*": buscarTipoElemento(db,args)
+            @"dtitm*": buscarElemento(db,args)
+            @"sitems*": dbr.list(db,@childs_query,params)
+        }
     }
 
     function evaluateFilters(&params)
@@ -54,33 +201,152 @@ module "Privilegios por Tipo de Elementos de Datos.:detusr"
 
     function list(&db,&params)
     {
-        do detusr.evaluateFilters(params)
+        do dbr.apps.action.grant("XB90")
 
+        do detusr.evaluateFilters(params)
         new data
         {
             @"data*": entity.list(db,params)
             @"itemactions*": dbr.apps.itemactions(db,"DET08A","action","",0)
             @"itemreports*": dbr.apps.itemactions(db,"DET08A","report","",0)
+            @"list_usr*": dbr.list(db,"select sys_pk, username from tuser where not ifnull(sys_deleted,0)",@null)
+            @"list_det*": dbr.list(db,"select id, title from sys_app_item_type",@null)
         }
-
         return data
+
+        exception
+        {
+            do errordet(@false)
+            code = last_error_code()
+            error = last_error()
+            do dbr.apps.action.log()
+            do rise_error(code,error)
+        }
     }
 
     function read(&db,&params)
     {
-        new data
-        {
-            @"entity*": entity.read(db,params)
-        }
+        do dbr.apps.action.grant("XB90")
+
+        if not(isset("@just_read_entity")) { @just_read_entity = @false }
+        if @just_read_entity { return entity.read(db,params) }
+
+        ref data = record.create()
         do detusr.prepareView(db,params,data)
+        
         return data
+
+        exception
+        {
+            do errordet(@false)
+            code = last_error_code()
+            error = last_error()
+            do dbr.apps.action.log()
+            do rise_error(code,error)
+        }
     }
 
     function blank(&db,&params)
     {
+        do dbr.apps.action.grant("XB90")
+
         ref data = record.create()
         do detusr.prepareView(db,params,data)
         return data
+
+        exception
+        {
+            do errordet(@false)
+            code = last_error_code()
+            error = last_error()
+            do dbr.apps.action.log()
+            do rise_error(code,error)
+        }
+    }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+        @just_read_entity = @true
+
+        do dbr.apps.action.pre("XB91")
+        do dbr.begin(db)
+        
+        if @@(data,"#detid") < 1 { do rise_error(500,"Ingrese un ID Válido.") }
+
+        ref entity = entity.create(db,params,data)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        @url_redir = path.concat(@DBEXT_DETUSR,@@(entity,"$sys_pk")+"/")
+        return entity
+
+        exception{ do detusr.catch(db,params,data) }
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+        @just_read_entity = @true
+
+        do dbr.apps.action.pre("XB92")
+        do dbr.begin(db)
+
+        ref detusr = record.copy(data,"*")
+        permisos = field.dstr(detusr,"_sitems","[]")
+        if permisos == "" { permisos = "[]" }
+        detusr<"_sitems*"> : from.json(permisos)
+
+        using @childs
+        {
+            member "_sitems"
+            {
+                @"joinfield": "ref_det_usr"
+                @"keyfield": "sys_pk"
+                @"table": "sitem_det_usr"
+                @"select_query": @childs_query
+                @"fields": "sys_pk,sys_recver,itemid"
+            }
+        }
+
+        ref entity = entity.update(db,params,detusr)
+
+        do dbr.apps.action.pos(entity)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(entity)
+
+        return entity
+
+        exception{ do detusr.catch(db,params,data) }
+    }
+
+    function delete(&db,&params)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB93")
+        do dbr.begin(db)
+
+        do dbr.delete(db,"sitem_det_usr","ref_det_usr=@_entity_id",params)
+        do dbr.delete(db,"det_usr","sys_pk=@_entity_id",params)
+
+        do dbr.apps.action.pos(@null)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(@null)
+
+        return @null
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            code = last_error_code()
+            error = last_error()
+            do dbr.apps.action.log()
+            do rise_error(code,error)
+        }
     }
 
     function catch(&db,&params,&data)
@@ -104,4 +370,7 @@ module "Privilegios por Tipo de Elementos de Datos.:detusr"
     point @list to detusr.list
     point @read to detusr.read
     point @blank to detusr.blank
+    point @create to detusr.create
+    point @update to detusr.update
+    point @delete to detusr.delete
 }
