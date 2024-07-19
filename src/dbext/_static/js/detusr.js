@@ -33,12 +33,13 @@ const detusr =
                 let cf = (finder?.keyfield??"");
                 let df = (finder?.textfield??"");
                 let columns = cf+","+df;
+                let colcaptions = cf.toUpperCase() +","+ df.toUpperCase();
 
                 ik_itm.setAttribute("data-key",kf);
                 ik_itm.setAttribute("data-search",cf);
                 ik_itm.setAttribute("data-text",df);
-                ik_itm.setAttribute("columns",columns);
-                ik_itm.setAttribute("colcaptions",columns);
+                ik_itm.columns = columns;
+                ik_itm.colcaptions = colcaptions;
 
                 ik_itm.clear();
                 txt_detid.value = 0;

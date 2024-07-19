@@ -259,7 +259,7 @@ model "Variables globales"
         @"title" string(255) required
         @"view_url" string(1024) //URL de consulta, en donde @_entity_id representa el id del elemento
     }
-
+    // Buscadores por Tipo de Elemento de Datos
     entity "sys_app_item_type_finder"
     {
         @"det" ref:"sys_app_item_type" required 
