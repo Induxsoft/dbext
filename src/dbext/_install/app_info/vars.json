@@ -5,6 +5,46 @@
         "help": "Configuraciones comunes a todos los paquetes"
     },
     {
+        "id": "params",
+        "caption": "Parámetros",
+        "help": "Valores de configuración global",
+        "parent":"general",
+        "vars":[
+            {
+                "varname": "FXCA001",
+                "vardefault": "4",
+                "varvalue": "4",
+                "varcaption": "Precisión de decimales en dinero",
+                "vartype": "integer",
+                "varinput": { "control": "integer" }
+            },
+            {
+                "varname": "FXCA002",
+                "vardefault": "4",
+                "varvalue": "4",
+                "varcaption": "Precisión de decimales en volúmenes",
+                "vartype": "integer",
+                "varinput": { "control": "integer" } 
+            },
+            {
+                "varname": "V12-0A-001",
+                "vardefault": "2",
+                "varvalue": "2",
+                "varcaption": "Decimales visibles en dinero",
+                "vartype": "integer",
+                "varinput": { "control": "integer" }
+            },
+            {
+                "varname": "V12-0A-002",
+                "vardefault": "4",
+                "varvalue": "4",
+                "varcaption": "Decimales visibles en volúmenes",
+                "vartype": "integer",
+                "varinput": { "control": "integer" } 
+            }
+        ]
+    },
+    {
         "id": "impresion",
         "caption": "Impresion",
         "help": "Información de encabezado y pie de página para los informes.",

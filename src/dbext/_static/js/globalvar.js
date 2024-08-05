@@ -240,6 +240,7 @@ var globalvar =
                 }, varValue);
                 break;
             }
+            case "integer":
             case "number":
             case "decimal":
             {
@@ -305,7 +306,7 @@ var globalvar =
             {
                 control = main.createFullElement('input', { 
                     type:'text', 
-                    class:'induxsoft-form-control', 
+                    class:'induxsoft-form-control',
                     pk:varData.sys_pk, 
                     value:varValue,
                 }, varValue);
