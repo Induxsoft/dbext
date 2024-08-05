@@ -17,34 +17,36 @@ module ":dbr.control"
             required = trim(@@(ctrlDef,"$required"))
             required = ifstr(parse.bool(required), "required", "")
 
+            enable_controls=parse.bool(trim(@@(ctrlDef,"$disabled")))
+
             switch control
             {
                 case "date"
                 {
                     #$
                     label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="date" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(@enable_controls,'','disabled')>"="")
+                    input(class="form-control rounded-0" type="date" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
                     #!
                 }
                 case "time"
                 {
                     #$
                     label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="time" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(@enable_controls,'','disabled')>"="")
+                    input(class="form-control rounded-0" type="time" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
                     #!
                 }
                 case "datetime"
                 {
                     #$
                     label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="datetime-local" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(@enable_controls,'','disabled')>"="")
+                    input(class="form-control rounded-0" type="datetime-local" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
                     #!
                 }
                 case "hexcolor"
                 {
                     #$
                     label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control form-control-color rounded-0" type="color" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(@enable_controls,'','disabled')>"="")
+                    input(class="form-control form-control-color rounded-0" type="color" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
                     #!
                     break
                 }
@@ -52,7 +54,7 @@ module ":dbr.control"
                 {
                     #$
                     label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    textarea(class="form-control rounded-0" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(@enable_controls,'','disabled')>"=""){$""}
+                    textarea(class="form-control rounded-0" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"=""){$""}
                     #!
                     break
                 }
@@ -60,7 +62,7 @@ module ":dbr.control"
                 {
                     #$
                     label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="number" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(@enable_controls,'','disabled')>"="")
+                    input(class="form-control rounded-0" type="number" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
                     #!
                     break
                 }
@@ -68,7 +70,7 @@ module ":dbr.control"
                 {
                     #$
                     label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="file" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(@enable_controls,'','disabled')>"="")
+                    input(class="form-control rounded-0" type="file" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
                     #!
                     break
                 }
@@ -99,7 +101,7 @@ module ":dbr.control"
                     }
 
                     if required != "" { select_def<"attributes/required"> : "true" }
-                    if not(@enable_controls) { select_def<"attributes/disabled"> : "true" }
+                    if not(enable_controls) { select_def<"attributes/disabled"> : "true" }
 
                     #$
                     label(class="form-label" "for"="sel_#<ctrlName>"){$"#<caption>"}
@@ -112,7 +114,7 @@ module ":dbr.control"
                 {
                     #$
                     label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="text" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(@enable_controls,'','disabled')>"="")
+                    input(class="form-control rounded-0" type="text" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
                     #!
                     break
                 }
