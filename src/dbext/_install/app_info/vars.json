@@ -27,6 +27,22 @@
                 "varinput": { "control": "integer" } 
             },
             {
+                "varname": "FXCA013",
+                "vardefault": "1",
+                "varvalue": "1",
+                "varcaption": "Divisa predeterminada",
+                "vartype": "integer",
+                "varinput": { 
+                    "control": "select", 
+                    "source": {
+                            "type":"query",
+                            "query":"Select sys_pk, descripcion from divisa order by descripcion;",
+                            "keyfield":"sys_pk",
+                            "showfield":"descripcion"
+                        } 
+                    }
+            },
+            {
                 "varname": "V12-0A-001",
                 "vardefault": "2",
                 "varvalue": "2",

@@ -7,7 +7,17 @@ module "model"
 
     function load_query_values(&db,&params)
     {
-        return dbr.list(db,url_dcode(@@(params,"$cmd")),@null)
+        
+        ref rec=dbr.rec(db,"select ifnull(varinput,'{}') varinput from globalvar where varname=@varname",params)
+        if not(isnull(rec))
+        {
+            if trim(rec.varinput)=="" { rec.varinput:="{}" }
+            ref d=from.json(rec.varinput)
+            sql=@@(d,"$source/query")
+            if sql!="" { return dbr.list(db,sql,@null)} 
+        }
+
+        return list.create()
     }
 
     function globalvar_read(&db, &params)

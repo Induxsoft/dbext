@@ -263,6 +263,7 @@ var globalvar =
             }
             case "select":
             {
+                
                 let type = varInput?.source?.type ?? 'list';
                 let values = varInput?.source?.values ?? [];
                 let query = varInput?.source?.query ?? '';
@@ -290,7 +291,7 @@ var globalvar =
 
                 if (type === "query")
                 {
-                    let url = "./?_view=load-values&cmd=" + main.url_encode(query);
+                    let url = "./?_view=load-values&varname=" + varData.varname;
                     fetch(url).then(response => response.json())
                         .then(data => fillSelect(data))
                         .finally(() => {
