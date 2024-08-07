@@ -43,6 +43,36 @@
                     }
             },
             {
+                "varname": "V12-00-001",
+                "vardefault": "MEX",
+                "varvalue": "MEX",
+                "varcaption": "País",
+                "vartype": "string",
+                "control": "select", 
+                "source": {
+                        "type":"query",
+                        "query":"Select codigo, nombre from pais order by nombre;",
+                        "keyfield":"codigo",
+                        "showfield":"nombre"
+                    },
+                "userenable":true
+            },
+            {
+                "varname": "V12-00-002",
+                "vardefault": "es",
+                "varvalue": "es",
+                "varcaption": "Idioma",
+                "vartype": "string",
+                "control": "select", 
+                "source": {
+                        "type":"query",
+                        "query":"Select iso639_1, nombre from idioma order by nombre;",
+                        "keyfield":"codiso639_1",
+                        "showfield":"nombre"
+                    },
+                "userenable":true
+            },
+            {
                 "varname": "V12-0A-001",
                 "vardefault": "2",
                 "varvalue": "2",

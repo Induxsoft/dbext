@@ -1,0 +1,62 @@
+include "dkli.dkh"
+#!
+module "Variables alojadas en la base de datos :dbr.localize"
+{
+    ref @dbr.localize.money_buffer=record.new()
+    ref @dbr.localize.country_buffer=@null
+    ref @dbr.localize.lang_buffer=@null
+
+    @dbr.localize.default.money_decs=4
+    @dbr.localize.default.country="MEX"
+    @dbr.localize.default.lang="es"
+    
+    country::db
+    {
+        if not(isnull(@dbr.localize.country_buffer)) { return @dbr.localize.country_buffer }
+
+        new p { cod_pais:= dbr.vars.getd(db,"V12-00-001",@dbr.localize.default.country) }
+        ref @dbr.localize.country_buffer=dbr.rec(db,"select * from pais where codigo=@cod_pais",p)
+        
+        if isnull(@dbr.localize.country_buffer) {do rise_error(510,"Código de país no encontrado: " + cod_pais) }
+
+        return @dbr.localize.country_buffer
+    }
+
+    lang::db
+    {
+        if not(isnull(@dbr.localize.lang_buffer)) { return @dbr.localize.lang_buffer }
+
+        new p { cod_pais:= dbr.vars.getd(db,"V12-00-002",@dbr.localize.default.lang) }
+        
+        ref @dbr.localize.lang_buffer=dbr.rec(db,"select * from idioma where iso639_1=@cod_lang",p)
+
+        if isnull(@dbr.localize.lang_buffer) { do rise_error(510,"Código de idioma no encontrado: " + cod_lang) }
+
+        return @dbr.localize.lang_buffer
+    }
+
+    money::&db,cod_divisa
+    {
+        if field.exist(@dbr.localize.money_buffer,cod_divisa)
+            { return @@(@dbr.localize.money_buffer,cod_divisa) }
+        
+        cod_divisa >> p
+        ref m=dbr.rec(db,"select * from divisa where codigo=@cod_divisa",p)
+        
+        if isnull(m) { do rise_error(510,"Código de divisa no encontrado: " + cod_divisa) }
+
+        if not(field.dobj(m,"decimales")) { m<"decimales">:@dbr.localize.default.money_decs }
+        if isnull(field.obj(m,"decimales")) { m<"decimales">:@dbr.localize.default.money_decs }
+
+        @dbr.localize.money_buffer<cod_divisa+"*">: m
+
+        return m
+    }
+
+    money_format::&db,cod_divisa
+    {
+        return "#,#.00"
+    }
+
+    
+}
