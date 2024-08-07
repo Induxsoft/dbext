@@ -1,8 +1,8 @@
-include "dkli.dkh"
+#include "dkli.dkh"
 #!
 module "Variables alojadas en la base de datos :dbr.localize"
 {
-    ref @dbr.localize.money_buffer=record.new()
+    ref @dbr.localize.money_buffer=record.create()
     ref @dbr.localize.country_buffer=@null
     ref @dbr.localize.lang_buffer=@null
 
@@ -27,7 +27,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
         if not(isnull(@dbr.localize.lang_buffer)) { return @dbr.localize.lang_buffer }
 
         new p { cod_pais:= dbr.vars.getd(db,"V12-00-002",@dbr.localize.default.lang) }
-        
+
         ref @dbr.localize.lang_buffer=dbr.rec(db,"select * from idioma where iso639_1=@cod_lang",p)
 
         if isnull(@dbr.localize.lang_buffer) { do rise_error(510,"Código de idioma no encontrado: " + cod_lang) }
@@ -55,8 +55,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
 
     money_format::&db,cod_divisa
     {
-        return "#,#.00"
+        return "$ #,#.00"
     }
-
     
 }
