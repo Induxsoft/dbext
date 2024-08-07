@@ -10,6 +10,7 @@ module "Controller configs"
 	#include "dbr.security.dkl"
 	#include "crudl/crudl.dk"
 	#include "./config.dk"
+	#include "_lib/lib.dk"
 
 	if @@(@http_context,"$session/user/ids") == "" {
 		@http_context<"response/headers/location"> : "/"
@@ -32,6 +33,10 @@ module "Controller configs"
 	do crudl.routes.entity("/comm/","comm")
 	do crudl.routes.entity("/smtp/","smtp")
 	do crudl.routes.entity("/detusr/","detusr")
+	do crudl.routes.entity("/divisa/","divisa")
+	do crudl.routes.entity("/pais/","pais")
+	do crudl.routes.entity("/edoprov/","edoprov")
+	do crudl.routes.entity("/ciudad/","ciudad")
 
 	@dbmvc_path="crudl/"
 	

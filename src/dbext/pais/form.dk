@@ -1,0 +1,87 @@
+#include "dkli.dkh"
+#!
+
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+    entity_id = @("$parameters/_entity_id")
+    isNew = (entity_id == "_new")
+
+    #$ div(class="container p-0")
+    {
+        form(action="." method="POST")
+        {
+            div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
+            {
+                div(class="col-4 d-flex align-items-center p-0")
+                {
+                    h5(class="tex-no-break m-0"){$"#<ifstr(isNew,'Agregar','Editar')> País"}
+                }
+                div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2" id="main_bar_controls")
+                {
+                    a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action" title="Refrescar"){$"#<@ICON_ARROW_CLOCKWISE>"}
+                    button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){$"#<@ICON_SAVE>"}
+                    a(href="../" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){$"#<@ICON_X_LG>"}
+                }
+            }
+            div(id="work_area" class="container-section")
+            {
+                div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+                input(type="hidden" name="sys_recver" value="#<@('./sys_recver')>")
+
+                div(class="row")
+                {
+                    div(class="col-lg-2 col-sm-3 col-6")
+                    {
+                        label(class="form-label fw-bold"){"Código:"}
+                        input(type="text" class="induxsoft-form-control" name="codigo" value="#<@('./codigo')>" required="true" maxlength="8")
+                    }
+                    div(class="col-lg-2 col-sm-3 col-6")
+                    {
+                        label(class="form-label"){"Código de área:"}
+                        input(type="text" class="induxsoft-form-control" name="codigotel" value="#<@('./codigotel')>"  maxlength="5")
+                    }
+                    div(class="col-lg-8 col-sm-6")
+                    {
+                        label(class="form-label fw-bold"){"Nombre:"}
+                        input(type="text" class="induxsoft-form-control" name="nombre" value="#<@('./nombre')>" required="true" maxlength="50")
+                    }
+                    
+                    div(class="col-lg-3 col-6")
+                    {
+                        label(class="form-label"){"Separador de Miles:"}
+                        input(type="text" class="induxsoft-form-control" name="th_sep" value="#<@('./th_sep')>" maxlength="3")
+                    }
+                    div(class="col-lg-3 col-6")
+                    {
+                        label(class="form-label"){"Separador de Decimales:"}
+                        input(type="text" class="induxsoft-form-control" name="dc_sep" value="#<@('./dc_sep')>" maxlength="3")
+                    }
+                    div(class="col-lg-3 col-6")
+                    {
+                        label(class="form-label"){"Código alfa-2 (ISO 3166-1):"}
+                        input(type="text" class="induxsoft-form-control" name="iso3166" value="#<@('./iso3166')>" maxlength="2")
+                    }
+                    div(class="col-lg-3 col-6")
+                    {
+                        label(class="form-label"){"Código alfa-3 (ISO 3166-1):"}
+                        input(type="text" class="induxsoft-form-control" name="iso3166_a3" value="#<@('./iso3166_a3')>" maxlength="3")
+                    }
+                }
+            }
+        }
+        
+        style{$'
+            @media only screen and (max-width: 500px) and (min-width: 100px)
+            {
+                #dv-w{
+                    margin-top:30 !important;
+                    width:80% !important;
+                }
+            }'
+        }
+    }
+}

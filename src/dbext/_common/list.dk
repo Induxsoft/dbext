@@ -1,0 +1,135 @@
+#include "dkli.dkh"
+#set "meta-xml-declaration" ""
+#!
+module "list.dk"
+{
+    #include "uielements.dkl"
+    #include "uielements.dbtable.dkl"
+    #include "serialize.dkh"
+    #include "../_lib/icons.dk"
+
+    cell_link_func::&params, &row, &cell
+    {
+        //params=Parámetros de la table (def_table)
+        //row=Datos (registro) de la fila
+        //cell=Información de la celda
+
+        //cell<"text">:@@(cell,"cell_type")
+        // do rise_error(99,to.json(cell))
+        new headers
+        {
+            @"style":"position: sticky !important;top:0 !important;background-color:#fff;"
+            @"class":"h6"
+        }
+        if @@(cell,"element")=="th"
+        {
+            cell<"attributes*">:headers
+            if @@(cell,"column")=="_actions" { headers<"class">:"h6 text-center no-print" }
+        }
+        if @@(cell,"cell_type")!="data" &&  @@(cell,"cell_type")!="unknow" { return }
+        if @@(cell,"column")=="_actions"
+        {
+            cell<"text">:ftext('
+                <div class="d-flex gap-2 justify-content-center no-print">
+                    <a class="btn btn-sm btn-light btn-row-edit" id="btnEditar" href="./#<@@(row,"sys_pk")>/">Editar</a>
+                    <a class="btn btn-sm btn-light" onclick="deleteEntity(#<@@(row,"sys_pk")>)" href="#" id="btnEliminar">Eliminar</a>
+                </div>
+            ')
+        }
+    }
+
+    point cell_link to cell_link_func
+    using @table_definition
+    {
+        @"before_cell*":cell_link
+        @"build_array":@true
+        member @"attributes"
+        {
+            @"class":"table table-hover"
+        }
+    }
+    ref buttons=@@(@table_definition,"&buttons")
+
+    #$
+    div(class="container p-0" id="div-first")
+    {
+        div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
+        {
+            div(class="col-4 d-flex align-items-center p-0")
+            {
+                h5(class="tex-no-break m-0"){$"#<ifstr(isset('@title'), @title, '')>"}
+            }
+            div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
+            {
+                #!
+                if not(isnull(buttons)){that buttons(@table_definition)}
+                #$
+                a(href="./_new/" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Agregar" id="btnAgregar"){$"Agregar"}
+                button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Imprimir" onclick="window.print()"){$"#<@ICON_PRINTER>"}
+                a(href="#" onclick="window.location.reload();" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Refrescar"){$"#<@ICON_ARROW_CLOCKWISE>"}
+                a(href="/" target="_top" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Salir" id="btn_go_back"){$"#<@ICON_X_LG>"}
+            }
+        }
+        div(class="pt-2")
+        {
+            form(action="./" method="GET" id="form_search" class="no-print my-1 d-flex py-1")
+            {
+                "filter-text"(
+                    "id"="ft_search"
+                    "text-field"="s"
+                    "placeholder"="Buscar"
+                    "form"="#form_search"
+                    "value"="#<@@(@@(@crud_context,'&http/request/get'),'$s')>"
+                    "auto-submit"="true"
+                    "class"="w-100"
+                ){$""}
+                input(type="hidden" id="input_search_hidden")
+                input(type="hidden" id="input_search_hidden2")
+            }
+            div
+            {
+                div(style="overflow-y:auto;max-height: 75vh;" class="mb-2" id="list_table_container")
+                {
+                    #! do uie.dbtable(@table_definition)
+                }
+                lenght = @count(@@(@table_definition,"&array_data"))
+                if lenght <= 0
+                {
+                    message = ""
+                    if @@(@crud_context,"$parameters/s") == ""
+                    {
+                        message = "Sin registros."
+                    }
+                    else 
+                    {
+                        message = "Sin resultados."
+                    }
+                    #$ div(class="text-center")
+                    {
+                        h6(style="background-color: #F5F5F5; padding: 10rem 0;"){"#<message>"}
+                    }
+                }
+                #! else 
+                {
+                    ordby = "código"
+                    if isset("order_by"){ ordby = order_by }
+                    a1 = ftext("Mostrando l#<@gender>s primer#<@gender>s #<lenght> #<@title> ordenad#<@gender>s por #<ordby>.")
+                    #$ small(class="text-secondary"){$"#<a1>"}
+                }
+            }
+        }
+
+        style
+        {$'
+            @media only screen and (max-width: 500px) and (min-width: 341px)
+            {
+                #div-first{
+                    margin-top:30 !important
+                }
+            }
+        '}
+
+        script(src="#<@jQuery>"){$""}
+        script(src="#<@js_definitive_api>"){$""}
+    }
+}

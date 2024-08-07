@@ -1,0 +1,160 @@
+#include "dkli.dkh"
+#!
+module ":pais"
+{
+    @list_query = "
+    SELECT sys_pk, codigo, codigotel, nombre
+    FROM #<@table_name>
+    WHERE NOT IFNULL(sys_deleted,0)
+        AND IF(IFNULL(@s,'')='', true, (codigo = @s OR nombre LIKE CONCAT('%',@s,'%')))
+    ORDER BY codigo
+    LIMIT #<@default_max_rows>;
+    "
+    @read_query = "SELECT
+        sys_pk,
+        sys_recver,
+        codigo,
+        codigotel,
+        nombre,
+        IFNULL(th_sep,'') th_sep,
+        IFNULL(dc_sep,'') dc_sep,
+        IFNULL(iso3166,'') iso3166,
+        IFNULL(iso3166_a3,'') iso3166_a3
+    FROM #<@table_name>
+    WHERE #<@keyfield> = @_entity_id
+    LIMIT 1;
+    "
+
+    function cu_error(table)
+    {
+        new fields
+        {
+            @"codigo": "El código"
+            @"nombre": "El nombre"
+        }
+        do valide_duplicate(fields, table, last_error(), last_error_code())
+    }
+
+    function list(&db,&params)
+    {
+        do dbr.apps.action.grant("XB110")
+        return entity.list(db,params)
+        
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function read(&db,&params)
+    {
+        do dbr.apps.action.grant("XB110")
+        return entity.read(db,params)
+        
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function blank(&db,&params)
+    {
+        do dbr.apps.action.grant("XB110")
+        return entity.blank(db,params)
+        
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB111")
+        do dbr.begin(db)
+
+        ref res = entity.create(db, params, data)
+
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+
+        return res 
+        
+        exception
+		{
+			do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do cu_error("pais")
+            do rise_error(last_error_code(),last_error())
+		}
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB112")
+        do dbr.begin(db)
+
+        do dbr.execute(db, "UPDATE pais SET sys_recver=0 WHERE sys_recver IS NULL AND sys_pk=@_entity_id;", params)
+        do dbr.execute(db, "UPDATE pais SET sys_lock=null WHERE sys_lock=0 AND sys_pk=@_entity_id;", params)
+        
+        ref res = entity.update(db, params, data)
+        
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+        
+        return res 
+        
+        exception
+		{
+			do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do cu_error("pais")
+            do rise_error(last_error_code(),last_error())
+		}
+    }
+
+    function delete(&db, &params)
+	{
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB113")
+        do dbr.begin(db)
+
+        ref res =  entity.delete(db, params)
+
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+        
+        return res 
+        
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+	}
+
+    point @list to pais.list
+    point @read to pais.read
+    point @blank to pais.blank
+    point @create to pais.create
+    point @update to pais.update
+    point @delete to pais.delete
+}

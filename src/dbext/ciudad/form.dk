@@ -1,0 +1,93 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "dbr.dkh"
+    #include "uielements.dkl"
+    #include "../config.dk"
+    #include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+    entity_id = @("$parameters/_entity_id")
+    isNew = (entity_id == "_new")
+    if not(isset("@http_context")){ref @http_context=@@(@crud_context,"&http")}
+    p=@@(@http_context,"$request/get/p")
+    edo=@@(@http_context,"$request/get/edo")
+
+    new def_ciudad
+    {
+        @"datatable*":dbr.list(@("&database"),"select sys_pk, codigo, nombre from edoprov order by nombre;",@null)
+        member "attributes"
+        {
+            @"class":"induxsoft-form-select"
+            @"name":"estado"
+        }
+
+        @"text_field":"nombre"
+        @"value_field":"sys_pk"
+        @"selected":@('./estado')
+    }
+
+    if isNew && trim(edo) != "" { def_ciudad<"selected">: edo }
+
+    #$ div(class="container p-0")
+    {
+        form(action="." method="POST")
+        {
+            div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
+            {
+                div(class="col-4 d-flex align-items-center p-0")
+                {
+                    h5(class="tex-no-break m-0"){$"#<ifstr(isNew,'Agregar','Editar')> Ciudad"}
+                }
+                div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2" id="main_bar_controls")
+                {
+                    #! url_back = ifstr(trim(edo)=="", "../", "../?edo="+edo+"&p="+p)
+                    #$ a(href="#" onclick="window.location.reload();" class="btn btn-sm border-secondary induxsoft-corners btn-main-action" title="Refrescar"){$"#<@ICON_ARROW_CLOCKWISE>"}
+                    button(type="button" onclick="validate()" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){$"#<@ICON_SAVE>"}
+                    a(href="#<url_back>" id="btn_form_back" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){$"#<@ICON_X_LG>"}
+                }
+            }
+            div(id="work_area" class="container-section")
+            {
+                div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+                input(type="hidden" name="sys_recver" value="#<@('./sys_recver')>")
+                input(type="hidden" id="sys_pk" value="#<@('./sys_pk')>")
+
+                div(class="row mb-2")
+                {
+                    div(class="col-sm-3")
+                    {
+                        small(class="fw-bold"){"Código:"}
+                        input(type="text" class="induxsoft-form-control" name="codigo" value="#<@('./codigo')>" required="true" maxlength="8")
+                    }
+                    div(class="col-sm-7")
+                    {
+                        small(class="fw-bold"){"Nombre:"}
+                        input(type="text" class="induxsoft-form-control" name="nombre" value="#<@('./nombre')>" required="true" maxlength="100")
+                    }
+                    div(class="col-sm-2")
+                    {
+                        small{"Código de área:"}
+                        input(type="text" class="induxsoft-form-control" name="codigotel" value="#<@('./codigotel')>"  maxlength="5")
+                    }
+                }
+                div(class="row mb-2")
+                {
+                    div(class="col-12")
+                    {
+                        small{"Estado:"}
+                        #! do uie.dbSelect(def_ciudad)
+                    }
+                }
+            }
+        }
+        #$
+        script(src="#<@jQuery>"){$""}
+        script(src="#<@js_definitive_api>"){$""}
+        #!
+        #include "ciudad.dkl"
+    }
+    do @context.end()
+}

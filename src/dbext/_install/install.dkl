@@ -11,6 +11,11 @@ program "instalador"
     ref @files_to_import = from.json('[
         "cdocumentos.csv",
         "blockdocumentos.csv",
+        "divisa.csv",
+        "idioma.csv",
+        "pais.csv",
+        "edoprov.csv",
+        "ciudad.csv",
         "snd_provider_tpy.csv",
         "snd_provider.csv",
         "snd_channel.csv"

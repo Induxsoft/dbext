@@ -1,0 +1,90 @@
+#include "dkli.dkh"
+#!
+
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "uielements.dkl"
+    #include "uielements.dbtable.dkl"
+    #include "../config.dk"
+    #include "serialize.dkh"
+
+    @gender="o"
+    @title="Estados"
+    
+    if not(isset("@http_context")){ref @http_context=@@(@crud_context,"&http")}
+    @p=@@(@http_context,"$request/get/pais")
+
+    new @table_definition
+    {
+        @"datatable*":@@(@crud_context,"&.")
+        member @"columns"
+        {
+            member @"codigo"
+            {
+                @"caption":"Código"
+            }
+            member @"nombre"
+            {
+                @"caption":"Nombre"
+            }
+            member @"pais"
+            {
+                @"caption":"País"
+            }
+            member @"_actions"
+            {
+                @"caption":"Acciones"
+                
+            }
+        }
+        member @"rows_attributes"
+        {
+           member @"detail"
+           {
+              @"onclick":"SelectRow(#<@@(row,'sys_pk')>,event,'#<@@(row,'nombre')>',#<@p>)" //Ejemplo
+              @"class":"tr_hover"
+           }
+        }
+    }
+
+    // #include "web/api.erp.test/src/core-apps/db-crudl/_common/list.dk"
+    //  cell_link_func::&params, &row, &cell
+    // {
+    //     //params=Parámetros de la table (def_table)
+    //     //row=Datos (registro) de la fila
+    //     //cell=Información de la celda
+
+    //     //cell<"text">:@@(cell,"cell_type")
+    //     if @@(cell,"cell_type")!="data" &&  @@(cell,"cell_type")!="unknow" { return }
+    //     if @@(cell,"column")=="_actions"
+    //     {
+    //         cell<"text">:ftext('<a id="btnEditar" href="./#<@@(row,"sys_pk")>/">Editar</a> |<a onclick="deleteEntity(#<@@(row,"sys_pk")>)" href="#" id="btnEliminar">Eliminar</a>')
+            
+    //     }
+    //     if @@(cell,"column")=="nombre"
+    //     {
+    //         cell<"text">:ftext('<a  href="../ciudad/?edo=#<@@(row,"sys_pk")>">#<@@(row,"nombre")></a> ')
+    //     }
+
+    // }
+
+    // point cell_link to cell_link_func
+    // using @table_definition
+    // {
+    //     @"before_cell*":cell_link
+    //     member @"attributes"
+    //     {
+    //         @"class":"table"
+    //     }
+    // }
+    
+
+    ##
+    div(class="m-0 justify-content-center" )
+    {
+        #! include @path_common
+        #include "edoprov.dk"
+    }
+    ##
+}

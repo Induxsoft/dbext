@@ -1,0 +1,98 @@
+script{
+	$'
+		function deleteEntity(sys_pk){
+			var res=confirm("¿Esta seguro de eliminar la fila?");
+			if(!res)
+				return;
+			definitive.rest("./"+sys_pk,"DELETE",null,
+				function(entity){
+					//Operación exitosa
+					window.location.reload();
+				},
+				function(error){
+					alert(error)
+					//Error de aplicación
+				},
+				function(error){
+					var er=JSON.stringify(error);
+					var p=JSON.parse(er);
+					alert(p.responseJSON.message);
+				}
+			);
+		}
+		document.addEventListener("DOMContentLoaded", () => {
+            const btn_go_back = document.querySelector("#btn_go_back");
+            if (btn_go_back)
+			{
+				btn_go_back.setAttribute("href","#<@LIST_ESTADO>?pais=#<@p>");
+				btn_go_back.setAttribute("target","_self");
+			}
+			if ("#<@edo>".trim())
+            {
+                const input_search_hidden = document.querySelector("#input_search_hidden");
+				const input_search_hidden2 = document.querySelector("#input_search_hidden2");
+                if (input_search_hidden)
+                {
+                    input_search_hidden.setAttribute("name","edo");
+                    input_search_hidden.value = "#<@edo>";
+                }
+				if (input_search_hidden2)
+				{
+					input_search_hidden2.setAttribute("name","p");
+                    input_search_hidden2.value = "#<@p>";
+				}
+                const btnAgregar = document.querySelector("#btnAgregar");
+                if (btnAgregar)
+                {
+                    btnAgregar.setAttribute("href", btnAgregar.getAttribute("href")+"?edo=#<@edo>&p=#<@p>");
+                }
+                let btns = document.querySelectorAll(".btn-row-edit");
+                btns.forEach(btn => {
+                    btn.setAttribute("href", btn.getAttribute("href")+"?edo=#<@edo>&p=#<@p>");
+                });
+            }
+        });
+		function validate()
+        {
+            if ($("input[name=codigo]").val()===""){
+				alert("Rellene el campo: Código");
+				return;
+			}
+            else if($("input[name=nombre]").val()===""){
+				alert("Rellene el campo: Nombre");
+				return;
+			}
+            else{
+				addCiudad();
+			}
+        }
+		function addCiudad()
+		{
+			let ciudad =
+            {
+                "sys_recver": $("input[name=sys_recver]").val(),
+                "codigo": $("input[name=codigo]").val(),
+                "nombre": $("input[name=nombre]").val(),
+				"codigotel": $("input[name=codigotel]").val(),
+                "estado": $("select[name=estado]").val()
+            }
+
+			var mthd=((Number($("#sys_pk").val())>0) ? "PUT": "POST");
+
+			definitive.rest(".", mthd, ciudad,
+                function(entity){
+                    const btn_back = document.querySelector("#btn_form_back");
+                    if (btn_back) btn_back.click();
+                },
+                function(error){
+                    alert(error)
+                },
+                function(error){
+                    var er=JSON.stringify(error);
+                    var p=JSON.parse(er);
+                    alert(p.responseJSON.message);
+                }
+            );
+		}
+	'
+}

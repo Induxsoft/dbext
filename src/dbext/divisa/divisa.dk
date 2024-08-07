@@ -1,0 +1,24 @@
+
+script{
+    $'
+        function deleteEntity(sys_pk){
+                var res=confirm("¿Esta seguro de eliminar la fila?");
+                if(!res)
+                    return;
+                definitive.rest("./"+sys_pk,"DELETE",null,
+                    function(entity){
+                        //Operación exitosa
+                        window.location.reload();
+                    },
+                    function(error){
+                        alert(error)
+                        //Error de aplicación
+                    },
+                    function(error){
+                        var er=JSON.stringify(error);
+                        var p=JSON.parse(er);
+                        alert(p.responseJSON.message);
+                    });
+        }
+    '
+}

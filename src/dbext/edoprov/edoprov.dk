@@ -1,0 +1,106 @@
+script{
+    $'
+        function deleteEntity(sys_pk){
+                var res=confirm("¿Esta seguro de eliminar la fila?");
+                if(!res)
+                    return;
+                definitive.rest("./"+sys_pk,"DELETE",null,
+                    function(entity){
+                        //Operación exitosa
+                        window.location.reload();
+                    },
+                    function(error){
+                        alert(error)
+                        //Error de aplicación
+                    },
+                    function(error){
+                        var er=JSON.stringify(error);
+                        var p=JSON.parse(er);
+                        alert(p.responseJSON.message);
+                    });
+        }
+        function SelectRow(sys_pk,e,name,p)
+        {
+            if(sys_pk==""){return;}
+            e.stopPropagation();
+            window.location.href="../ciudad/?edo="+sys_pk+"&e="+name+"&p="+p;
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+            const btn_go_back = document.querySelector("#btn_go_back");
+            if (btn_go_back)
+            {
+                btn_go_back.setAttribute("href","#<@LIST_PAIS>");
+                btn_go_back.setAttribute("target","_self");
+            }
+            if ("#<@p>".trim())
+            {
+                const input_search_hidden = document.querySelector("#input_search_hidden");
+                if (input_search_hidden)
+                {
+                    input_search_hidden.setAttribute("name","pais");
+                    input_search_hidden.value = "#<@p>";
+                }
+                const btnAgregar = document.querySelector("#btnAgregar");
+                if (btnAgregar)
+                {
+                    btnAgregar.setAttribute("href", btnAgregar.getAttribute("href")+"?p=#<@p>");
+                }
+                let btns = document.querySelectorAll(".btn-row-edit");
+                btns.forEach(btn => {
+                    btn.setAttribute("href", btn.getAttribute("href")+"?p=#<@p>");
+                });
+            }
+        });
+
+        function validate()
+        {
+            if ($("input[name=codigo]").val()===""){
+				alert("Rellene el campo: Código");
+				return;
+			}
+            else if($("input[name=nombre]").val()===""){
+				alert("Rellene el campo: Nombre");
+				return;
+			}
+            else{
+				addEdoprov();
+			}
+        }
+        function addEdoprov()
+        {
+            let edoprov =
+            {
+                "sys_recver": $("input[name=sys_recver]").val(),
+                "codigo": $("input[name=codigo]").val(),
+                "nombre": $("input[name=nombre]").val(),
+                "ipais": $("select[name=ipais]").val()
+            }
+
+            var mthd=((Number($("#sys_pk").val())>0) ? "PUT": "POST");
+
+			definitive.rest(".", mthd, edoprov,
+                function(entity){
+                    const btn_back = document.querySelector("#btn_form_back");
+                    if (btn_back) btn_back.click();
+                },
+                function(error){
+                    alert(error)
+                },
+                function(error){
+                    var er=JSON.stringify(error);
+                    var p=JSON.parse(er);
+                    alert(p.responseJSON.message);
+                }
+            );
+        }
+    '
+}
+style{
+    $'
+    .tr_hover:hover
+    {
+        cursor:pointer;
+    }
+    
+    '
+}

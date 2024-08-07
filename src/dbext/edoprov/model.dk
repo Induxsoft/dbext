@@ -1,0 +1,145 @@
+#include "dkli.dkh"
+#!
+module ":edoprov"
+{
+    @list_query = "
+    SELECT e.sys_pk, e.sys_recver, e.codigo, e.nombre, p.nombre pais
+    FROM edoprov AS e
+        INNER JOIN pais AS p ON e.ipais = p.sys_pk 
+    WHERE NOT IFNULL(e.sys_deleted,0)
+        AND IF(IFNULL(@s,'')='', true, (e.codigo = @s OR e.nombre LIKE CONCAT('%',@s,'%')))
+        AND (ipais=@pais OR ISNULL(@pais))
+    ORDER BY e.codigo
+    LIMIT #<@default_max_rows>;
+    "
+    @read_query = "SELECT sys_pk, sys_recver, codigo, nombre, ipais FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1;"
+    
+    function cu_error(table)
+    {
+        new fields
+        {
+            @"codigo": "El código"
+        }
+        do valide_duplicate(fields, table, last_error(), last_error_code())
+    }
+
+    function list(&db,&params)
+    {
+        do dbr.apps.action.grant("XB120")
+        return entity.list(db,params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function read(&db,&params)
+    {
+        do dbr.apps.action.grant("XB120")
+        return entity.read(db,params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function blank(&db,&params)
+    {
+        do dbr.apps.action.grant("XB120")
+        return entity.blank(db,params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB121")
+        do dbr.begin(db)
+
+        ref res = entity.create(db,params,data)
+
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+
+        return res 
+        
+        exception
+		{
+			do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do cu_error("edoprov")
+            do rise_error(last_error_code(),last_error())
+		}
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB122")
+        do dbr.begin(db)
+
+        ref res = entity.update(db,params,data)
+
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+
+        return res 
+        
+        exception
+		{
+			do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do cu_error("edoprov")
+            do rise_error(last_error_code(),last_error())
+		}
+    }
+    
+    function delete(&db,&params)
+	{
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB123")
+        do dbr.begin(db)
+
+        ref res = entity.delete(db,params)
+
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+
+        return res 
+        
+        exception
+		{
+			do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+		}
+	}
+
+    point @list to edoprov.list
+    point @read to edoprov.read
+    point @blank to edoprov.blank
+    point @create to edoprov.create
+    point @update to edoprov.update
+    point @delete to edoprov.delete
+}

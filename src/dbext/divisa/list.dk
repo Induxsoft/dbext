@@ -1,0 +1,35 @@
+#include "dkli.dkh"
+#!
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "../config.dk"
+
+    @gender="a"
+    @title="Divisas"
+
+    new @table_definition
+    {
+        @"datatable*":@@(@crud_context,"&.")
+        member @"columns"
+        {
+            member @"codigo" { @"caption":"Código" }
+            member @"descripcion" { @"caption":"Descripción" }
+            member @"tcambio" { @"caption":"Tipo de cambio" }
+            member @"decimales" { @"caption": "Decimales" }
+            member @"_actions"
+            {
+                @"caption":"Acciones"
+            }
+        }
+    }
+
+    #$
+    div
+	{
+    	#!
+    	#include "divisa.dk"
+        include @path_common
+    }
+    do @context.end()
+}

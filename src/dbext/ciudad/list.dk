@@ -1,0 +1,50 @@
+#include "dkli.dkh"
+#!
+
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "uielements.dbtable.dkl"
+    #include "uielements.dkl"
+    #include "../config.dk"
+
+    @gender="a"
+    @title="Ciudades"
+
+    if not(isset("@http_context")){ref @http_context=@@(@crud_context,"&http")}
+    @p=@@(@http_context,"$request/get/p")
+    @edo=@@(@http_context,"$request/get/edo")
+
+    new @table_definition
+    {
+        @"datatable*":@@(@crud_context,"&.")
+        member @"columns"
+        {   
+            member @"codigo"
+            {
+                @"caption":"Código"
+            }
+            member @"nombre"
+            {
+                @"caption":"Nombre"
+            }
+            member @"estado"
+            {
+                @"caption":"estado"
+            }
+            member @"_actions"
+            {
+                @"caption":"Acciones"
+                
+            }
+        }
+    }
+    #$
+    div(class="m-0 justify-content-center" )
+    {
+        #!
+        #include "ciudad.dkl"
+        include @path_common
+    }
+    
+}

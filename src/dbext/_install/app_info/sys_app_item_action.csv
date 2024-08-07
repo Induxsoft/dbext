@@ -16,3 +16,11 @@ XB83,Eliminar canal de comunicación,Eliminar,,javascript:InduxsoftCrudlModel.De
 XB91,Agregar relación de usuario con elemento de datos,Agregar,,/!/dbext/detusr/_new/,0,dbext.detusr,DET08A,0,action
 XB92,Agregar privilegio de usuario sobre elemento de datos,Privilegios,,/!/dbext/detusr/@_src_context_item_id/,0,dbext.detusr,DET08A,1,action
 XB93,Eliminar relación y privilegios de usuario por DET,Eliminar,,javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);,0,dbext.detusr,DET08A,1,action
+
+"XB101","Agregar divisa","Agregar","","/!/dbext/divisa/_new/","0","dbext.divisa","DET030","0","action"
+"XB102","Editar divisa","Editar","","/!/dbext/divisa/@_src_context_item_id/","0","dbext.divisa","DET030","1","action"
+"XB103","Eliminar divisa","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","dbext.divisa","DET030","1","action"
+
+"XB111","Agregar país","Agregar","","/!/dbext/pais/_new/","0","dbext.pais","DET034","0","action"
+"XB112","Editar país","Editar","","/!/dbext/pais/@_src_context_item_id/","0","dbext.pais","DET034","1","action"
+"XB113","Eliminar país","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","dbext.pais","DET034","1","action"

@@ -1,0 +1,58 @@
+#include "dkli.dkh"
+#!
+
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "uielements.dkl"
+    #include "uielements.dbtable.dkl"
+    #include "serialize.dkh"
+    #include "../config.dk"
+
+    @gender="o"
+    @title="Paises"
+
+    do @context.begin(@crud_context)
+
+    new @table_definition
+    {
+        @"datatable*":@("&.")
+        @"value_field":"sys_pk"
+        member @"columns"
+        {
+            member @"codigo"
+            {
+                @"caption":"Código"
+            }
+            member @"codigotel"
+            {
+                @"caption":"Código de área"
+            }
+            member @"nombre"
+            {
+                @"caption":"Nombre"
+            }
+            member @"_actions"
+            {
+                @"caption":"Acciones"
+                
+            }
+        }
+        member @"rows_attributes"
+        {
+            member @"detail"
+            {
+                @"onclick":"SelectRow(#<@@(row,'sys_pk')>,event,'#<@@(row,'nombre')>')" //Ejemplo
+                @"class":"tr_hover"
+            }
+        }
+    }
+
+    #$ div(class="m-0 justify-content-center" id="")
+    {
+        #! #include "pais.dk"
+        include @path_common   
+    }
+
+    do @context.end()
+}

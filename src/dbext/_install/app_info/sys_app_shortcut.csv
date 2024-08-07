@@ -8,3 +8,5 @@
 "XB70","Grupos de usuarios","/$/dbext/img/icons/usergroup-96x96.png","/!/dbext/usergroup/","0","dbext.usergroup","00A0"
 "XB80","Canales de comunicación","/$/dbext/img/icons/comm-96x96.png","/!/dbext/comm/","0","dbext.comm","00A0"
 "XB90","Privilegios sobre entidades","/$/dbext/img/icons/detusr-96x96.png","/!/dbext/detusr/","0","dbext.detusr","00A0"
+"XB100","Divisas","/$/dbext/img/icons/divisa-96x96.png","/!/dbext/divisa/","0","dbext.divisa","0090"
+"XB110","País","/$/dbext/img/icons/pais-96x96.png","/!/dbext/pais/","0","dbext.pais","0090"

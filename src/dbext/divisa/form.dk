@@ -1,0 +1,64 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "../config.dk"
+    #include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+    entity_id = @("$parameters/_entity_id")
+    isNew = (entity_id == "_new")
+
+    #$ div(class="container p-0")
+    {
+        div(class= "card-body")
+        {	
+            form(action="#" method="POST")
+            {
+                div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
+                {
+                    div(class="col-4 d-flex align-items-center p-0")
+                    {
+                        h5(class="tex-no-break m-0"){$"#<ifstr(isNew,'Agregar','Editar')> Divisa"}
+                    }
+                    div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2" id="main_bar_controls")
+                    {
+                        a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action" title="Refrescar"){$"#<@ICON_ARROW_CLOCKWISE>"}
+                        button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){$"#<@ICON_SAVE>"}
+                        a(href="../" class="btn btn-sm border-secondary induxsoft-corners btn-main-action"){$"#<@ICON_X_LG>"}
+                    }
+                }
+                div(id="work_area" class="container-section")
+                {
+                    div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+                    input(type="hidden" name="sys_recver" value="#<@('./sys_recver')>")
+
+                    div(class="mb-3 row")       
+                    {
+                        div(class="col-lg-2 col-sm-3")
+                        {
+                            small(class="fw-bold"){"Código:"}
+                            input(type="text" class="induxsoft-form-control" name="codigo" value="#<@('./codigo')>" maxlength="5" placeholder="<A>")
+                        }
+                        div(class="col-lg-10 col-sm-9")
+                        {
+                            small(class="fw-bold"){"Descripción:"}
+                            input(type="text" class="induxsoft-form-control" name="descripcion" value="#<@('./descripcion')>" required="true" maxlength="30")
+                        }
+                        div(class="col-lg-4 col-sm-4 col-6")
+                        {
+                            small(class="fw-bold"){"Tipo de cambio:"}
+                            input(type="number" class="induxsoft-form-control" name="tcambio" value="#<@('#./tcambio')>" step="0.000001" min="1" max="9999999999.99999999")
+                        }
+                        div(class="col-sm-2 col-sm-4 col-6")
+                        {
+                            small(class="fw-bold"){"Decimales:"}
+                            input(type="number" class="induxsoft-form-control" name="decimales" value="#<@('#./decimales')>" step="1" min="0")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

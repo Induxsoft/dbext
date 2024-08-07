@@ -1,0 +1,144 @@
+#include "dkli.dkh"
+#!
+module ":ciudad"
+{
+    @list_query = "
+    SELECT c.sys_pk, c.sys_recver, c.codigo, c.codigotel, c.nombre, e.nombre estado
+    FROM ciudad AS c
+        INNER JOIN edoprov AS e ON c.estado = e.sys_pk
+    WHERE NOT IFNULL(c.sys_deleted,0)
+        AND IF(IFNULL(@s,'')='', true, (c.codigo = @s OR c.nombre LIKE CONCAT('%',@s,'%')))
+        AND (c.estado=@edo OR ISNULL(@edo))
+    ORDER BY c.codigo
+    LIMIT #<@default_max_rows>;
+    "
+    @read_query = "SELECT sys_pk, sys_recver, codigo, codigotel, nombre, estado FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1;"
+
+    function cu_error(table)
+    {
+        new fields {
+            @"codigo": "El código"
+        }
+        do valide_duplicate(fields, table, last_error(), last_error_code())
+    }
+
+    function list(&db,&params)
+    {
+        do dbr.apps.action.grant("XB130")
+        return entity.list(db,params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function read(&db,&params)
+    {
+        do dbr.apps.action.grant("XB130")
+        return entity.read(db, params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function blank(&db,&params)
+    {
+        do dbr.apps.action.grant("XB130")
+        return entity.blank(db, params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB131")
+        do dbr.begin(db)
+
+        ref res = entity.create(db,params,data)
+
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+
+        return res 
+        
+        exception
+		{
+			do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do cu_error("ciudad")
+            do rise_error(last_error_code(),last_error())
+		}
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB132")
+        do dbr.begin(db)
+
+        ref res = entity.update(db,params,data)
+
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+
+        return res 
+        
+        exception
+		{
+			do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do cu_error("ciudad")
+            do rise_error(last_error_code(),last_error())
+		}
+    }
+    
+    function delete(&db,&params)
+	{
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB133")
+        do dbr.begin(db)
+
+        ref res = entity.delete(db,params)
+
+        do dbr.apps.action.pos(res)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(res)
+
+        return res 
+        
+        exception
+		{
+			do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+		}
+	}
+    
+    point @list to ciudad.list
+    point @read to ciudad.read
+    point @blank to ciudad.blank
+    point @create to ciudad.create
+    point @update to ciudad.update
+    point @delete to ciudad.delete
+}

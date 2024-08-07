@@ -3,8 +3,16 @@
 module "config"
 {
     // =============== GENERAL
+    @title=""
+	@gender="o"
+	@path_common="dbext/_common/list.dk"
+
+    @default_max_rows=250
 
     // _STATIC
+    @jQuery = "/$/dbext/js/jquery-3.6.0.min.js"
+    @js_definitive_api = "/$/dbext/js/definitive.api.js"
+
     @JS_MAIN = "/$/dbext/js/main.js"
     @JS_TUSER = "/$/dbext/js/tuser.js"
     @JS_USERGROUP = "/$/dbext/js/usergroup.js"
@@ -39,6 +47,9 @@ module "config"
     @DBEXT_ADD_EDIT_GLVAR = "/!/dbext/globalvar/@id/"
 
     @DBEXT_SEARCH_PROVEEDOR = "/!/dbext/comm/?_view=proveedor&s=@search"
+
+    @LIST_PAIS = "/!/dbext/pais/"
+	@LIST_ESTADO = "/!/dbext/edoprov/"
 
     //* ======================================== [ AUTHORIZATIONS ]
     @AUT_ACCESS_FOLIOS="CFO-00-000-000"
@@ -87,8 +98,6 @@ module "config"
 
     @TYPE_AUTH_BOX= "/!/dbext/authtpy/"
     @TYPE_AUTH_BOX_ADD_EDIT="/!/dbext/authtpy/@id/"
-
-    @default_max_rows=250
 
     @icon_color = "#888"
 

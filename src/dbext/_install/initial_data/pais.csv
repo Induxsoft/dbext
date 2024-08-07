@@ -1,0 +1,4 @@
+﻿"sys_pk","sys_guid","sys_dtcreated","sys_timestamp","sys_info","sys_user","sys_lastuser","sys_exported","sys_dtexported","sys_recver","sys_deleted","sys_lock","codigo","codigotel","nombre","th_sep","dc_sep","iso3166","iso3166_a3"
+"1","2345F0ABC9AB418F00DE01DAF3A361E1","2007-10-22 05:27:16","2007-10-22 05:27:16",\N,\N,\N,"0","2007-10-22 05:27:16","0",\N,\N,"MEX","+52","México",",",".","MX","MEX"
+"2","8FBBCEAB3A7C4E078D6F667DA97900CA","2007-10-23 10:30:55","2007-10-23 10:30:55",\N,\N,\N,"0","2007-10-23 10:30:55","0",\N,\N,"XXX","000","(Desconocido)",",",".",\N,\N
+"3","2C995E39A8B046EE85ED48D9A55300F2","2017-06-07 11:00:48","2017-06-07 11:00:48",\N,\N,\N,"0","2017-06-07 11:00:48","0",\N,\N,"USA","+1","Estados Unidos",",",".","US","USA"

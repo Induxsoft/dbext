@@ -12,20 +12,40 @@ XB30,Control de folios,dbext.blockdocs
 XB31,Agregar folio,dbext.blockdocs
 XB32,Editar folio,dbext.blockdocs
 XB33,Eliminar folio,dbext.blockdocs
+dbext.ciudad,Ciudades,dbext
+XB130,Ciudad,dbext.ciudad
+XB131,Agregar ciudad,dbext.ciudad
+XB132,Editar ciudad,dbext.ciudad
+XB133,Eliminar ciudad,dbext.ciudad
 dbext.comm,Canales de comunicación,dbext
 XB80,Canales de comunicación,dbext.comm
 XB81,Crear canal de comunicación,dbext.comm
 XB82,Editar canal de comunicación,dbext.comm
 XB83,Eliminar canal de comunicación,dbext.comm
 dbext.detusr,Privilegios por tipo de elemento de datos,dbext
-XB90,Privilegios de usuario por Tipo de Elementos de Datos,dbext.detusr
+XB90,Privilegios sobre entidades,dbext.detusr
 XB91,Agregar relación de usuario con elemento de datos,dbext.detusr
 XB92,Agregar privilegio de usuario sobre elemento de datos,dbext.detusr
 XB93,Eliminar relación y privilegios de usuario por DET,dbext.detusr
+dbext.divisa,Divisas,dbext
+XB100,Divisas,dbext.divisa
+XB101,Agregar divisa,dbext.divisa
+XB102,Editar divisa,dbext.divisa
+XB103,Eliminar divisa,dbext.divisa
+dbext.edoprov,Estados,dbext
+XB120,Estado,dbext.edoprov
+XB121,Agregar estado,dbext.edoprov
+XB122,Editar estado,dbext.edoprov
+XB123,Eliminar estado,dbext.edoprov
 dbext.globalvar,Administración de variables globales,dbext
 XB40,Variables globales,dbext.globalvar
 XB41,Actualizar variables globales,dbext.globalvar
 XB42,Actualizar variables globales,dbext.globalvar
+dbext.pais,Países,dbext
+XB110,País,dbext.pais
+XB111,Agregar país,dbext.pais
+XB112,Editar país,dbext.pais
+XB113,Eliminar país,dbext.pais
 dbext.profile,Editor de perfiles de seguridad,dbext
 XB50,Perfiles,dbext.profile
 XB51,Actualizar perfiles,dbext.profile
