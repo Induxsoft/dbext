@@ -57,5 +57,5 @@ module "Variables alojadas en la base de datos :dbr.localize"
     {
         return "$ #,#.00"
     }
-    
+
 }
