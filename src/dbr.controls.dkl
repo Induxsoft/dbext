@@ -14,12 +14,27 @@ module ":dbr.control"
                 first_character = toupper(lremove(caption,1))
                 caption = first_character + left(caption,1)
             }
-            required = trim(@@(ctrlDef,"$required"))
-            required = ifstr(parse.bool(required), "required", "")
+            is_required = parse.bool(trim(@@(ctrlDef,"$required")))
+            is_readonly = parse.bool(trim(@@(ctrlDef,"$readonly")))
+            is_disabled = parse.bool(trim(@@(ctrlDef,"$disabled")))
+            
+            required = ifstr(is_required, "required", "")
+            readonly = ifstr(is_readonly, "readonly", "")
+            disabled = ifstr(is_disabled, "disabled", "")
+
+            wrap_attr = ""
+            ref wrap = ifnull(@@(ctrlDef,"&wrp_attr"),record.create())
+            ref lst = list.create_from_fields(wrap)
+            for i=0; i<list.count(lst)
+            {
+                attr_key = list.str(lst,i)
+                attr_val = field.dstr(wrap,list.str(lst,i),"")
+                wrap_attr = wrap_attr + attr_key+' = "'+attr_val+'" '
+            }
+            wrap_attr = trim(wrap_attr)
 
             enable=trim(@@(ctrlDef,"$disabled"))
             if enable==""{enable="true"}
-            
             enable_controls=parse.bool(enable)
 
             switch control
@@ -27,53 +42,74 @@ module ":dbr.control"
                 case "date"
                 {
                     #$
-                    label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="date" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="date" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
                     #!
                 }
                 case "time"
                 {
                     #$
-                    label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="time" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="time" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
                     #!
                 }
                 case "datetime"
                 {
                     #$
-                    label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="datetime-local" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="datetime-local" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
                     #!
                 }
                 case "hexcolor"
                 {
                     #$
-                    label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control form-control-color rounded-0" type="color" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
+                        input(class="form-control form-control-color rounded-0" type="color" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
                     #!
                     break
                 }
                 case "textarea"
                 {
                     #$
-                    label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    textarea(class="form-control rounded-0" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"=""){$""}
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
+                        textarea(class="form-control rounded-0" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"=""){$""}
+                    }
                     #!
                     break
                 }
                 case "number"
                 {
                     #$
-                    label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="number" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="number" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
                     #!
                     break
                 }
                 case "file"
                 {
                     #$
-                    label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="file" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="file" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
                     #!
                     break
                 }
@@ -99,25 +135,33 @@ module ":dbr.control"
                             @"name": ctrlName
                             @"class": "form-select rounded-0"
                         }
+                        @"attr_options*": ifnull(@@(ctrlDef,"&opt_attr"),record.create())
                         @"value_field": _keyfield
                         @"text_field": _showfield
                     }
 
-                    if required != "" { select_def<"attributes/required"> : "true" }
-                    if not(enable_controls) { select_def<"attributes/disabled"> : "true" }
+                    if is_required { select_def<"attributes/required"> : "true" }
+                    if is_readonly { select_def<"attributes/readonly"> : "true" }
+                    if is_disabled { select_def<"attributes/disabled"> : "true" }
 
                     #$
-                    label(class="form-label" "for"="sel_#<ctrlName>"){$"#<caption>"}
-                    #!
-                    do uie.dbSelect(select_def)
-                    #!
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="sel_#<ctrlName>"){$"#<caption>"}
+                        #!
+                        do uie.dbSelect(select_def)
+                        #!
+                    }
                     break
                 }
                 default
                 {
                     #$
-                    label(class="form-label" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                    input(class="form-control rounded-0" type="text" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<ifstr(enable_controls,'','disabled')>"="")
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="text" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
                     #!
                     break
                 }
