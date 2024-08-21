@@ -6,6 +6,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
     ref @dbr.localize.country_buffer=@null
     ref @dbr.localize.lang_buffer=@null
 
+    @dbr.localize.default.money_code=""
     @dbr.localize.default.money_decs=4
     @dbr.localize.default.country="MEX"
     @dbr.localize.default.lang="es"
@@ -58,4 +59,35 @@ module "Variables alojadas en la base de datos :dbr.localize"
         return "$ #,#.00"
     }
 
+    money_decs::&db,cod_divisa
+    {
+        if trim(cod_divisa)=="" { return @dbr.localize.default.money_decs }
+        ref m=money(db,cod_divisa)
+        return m.decimales
+    }
+
+    ref localize_db=@null
+    
+    if isset("@crud_context") && isnull(localize_db)
+    {
+        if not(isnull(@@(@crud_context,"&database")))
+        {
+            ref localize_db=@@(@crud_context,"&database")
+        }
+    }
+
+    if isset("@http_context") && isnull(localize_db)
+    {
+        if not(isnull(@@(@http_context,"&session/idp/database")))
+        {
+            ref localize_db=@@(@http_context,"&session/idp/database")
+        }
+    }
+
+    if not(isnull(localize_db))
+    {
+        @dbr.localize.default.money_decs=parse.num(dbr.vars.get(localize_db,"FXCA001"))
+        @dbr.localize.default.money_code=dbr.str(localize_db,"select ifnull(codigo,'') from divisa where sys_pk=" str(parse.num(dbr.vars.get(localize_db,"FXCA013"))),@null)
+        do money(localize_db,@dbr.localize.default.money_code)
+    }
 }
