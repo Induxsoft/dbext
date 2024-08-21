@@ -45,7 +45,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
         
         if isnull(m) { do rise_error(510,"Código de divisa no encontrado: " + cod_divisa) }
 
-        if not(field.dobj(m,"decimales")) { m<"decimales">:@dbr.localize.default.money_decs }
+        if not(field.exist(m,"decimales")) { m<"decimales">:@dbr.localize.default.money_decs }
         if isnull(field.obj(m,"decimales")) { m<"decimales">:@dbr.localize.default.money_decs }
 
         @dbr.localize.money_buffer<cod_divisa+"*">: m
