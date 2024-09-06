@@ -7,7 +7,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
     ref @dbr.localize.lang_buffer=@null
 
     @dbr.localize.default.money_code=""
-    @dbr.localize.default.money_decs=4
+    @dbr.localize.default.money_decs=2
     @dbr.localize.default.country="MEX"
     @dbr.localize.default.lang="es"
     
@@ -38,8 +38,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
 
     money::&db,cod_divisa
     {
-        if field.exist(@dbr.localize.money_buffer,cod_divisa)
-            { return @@(@dbr.localize.money_buffer,cod_divisa) }
+        if field.exist(@dbr.localize.money_buffer,cod_divisa) { return @@(@dbr.localize.money_buffer,"&"+cod_divisa) }
         
         cod_divisa >> p
         ref m=dbr.rec(db,"select * from divisa where codigo=@cod_divisa",p)
@@ -54,6 +53,30 @@ module "Variables alojadas en la base de datos :dbr.localize"
         return m
     }
 
+    money_tc::&db,cod_divisa,tc
+    {
+        tc, cod_divisa >> p
+        sql=""
+        if vartype("cod_divisa")==1 
+        {
+            sql="update divisa set tcambio=@tc where codigo=@cod_divisa;"
+            cod=dbr.str(db,"select codigo from divisa where codigo=@cod_divisa;",p)
+        }
+        else if vartype("cod_divisa")==2 
+        {
+            sql="update divisa set tcambio=@tc where sys_pk=@cod_divisa;"
+            cod=cod_divisa
+        }
+
+        do dbr.execute(db,sql,p)
+
+        if field.exist(@dbr.localize.money_buffer,cod)
+        { 
+            ref d=@@(@dbr.localize.money_buffer,"&"+cod) 
+            d.tcambio=tc
+        }
+    }
+
     money_format::&db,cod_divisa
     {
         return "$ #,#.00"
@@ -66,28 +89,39 @@ module "Variables alojadas en la base de datos :dbr.localize"
         return m.decimales
     }
 
-    ref localize_db=@null
-    
-    if isset("@crud_context") && isnull(localize_db)
+    detect_db::
     {
-        if not(isnull(@@(@crud_context,"&database")))
+        ref localize_db=@null
+
+        if isset("@crud_context") && isnull(localize_db)
         {
-            ref localize_db=@@(@crud_context,"&database")
+            if not(isnull(@@(@crud_context,"&database")))
+            {
+                ref localize_db=@@(@crud_context,"&database")
+            }
         }
+
+        if isset("@http_context") && isnull(localize_db)
+        {
+            if not(isnull(@@(@http_context,"&session/idp/database")))
+            {
+                ref localize_db=@@(@http_context,"&session/idp/database")
+            }
+        }
+        return localize_db
     }
 
-    if isset("@http_context") && isnull(localize_db)
+    init::&localize_db
     {
-        if not(isnull(@@(@http_context,"&session/idp/database")))
-        {
-            ref localize_db=@@(@http_context,"&session/idp/database")
-        }
+        @dbr.localize.default.money_decs=parse.num(dbr.vars.get(localize_db,"V12-0A-001"))
+        @dbr.localize.default.money_code=dbr.str(localize_db,"select ifnull(codigo,'') from divisa where sys_pk=" +str(parse.num(dbr.vars.get(localize_db,"FXCA013"))),@null)
+        do money(localize_db,@dbr.localize.default.money_code)
     }
+
+    ref localize_db=detect_db()
 
     if not(isnull(localize_db))
     {
-        @dbr.localize.default.money_decs=parse.num(dbr.vars.get(localize_db,"FXCA001"))
-        @dbr.localize.default.money_code=dbr.str(localize_db,"select ifnull(codigo,'') from divisa where sys_pk=" str(parse.num(dbr.vars.get(localize_db,"FXCA013"))),@null)
-        do money(localize_db,@dbr.localize.default.money_code)
+        do init(localize_db)
     }
 }
