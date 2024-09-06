@@ -23,7 +23,12 @@ module "Variables alojadas en la base de datos :dbr.vars"
     // Establece una variable global
     set::&db,varname,value
     {
-        new p{@"varname":varname}
+        new p
+        {
+            @"varname":varname
+            @"varvalue":value
+        }
+
         ref rec=dbr.rec(db,"select * from globalvar where varname=@varname;",p)
         if isnull(rec)
         {
@@ -37,13 +42,11 @@ module "Variables alojadas en la base de datos :dbr.vars"
                 @"varname":varname
                 @"varvalue":value
             }
-
             do dbr.insert(db,"globalvar",rec)
         }
         else
         {
-            p<"value">:value
-            do dbr.update(db,"update globalvar set varvalue=@value",p)
+            do dbr.execute(db,"update globalvar set varvalue=@varvalue where varname=@varname",p)
         }
         
     }
