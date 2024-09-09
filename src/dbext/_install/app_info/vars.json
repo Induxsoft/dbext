@@ -48,16 +48,14 @@
                 "varvalue": "MEX",
                 "varcaption": "País",
                 "vartype": "string",
-                "varinput": {
-                    "control": "select", 
-                    "source": {
-                            "type":"query",
-                            "query":"Select codigo, nombre from pais order by nombre;",
-                            "keyfield":"codigo",
-                            "showfield":"nombre"
-                        }
-                },
-                "userenable":1
+                "control": "select", 
+                "source": {
+                        "type":"query",
+                        "query":"Select codigo, nombre from pais order by nombre;",
+                        "keyfield":"codigo",
+                        "showfield":"nombre"
+                    },
+                "userenable":true
             },
             {
                 "varname": "V12-00-002",
@@ -65,16 +63,14 @@
                 "varvalue": "es",
                 "varcaption": "Idioma",
                 "vartype": "string",
-                "varinput":{
-                    "control": "select", 
-                    "source": {
-                            "type":"query",
-                            "query":"Select iso639_1, nombre from idioma order by nombre;",
-                            "keyfield":"iso639_1",
-                            "showfield":"nombre"
-                        }
-                },
-                "userenable":1
+                "control": "select", 
+                "source": {
+                        "type":"query",
+                        "query":"Select iso639_1, nombre from idioma order by nombre;",
+                        "keyfield":"codiso639_1",
+                        "showfield":"nombre"
+                    },
+                "userenable":true
             },
             {
                 "varname": "V12-0A-001",
@@ -91,6 +87,26 @@
                 "varcaption": "Decimales visibles en volúmenes",
                 "vartype": "integer",
                 "varinput": { "control": "integer" } 
+            },
+            {
+                "varname": "FXCA021",
+                "vardefault": "2",
+                "varvalue": "2",
+                "varcaption": "Cálculo de porcentajes de descuentos.",
+                "varhelp": "Método de cálculo de porcentajes de descuentos comerciales.",
+                "vartype": "integer",
+                "varinput": {
+                    "control": "select",
+                    "source":{
+                        "type":"list",
+                        "values":[
+                            {"val":"1", "text":"Método 1 (Base - (Base * Porcentaje * 0.01))"},
+                            {"val":"2", "text":"Método 2 (Base / (1 + (Porcentaje * 0.01)))"}
+                        ],
+                        "showfield":"text",
+                        "keyfield":"val"
+                    }
+                }
             }
         ]
     },

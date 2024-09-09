@@ -9,6 +9,6 @@
 "dbext","dbext.comm","Canales de comunicación",2024-03-28T23:59:59,"Canales de comunicación de proveedores de servicios"
 "dbext","dbext.detusr","Privilegios por Tipo de Elementos de Datos",2024-07-16T23:59:59,"Permite indicar privilegios específicos para un usuario sobre un tipo de elemento de datos"
 "dbext","dbext.divisa","Divisas",2023-12-26T09:25:59,"Catálogo de Divisas"
-"dbext","dbext.pais","País",2023-12-26T09:25:59,"Catálogo de País"
+"dbext","dbext.pais","Países",2023-12-26T09:25:59,"Catálogo de País"
 "dbext","dbext.edoprov","Estado",2023-12-26T09:25:59,"Catálogo de Estados"
 "dbext","dbext.ciudad","Ciudad",2023-12-26T09:25:59,"Catálogo de Ciudades"
