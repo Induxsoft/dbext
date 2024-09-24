@@ -55,7 +55,7 @@
                         "keyfield":"codigo",
                         "showfield":"nombre"
                     },
-                "userenable":true
+                "userenable":1
             },
             {
                 "varname": "V12-00-002",
@@ -70,7 +70,7 @@
                         "keyfield":"codiso639_1",
                         "showfield":"nombre"
                     },
-                "userenable":true
+                "userenable":1
             },
             {
                 "varname": "V12-0A-001",
