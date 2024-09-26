@@ -92,6 +92,11 @@ module "config"
     @AUT_UPDATE_USUARIO="TUS-00-000-003"
     @AUT_DELETE_USUARIO="TUS-00-000-004"
 
+    //grupo y programa batch
+    @BATCH_DETAIL_PROG_TASKMAN="/!/batch/taskman/{id}/{taskname}/"
+    @jobgroup="XB"
+    @program_importar_users="users-import.dkl"
+
     //authbox
     @AUTH_BOX= "/!/dbext/authbox/"
     @AUTH_BOX_ADD_EDIT="/!/dbext/authbox/@id/"

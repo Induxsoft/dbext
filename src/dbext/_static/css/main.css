@@ -41,7 +41,11 @@
     background-color: #e9ecef;
     opacity: 1;
 }
-
+.event-none
+{
+    pointer-events: none;
+    opacity: .5;
+}
 @media screen and (max-width: 750px) 
 {
 	.pack-m-card{grid-template-columns: repeat(auto-fill, minmax(80vw, 1fr)) !important;}

@@ -4,17 +4,54 @@ module "list"
 {
     #include "functions.dkh"
     #include "serialize.dkh"
+    #include "dbr.dkh"
     #include "../config.dk"
     #include "../_lib/scape_special_charactes2.dk"
+    #include "batch.v12.dkl"
 
     do @context.begin(@crud_context)
 
     ref usuarios = @("&./")
     do scape_special_charactes(usuarios,"userid,username")
     
+    ref db=@("&database")
+    new p
+    {
+        @"jobgroup": @jobgroup
+        @"program": @program_importar_users
+    }
+
+    ref dtProgram = batch.return_job(db,p)
+    reset=@false
+    if isnull(dtProgram)
+    {
+        reset=@true
+        ref dtProgram=dbr.rec(db,"SELECT sys_pk,jg.sys_pk jp_ref FROM jobsgroup jg WHERE jg.sys_guid=@jobgroup OR jg.name=@jobgroup ",p)
+    }
+       
+    do batch.getConfig(db)
+
+    interval_time = @batch_interval_time
+    progress_type = @batch_progress_type
+    steps = @batch_steps
+
+    program_token = @@(dtProgram,"$sys_guid")
+    program_status = @@(dtProgram,"#status")
+    program_st_text = @@(dtProgram,"$status_text")
+
+    show_spinner = (program_status < 3)
+    show_st_text = (program_status < 3)
+
+    if reset
+    {
+        show_spinner=@false
+        show_st_text=@false
+    }
     #$
     div(class="container p-0")
     {
+        script(src="#<@JS_TUSER>"){$""}
+        link(href="#<@CSS_MAIN>" rel="stylesheet" type="text/css"){""}
         div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
         {
             div(class="col-4 d-flex align-items-center p-0")
@@ -23,6 +60,10 @@ module "list"
             }
             div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
             {
+                div(class="spinner-border text-secondary #<ifstr(show_spinner,'','d-none')>" role="status" id="spinner"){span(class="visually-hidden"){$"En ejecucion..."}}
+                input(type="file" id="file" name="file" class="d-none" accept=".csv")
+                label("for"="file" id="btn_run_program" class="btn border-secondary btn-sm induxsoft-corners btn-main-action" ){"Importar"}
+
                 a(href="#<replace(@DBEXT_ADD_EDIT_TUSER, '@id', '_new')>" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print"){$"Agregar"}
                 button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Imprimir" onclick="window.print()"){$"#<@@(@icons,'PRINTER')>"}
                 a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
@@ -104,6 +145,22 @@ module "list"
         div(id="status_bar" class="container-section")
         {
             $""
+        }
+        #$
+        script
+        {
+            $'
+            batch.url_taskman="#<replace(@BATCH_DETAIL_PROG_TASKMAN,"{taskname}",@@(p,"$program"))>";
+            batch.id_jog=#<@@(dtProgram,"#jp_ref")>;
+            batch.program_token = "#<program_token>";
+            batch.program_status = #<program_status>;
+            batch.interval_time = #<interval_time>;
+            batch.progress_type = #<progress_type>;
+            batch.steps = #<steps>;
+            batch.job = "#<@@(dtProgram,"sys_guid")>";
+            batch.iniciar_job=false;
+            batch.show_spinner=#<show_spinner>;
+            '
         }
     }
 }

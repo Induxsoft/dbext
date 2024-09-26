@@ -190,7 +190,6 @@ module "form.dk"
         script{$'
             tuser.user = #<to.json(user)>;
             tuser.url = "#<@DBEXT_ADD_EDIT_TUSER>";
-            console.log(#<to.json(user)>);
         '}
     }
 }

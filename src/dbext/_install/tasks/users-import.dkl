@@ -1,0 +1,159 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "dbr.dkh"
+    #include "batch.v12.dkl"
+    
+    // DECLARACIÓN DE FUNCIONES
+    ref lib_csv = _import_library("devkron.serialize.csv.dll")
+    do _map_function(lib_csv,"devkron.serialize.csv.csvHelper","CsvRead","CsvRead","System.String,System.String","*")
+    do _map_function(lib_csv,"devkron.serialize.csv.csvHelper","CsvWrite","CsvWrite","System.String,*System.Object","void")
+
+    do @context.begin(@batch_context)
+    
+    path_log="data"
+
+    ref db = @("&database")
+    ref @batchDB = db
+    ref params=@("&params")
+    ref job=@("&job")
+    qname=@("$qname")
+
+    path_log=path.concat(path_log,qname)
+    path_log=path.concat(path_log,"dbext")
+    token=@@(job,"$id")
+
+    ref @_LOG=text.create()
+    do text.say(@_LOG,"Inicio: "+date_str(now(),"yyyy-MM-dd hh:mm:ss") )
+    do text.say(@_LOG,"Token del trabajo: "+token)
+
+    file=@@(params,"$file")
+
+    if not(file.exists(file))
+    {
+        do batch.saveLog(token,"No existe el archivo: "+file)
+        do text.say(@_LOG,"No existe el archivo: "+file)
+    }
+    else 
+    {
+        do text.say(@_LOG,"Obteniendo datos del archivo: "+file)
+        do batch.saveLog(token,"Obteniendo datos del archivo: "+file)
+
+        ref CsvData = CsvRead(file,"")
+        count_data= @count(CsvData)
+
+        do batch.saveLog(token,"Se encontrarón "+str(count_data)+" filas")
+        do text.say(@_LOG,"Se encontrarón "+str(count_data)+" filas")
+        
+        new p{}
+
+        for i = 0; i < count_data
+        {
+            ref data=record.caseinsensitive(@item(CsvData,i))
+            new tuser
+            {
+                @"sys_guid":uuid()
+                @"sys_dtcreated*":now()
+                @"sys_timestamp*":now()
+                @"sys_recver":0
+
+                @"pwd":toupper(md5e(@@(data,"pwd"), "Unicode"))
+                @"pwdmd5":toupper(md5(@@(data,"pwd")))
+                @"userid":@@(data,"$userid")
+                @"username":@@(data,"$username")
+            }
+            
+            pk_user=dbr.num(db,"select sys_pk from tuser where userid=@userid",tuser)
+            if pk_user < 1
+            {
+                do dbr.insert(db,"tuser",tuser)
+                pk_user=dbr.num(db,"select sys_pk from tuser where userid=@userid",tuser)
+            }
+
+            grupoid=trim(@@(data,"$grupoid"))
+
+            ref lgrous=split(grupoid,":")
+            for j = 0; j < @count(lgrous)
+            {
+                idgroup=list.str(lgrous,j)
+                if trim(idgroup)!=""
+                {
+                    p<"idgroup">:idgroup
+
+                    pk_group=dbr.num(db,"select sys_pk from usergroup where groupid=@idgroup",p)
+                    if pk_group< 1
+                    {
+                        new usergroup
+                        {
+                            @"sys_guid":uuid()
+                            @"sys_dtcreated*":now()
+                            @"sys_timestamp*":now()
+                            @"sys_recver":0
+
+                            @"groupid":idgroup
+                            @"description":"Grupo "+idgroup
+                            @"notes":"Grupo creado automático"
+                        }
+                        do dbr.insert(db,"usergroup",usergroup)
+                        pk_group=dbr.num(db,"select sys_pk from usergroup where groupid=@idgroup",p)
+                    }
+
+                    if pk_group > 0 && pk_user > 0
+                    {
+                        using p
+                        {
+                            @"groups":pk_group
+                            @"users":pk_user
+                        }
+                        pk_user_group=dbr.num(db,"select sys_pk from user_usergroup_ where groups=@groups and users=@users",p)
+
+                        if pk_user_group < 1
+                        {
+                            new user_usergroup_
+                            {
+                                @"sys_guid":uuid()
+                                @"sys_dtcreated*":now()
+                                @"sys_timestamp*":now()
+                                @"sys_recver":0
+
+                                @"groups":pk_group
+                                @"users":pk_user
+                            }
+                            do dbr.insert(db,"user_usergroup_",user_usergroup_)
+                        }
+                    }
+                }
+            }
+            do text.say(@_LOG,"Insertado -> Fila: "+str(i+1)+" User: "+@@(tuser,"$userid"))
+
+            exception
+            {
+                do text.say(@_LOG,last_error())
+            }
+        }
+    }
+
+    do dir.ensure(path_log)
+
+    name_log="log_users.log"
+    log=path.concat(path_log,name_log)
+
+    do file.wtext(log,text.get(@_LOG))
+
+    do text.say(@_LOG,"Log creado : "+name_log)
+    do batch.saveLog(token,"Log creado : "+name_log)
+
+    exception
+    {
+        error=last_error()
+        if isset("p")
+        {
+            do batch.saveLog(token,error)
+            do dbr.execute(db,"update job set jstatus=@status_con_error where sys_guid=@token",p)
+        }
+        do rise_error(500,error)
+    }
+}
