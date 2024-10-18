@@ -59,7 +59,7 @@ module "Extensiones DBR para gestión de permisos:dbr.security"
 		ref usergroup = dbr.rec(db,"SELECT * FROM usergroup WHERE groupid = @groupid",params)
 
 		if admins_groupid == "" || isnull(usergroup) {
-			sql_admins_groupid = "SELECT groupid FROM usergroup WHERE (groupid='Administradores' OR groupid='Administrators' OR groupid='Admins')"
+			sql_admins_groupid = "SELECT groupid FROM usergroup WHERE groupid LIKE 'admin%' LIMIT 1;"
 			admins_groupid = dbr.str(db,sql_admins_groupid,@null)
 		}
 
