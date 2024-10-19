@@ -4,16 +4,22 @@ module ":dbr.control"
 {
     function GenerateHtml(&db,&definition)
     {
-        go foreach.fobj(key:ctrlName, value:ctrlDef) with(definition)
+        go foreach.fobj(key:ctrlKey, value:ctrlDef) with(definition)
         {
             control = tolower(trim(@@(ctrlDef,"$control")))
+            name = @@(ctrlDef,"$name")
+            id = @@(ctrlDef,"$id")
             caption = trim(@@(ctrlDef,"$caption"))
+            
+            if name == "" { name = ctrlKey }
+            // if id == "" { id = ctrlKey }
             if caption == ""
             {
-                caption = ranychars(tolower(trim(ctrlName)), "-_.:;/\\", " ")
+                caption = ranychars(tolower(trim(name)), "-_.:;/\\", " ")
                 first_character = toupper(lremove(caption,1))
                 caption = first_character + left(caption,1)
             }
+            
             is_required = parse.bool(trim(@@(ctrlDef,"$required")))
             is_readonly = parse.bool(trim(@@(ctrlDef,"$readonly")))
             is_disabled = parse.bool(trim(@@(ctrlDef,"$disabled")))
@@ -33,111 +39,153 @@ module ":dbr.control"
             }
             wrap_attr = trim(wrap_attr)
 
-            enable=trim(@@(ctrlDef,"$disabled"))
-            if enable==""{enable="true"}
-            enable_controls=parse.bool(enable)
-
             switch control
             {
                 case "date"
                 {
+                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="date" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="date" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                 }
                 case "time"
                 {
+                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="time" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="time" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                 }
                 case "datetime"
                 {
+                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="datetime-local" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="datetime-local" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                 }
                 case "hexcolor"
                 {
+                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                        input(class="form-control form-control-color rounded-0" type="color" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control form-control-color rounded-0" type="color" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break
                 }
                 case "textarea"
                 {
+                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                        textarea(class="form-control rounded-0" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"=""){$""}
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        textarea(class="form-control rounded-0" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"=""){$""}
                     }
                     #!
                     break
                 }
                 case "number"
                 {
+                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="number" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
+                    #!
+                    break
+                }
+                case "integer"
+                {
+                    if id == "" { id = "txt_"+ctrlKey }
+                    #$
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" step="1" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
+                    #!
+                    break
+                }
+                case "decimal"
+                {
+                    decimals = @@(ctrlDef,"#decimals")
+                    num_step = "1"
+                    
+                    if id == "" { id = "txt_"+ctrlKey }
+                    if decimals > 0 { num_step = "0."+padright("",(decimals-1),"0")+"1" }
+
+                    #$
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" step="#<num_step>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break
                 }
                 case "file"
                 {
+                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="file" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="file" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                    }
+                    #!
+                    break
+                }
+                case "bool"
+                {
+                    if id == "" { id = "chk_"+ctrlKey }
+                    #$
+                    div("#<wrap_attr>"="")
+                    {
+                        input(class="form-check-input" type="checkbox" name="#<name>" id="#<id>" "#<checked>"="")
+                        label(class="form-check-label" "for"="#<id>"){$"#<caption>"}
                     }
                     #!
                     break
                 }
                 case "select"
                 {
-                    _type = @@(ctrlDef,"$source/type")
-                    _query = @@(ctrlDef,"$source/query")
-                    _showfield = @@(ctrlDef,"$source/showfield")
-                    _keyfield = @@(ctrlDef,"$source/keyfield")
-                    ref _values = ifnull(@@(ctrlDef,"&source/values"),list.create())
+                    type = @@(ctrlDef,"$source/type") //[list, query]
+                    query = @@(ctrlDef,"$source/query")
+                    showfield = @@(ctrlDef,"$source/showfield")
+                    keyfield = @@(ctrlDef,"$source/keyfield")
+                    ref values = ifnull(@@(ctrlDef,"&source/values"),list.create())
 
-                    if _type == "query"
-                    {
-                        ref _values = dbr.list(db, _query, @null)
-                    }
+                    if id == "" { id = "sel_"+ctrlKey }
+                    if type == "query" { ref values:dbr.list(db,query,@null) }
 
                     new select_def
                     {
-                        @"datatable*": _values
-                        @"id": "sel_" + ctrlName
+                        @"datatable*": values
+                        @"id": id
                         new member "attributes"
                         {
-                            @"name": ctrlName
+                            @"name": name
                             @"class": "form-select rounded-0"
                         }
                         @"attr_options*": ifnull(@@(ctrlDef,"&opt_attr"),record.create())
-                        @"value_field": _keyfield
-                        @"text_field": _showfield
+                        @"value_field": keyfield
+                        @"text_field": showfield
                     }
 
                     if is_required { select_def<"attributes/required"> : "true" }
@@ -147,20 +195,54 @@ module ":dbr.control"
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="sel_#<ctrlName>"){$"#<caption>"}
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
                         #!
                         do uie.dbSelect(select_def)
                         #!
                     }
                     break
                 }
-                default
+                case "input-key"
                 {
+                    type = @@(ctrlDef,"$source/type") //[list, query, service]
+                    query = @@(ctrlDef,"$source/query")
+                    source = @@(ctrlDef,"$source/source")
+                    keyfield = @@(ctrlDef,"$source/keyfield")
+                    showfield = @@(ctrlDef,"$source/showfield")
+                    searchfield = @@(ctrlDef,"$source/searchfield")
+                    columns = @@(ctrlDef,"$source/columns")
+                    ccaptions = @@(ctrlDef,"$source/ccaptions")
+                    ref values = ifnull(@@(ctrlDef,"&source/values"),list.create())
+
+                    small_style = "
+                    #input_search_container, #input_description_container,
+                    #button_search_container, #button_clear_container {
+                        height: calc(1.5em + .5rem + 2px) !important;
+                        padding: .25rem .5rem !important;
+                        font-size: .875rem !important;
+                    }
+                    "
+
+                    if id == "" { id = "ik_"+ctrlKey }
+                    if type == "query" { ref values:dbr.list(db,query,@null) }
+                    
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="txt_#<ctrlName>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="text" name="#<ctrlName>" id="txt_#<ctrlName>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        "input-key"(name="#<name>" id="#<id>" "data-key"="#<keyfield>" "data-search"="#<searchfield>" "data-text"="#<showfield>" "data-source"="#<source>" columns="#<columns>" colcaptions="#<ccaptions>" "#<ifstr(type!='service','data-source-array','')>"="#<to.json(values)>" required="#<ifstr(is_required,'true','false')>"){$""} //"control-styles"="#<small_style>"
+                    }
+                    #!
+                    break
+                }
+                default
+                {
+                    if id == "" { id = "txt_"+ctrlKey }
+                    #$
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-control rounded-0" type="text" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break
