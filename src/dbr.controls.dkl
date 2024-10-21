@@ -12,7 +12,7 @@ module ":dbr.control"
             caption = trim(@@(ctrlDef,"$caption"))
             
             if name == "" { name = ctrlKey }
-            // if id == "" { id = ctrlKey }
+            if id == "" { id = ctrlKey }
             if caption == ""
             {
                 caption = ranychars(tolower(trim(name)), "-_.:;/\\", " ")
@@ -43,7 +43,6 @@ module ":dbr.control"
             {
                 case "date"
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -54,7 +53,6 @@ module ":dbr.control"
                 }
                 case "time"
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -65,7 +63,6 @@ module ":dbr.control"
                 }
                 case "datetime"
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -76,7 +73,6 @@ module ":dbr.control"
                 }
                 case "hexcolor"
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -88,7 +84,6 @@ module ":dbr.control"
                 }
                 case "textarea"
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -100,7 +95,6 @@ module ":dbr.control"
                 }
                 case "number"
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -112,7 +106,6 @@ module ":dbr.control"
                 }
                 case "integer"
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -127,7 +120,6 @@ module ":dbr.control"
                     decimals = @@(ctrlDef,"#decimals")
                     num_step = "1"
                     
-                    if id == "" { id = "txt_"+ctrlKey }
                     if decimals > 0 { num_step = "0."+padright("",(decimals-1),"0")+"1" }
 
                     #$
@@ -141,7 +133,6 @@ module ":dbr.control"
                 }
                 case "file"
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -153,7 +144,6 @@ module ":dbr.control"
                 }
                 case "bool"
                 {
-                    if id == "" { id = "chk_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -171,7 +161,6 @@ module ":dbr.control"
                     keyfield = @@(ctrlDef,"$source/keyfield")
                     ref values = ifnull(@@(ctrlDef,"&source/values"),list.create())
 
-                    if id == "" { id = "sel_"+ctrlKey }
                     if type == "query" { ref values:dbr.list(db,query,@null) }
 
                     new select_def
@@ -223,7 +212,6 @@ module ":dbr.control"
                     }
                     "
 
-                    if id == "" { id = "ik_"+ctrlKey }
                     if type == "query" { ref values:dbr.list(db,query,@null) }
                     
                     #$
@@ -237,7 +225,6 @@ module ":dbr.control"
                 }
                 default
                 {
-                    if id == "" { id = "txt_"+ctrlKey }
                     #$
                     div("#<wrap_attr>"="")
                     {
