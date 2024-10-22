@@ -38,7 +38,8 @@ var tuser =
             success => { 
                 main.clearValues('mdl_cpwd_controls');
                 main.closeModal('modal_change_pwd');
-                this.changeSysRecver(success);
+                window.location.reload();
+                // this.changeSysRecver(success);
             },
             failure => { alert('No fue posible cambiar la contraseña\n' + JSON.stringify(failure)) },
             'PUT', false

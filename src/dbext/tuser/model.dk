@@ -31,6 +31,7 @@ module "model"
 
         // do dbr.begin(db)
 
+        do dbr.execute(db,"update tuser set sys_recver = ifnull(sys_recver,0) where sys_pk=@sys_pk",data)
         ref res = record.caseinsensitive(entity.create(db,params,data))
         if not(isnull(groups)) && list.count(groups) > 0 { do tuser_add_to_groups(db, groups, @@(res,"#sys_pk")) }
         
