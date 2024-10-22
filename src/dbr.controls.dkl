@@ -2,9 +2,15 @@
 #!
 module ":dbr.control"
 {
-    function GenerateHtml(&db,&definition)
+    function GenerateHtml(&db,&controls)
     {
-        go foreach.fobj(key:ctrlKey, value:ctrlDef) with(definition)
+        ref parameters = record.create()
+
+        if isset("@control_params"){ ref parameters:@control_params }
+        else if isset("@crud_context"){ ref parameters:@("&parameters") }
+        else if isset("@http_context"){ ref parameters:@@(@http_context,"&request/get") }
+        
+        go foreach.fobj(key:ctrlKey, value:ctrlDef) with(controls)
         {
             control = tolower(trim(@@(ctrlDef,"$control")))
             name = @@(ctrlDef,"$name")
@@ -13,6 +19,7 @@ module ":dbr.control"
             
             if name == "" { name = ctrlKey }
             if id == "" { id = ctrlKey }
+            value = @@(parameters,name)
             if caption == ""
             {
                 caption = ranychars(tolower(trim(name)), "-_.:;/\\", " ")
@@ -47,7 +54,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="date" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control rounded-0" type="date" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                 }
@@ -57,7 +64,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="time" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control rounded-0" type="time" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                 }
@@ -67,7 +74,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="datetime-local" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control rounded-0" type="datetime-local" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                 }
@@ -77,7 +84,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control form-control-color rounded-0" type="color" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control form-control-color rounded-0" type="color" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break
@@ -88,7 +95,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        textarea(class="form-control rounded-0" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"=""){$""}
+                        textarea(class="form-control rounded-0" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"=""){$""}
                     }
                     #!
                     break
@@ -99,7 +106,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break
@@ -110,7 +117,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" step="1" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" value="#<value>" step="1" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break
@@ -126,7 +133,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" step="#<num_step>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" value="#<value>" step="#<num_step>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break
@@ -144,6 +151,7 @@ module ":dbr.control"
                 }
                 case "bool"
                 {
+                    checked = ifstr(parse.bool(value), "checked", "")
                     #$
                     div("#<wrap_attr>"="")
                     {
@@ -157,8 +165,6 @@ module ":dbr.control"
                 {
                     type = @@(ctrlDef,"$source/type") //[list, query]
                     query = @@(ctrlDef,"$source/query")
-                    showfield = @@(ctrlDef,"$source/showfield")
-                    keyfield = @@(ctrlDef,"$source/keyfield")
                     ref values = ifnull(@@(ctrlDef,"&source/values"),list.create())
 
                     if type == "query" { ref values:dbr.list(db,query,@null) }
@@ -173,8 +179,11 @@ module ":dbr.control"
                             @"class": "form-select rounded-0"
                         }
                         @"attr_options*": ifnull(@@(ctrlDef,"&opt_attr"),record.create())
-                        @"value_field": keyfield
-                        @"text_field": showfield
+                        @"value_field": @@(ctrlDef,"$source/keyfield")
+                        @"text_field": @@(ctrlDef,"$source/showfield")
+                        @"first_value": @@(ctrlDef,"$source/first_value")
+                        @"first_text": @@(ctrlDef,"$source/first_text")
+                        @"selected": value
                     }
 
                     if is_required { select_def<"attributes/required"> : "true" }
@@ -229,7 +238,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="text" name="#<name>" id="#<id>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control rounded-0" type="text" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break

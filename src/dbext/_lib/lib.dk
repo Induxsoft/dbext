@@ -43,4 +43,15 @@ module
 
         return meth+"://"+host+":"+port+prms
     }
+
+    function ifempty(s,d)
+    {
+        if trim(str(s)) == "" { return str(d) }
+        return str(s)
+    }
+
+    function isempty(s)
+    {
+        return trim(str(s)) == ""
+    }
 }

@@ -133,7 +133,7 @@ model "Variables globales"
         @"vardefault" string(255) 
         @"varname" string(32) unique required
         @"varvalue" string(32000) 
-        @"fuser"  ref:"tuser" required
+        @"fuser" ref:"tuser" required
     }
     //#endregion
 
@@ -143,7 +143,7 @@ model "Variables globales"
         @"id" string(32) key
         @"caption" string(150) required
         @"help" memo
-        @"parent" ref: "varcategory"
+        @"parent" ref:"varcategory"
     }
     // Variables globales
     entity "globalvar"
@@ -168,7 +168,7 @@ model "Variables globales"
         @"varhelp" memo         // Ayuda o información adicional
         @"vartype" string(15)   // Tipo de dato: string,integer,decimal,bool,date,datetime,time
         @"varinput" memo        // Json con especificaciones al tipo de control de entrada: null or 'default', color, select,inputkey,dkl,json,textarea
-        @"ref_varcat" ref: "varcategory" // Categoría de variable
+        @"ref_varcat" ref:"varcategory" // Categoría de variable
         @"userenable" bool // Si es true, la variable puede establecerse por usuario
     }
     // Variables del usuario
@@ -195,15 +195,6 @@ model "Variables globales"
             field "varname"
             field "userid"
         }
-    }
-
-    // Catálogo de monedas o divisas
-    entity "divisa" : "TableModel"
-    {
-        @"codigo" string(5) unique required
-        @"descripcion" string(30) unique required
-        @"tcambio" decimal(18,8)
-        @"decimales" int
     }
     // Administración de series de documentos
     entity "blockdocumentos" : "TableModel"
@@ -234,7 +225,14 @@ model "Variables globales"
             field "block"
         }
     }
-
+    // Catálogo de monedas o divisas
+    entity "divisa" : "TableModel"
+    {
+        @"codigo" string(5) unique required
+        @"descripcion" string(30) unique required
+        @"tcambio" decimal(18,8)
+        @"decimales" int
+    }
     entity "idioma" : "TableModel"
     {
         @"nombre" string(50) required   
@@ -260,14 +258,14 @@ model "Variables globales"
     {
         @"codigo" string(8) unique required
         @"nombre" string(50) required
-        @"ipais" int ref:"pais" ["sys_pk"] required
+        @"ipais" ref:"pais" required
     }
     entity "ciudad" : "TableModel"
     {
         @"codigo" string(8) unique required
         @"codigotel" string(5)
         @"nombre" string(100) required
-        @"estado" int ref:"edoprov" ["sys_pk"] required
+        @"estado" ref:"edoprov" required
     }
     entity "domicilio" : "TableModel"
     {
@@ -276,7 +274,7 @@ model "Variables globales"
         @"direccion" string(1024)
         @"notas" string(150)
         @"telefonos" string(150)
-        @"iciudad" int ref:"ciudad" ["sys_pk"]
+        @"iciudad" ref:"ciudad"
         @"numint" string(1024)
         @"numext" string(1024)
     }
@@ -292,14 +290,14 @@ model "Variables globales"
     entity "snd_provider" : "TableModel"
     {
         @"name" string(32) unique required
-        @"tpy" ref: "snd_provider_tpy" required
+        @"tpy" ref:"snd_provider_tpy" required
         @"entry_point" string(256)  // URL relativa de acceso a los controles del proveedor
         @"lib" string(256) required // Ruta hacia la biblioteca que implementa las funciones de la interfaz
     }
 
     entity "snd_channel" : "TableModel"
     {
-        @"prov" ref: "snd_provider" required
+        @"prov" ref:"snd_provider" required
         @"name" string(32) unique required
         @"config" mmemo
     }
@@ -329,6 +327,24 @@ model "Variables globales"
             field "ref_det_usr"
             field "itemid"
         }
+    }
+
+    entity "dba_query_cat":"TableModel"
+    {
+        @"id" string(25) unique required
+        @"title" string(100) required
+    }
+    
+    entity "dba_query":"TableModel"
+    {
+        @"actid" string(25) unique required
+        @"id" string(25) unique required
+        @"title" string(255) required
+        @"parameters" memo
+        @"properties" memo
+        @"qry" mmemo
+        @"design" memo
+        @"cat" ref:"dba_query_cat" required
     }
 
     //#region sys_*
@@ -432,7 +448,7 @@ model "Variables globales"
     entity "sys_group_app_shortcut"
     {
         @"shortcut" ref:"sys_app_shortcut" required
-        @"usergroup" ref: "usergroup" required
+        @"usergroup" ref:"usergroup" required
 
         index "sys_group_app_shortcut_idx1" unique
         {
@@ -452,9 +468,9 @@ model "Variables globales"
         @"id" string(32) unique required
         @"text" string(50) required
         @"view" lmemo required //Código Dkl de la vista estática para este tipo de entidades
-        @"usergroup" ref: "usergroup" required
+        @"usergroup" ref:"usergroup" required
         @"min_users" int required // Valor mínimo admitido=1, indica la cantidad de usuarios diferentes del grupo que deben autorizar
-        @"masteruser" ref: "tuser" // Usuario maestro, puede conceder la autorización sin pertenecer al grupo o  sin reunir la cantidad
+        @"masteruser" ref:"tuser" // Usuario maestro, puede conceder la autorización sin pertenecer al grupo o  sin reunir la cantidad
         @"autologin" bool //Si es true, se crea una nueva sesión para el usuario solicitante si cuando se realiza la autorización no tiene una sesión activa
     }
     // Bitácora de autorizaciones
@@ -469,7 +485,7 @@ model "Variables globales"
         @"note" memo
         @"authorized" bool
         @"rejected" bool //rechazada
-        @"rejby" ref: "tuser" //user rechazo
+        @"rejby" ref:"tuser" //user rechazo
         @"redir" string(1024)
         @"cancel" bool
         @"error" bool

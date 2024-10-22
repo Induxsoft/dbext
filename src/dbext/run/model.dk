@@ -1,0 +1,43 @@
+#include "dkli.dkh"
+#!
+module "Ejecutar consultas a través del método POST"
+{
+    function Run(&db,&params,&data)
+    {
+        new response { @"success": @true }
+        do dbr.apps.action.grant("XBF0")
+
+        sql = trim(@@(data,"$sql"))
+        ref result = dbr.list(db,sql,params)
+        ref first = record.create()
+        if list.count(result) > 0 { ref first:list.obj(result,0) }
+        ref columns = list.create_from_fields(first)
+        using response
+        {
+            @"success": @true
+            @"columns*": columns
+            @"data*": result
+        }
+
+        exception
+        {
+            do errordet(@false)
+            code = last_error_code()
+            error = last_error()
+
+            if isset("@@_action_context") { do dbr.apps.action.log() }
+            do clear_exceptions()
+            // do rise_error(code,error)
+
+            using response
+            {
+                @"success": @false
+                @"message": error
+            }
+        }
+
+        return response
+    }
+
+    point @create to Run
+}

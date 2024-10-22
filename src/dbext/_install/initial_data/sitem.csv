@@ -61,3 +61,8 @@ XB70,Grupos de usuarios,dbext.usergroup
 XB71,Agregar grupo de usuarios,dbext.usergroup
 XB72,Editar grupo de usuarios,dbext.usergroup
 XB73,Eliminar grupo de usuarios,dbext.usergroup
+dbext.run,Run,dbext
+XBF0,"Ejecutar consultas a través del método POST",dbext.run
+dbext.query,Query,dbext
+XB120,Galería de consultas,dbext.query
+XB121,Ejecutar consulta,dbext.query

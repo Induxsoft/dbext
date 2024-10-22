@@ -10,3 +10,4 @@
 "XB90","Privilegios sobre entidades","/$/dbext/img/icons/detusr-96x96.png","/!/dbext/detusr/","0","dbext.detusr","00A0"
 "XB100","Divisas","/$/dbext/img/icons/divisa-96x96.png","/!/dbext/divisa/","0","dbext.divisa","0090"
 "XB110","Países","/$/dbext/img/icons/pais-96x96.png","/!/dbext/pais/","0","dbext.pais","0090"
+"XB120","Galería de consultas","/$/dbext/img/icons/query-96x96.png","/!/dbext/query/","0","dbext.query","0080"

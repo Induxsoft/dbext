@@ -1,0 +1,120 @@
+#include "dkli.dkh"
+#!
+module "Galería de consultas:query"
+{
+    @table_name = "dba_query"
+    @keyfield = "sys_pk"
+
+    @read_query = "
+    SELECT
+        sys_pk,
+        sys_recver,
+        actid,
+        id,
+        title,
+        IFNULL(qry,'') qry,
+        IFNULL(parameters,'') ctrls,
+        IFNULL(design,'') design
+    FROM #<@table_name>
+    WHERE #<@keyfield> = @_entity_id
+    "
+
+    prepareDefaultReportData::&db,&data
+    {
+        using data
+        {
+            member @"titles"
+            {
+                @"title": dbr.vars.getd(db,"FXCA108","")
+                @"subtitle": dbr.vars.getd(db,"FXCA109","")
+                @"subtitle_2": dbr.vars.getd(db,"FXCA110","")
+                @"footer": dbr.vars.getd(db,"FXCA111","")
+            }
+        }
+    }
+
+    function list(&db,&params)
+    {
+        namespace "query"
+
+        do dbr.apps.action.grant("XB120")
+
+        sql = "SELECT sys_pk, CONCAT(id,' - ',title) AS descripcion FROM dba_query_cat WHERE NOT IFNULL(sys_deleted,0) ORDER BY id;"
+        ref categories = dbr.list(db,sql,@null)
+        
+        if not(field.exist(params,"fil_cat")) {
+            ref first_cat = record.create()
+            if list.count(categories) > 0 { ref first_cat:list.obj(categories,0) }
+            params<"fil_cat"> : @@(first_cat,"#sys_pk")
+        }
+
+        sql = "SELECT sys_pk, id, title FROM dba_query WHERE NOT IFNULL(sys_deleted,0) AND cat = @fil_cat"
+        if trim(@@(params,"$fil_text")) != "" { sql = sql + " AND (id = @fil_text OR title LIKE CONCAT('%',@fil_text,'%'))" }
+        sql = sql + " ORDER BY id;"
+        ref queries = dbr.list(db,sql,params)
+
+        new resp
+        {
+            @"categories*": categories
+            @"queries*": queries
+        }
+        do prepareDefaultReportData(db,resp)
+        return resp
+
+        exception{ do catch(db,params) }
+    }
+
+    function read(&db,&params)
+    {
+        namespace "query"
+
+        ref entity = entity.read(db,params)
+        do dbr.apps.action.grant(@@(entity,"$actid"))
+
+        json_ctrls = ifempty(@@(entity,"$ctrls"),"{}")
+        ref controls = from.json(json_ctrls)
+
+        json_design = ifempty(@@(entity,"$design"),"{}")
+        ref design = from.json(json_design)
+
+        ref data = list.create()
+        sql = trim(@@(entity,"$qry"))
+        if sql != ""
+        {
+            go foreach.fobj(key:key, value:def) with(controls)
+            {
+                ctrl_name = ifempty(@@(def,"$name"),key)
+                if not(field.exist(params,ctrl_name)) { params<ctrl_name> : @@(def,"default") }
+            }
+            
+            ref data:dbr.list(db,sql,params)
+        }
+        design<"datatable*"> : data
+
+        new resp
+        {
+            @"title": @@(entity,"$title")
+            @"controls*": controls
+            @"design*": design
+            // @"data*": data
+        }
+        do prepareDefaultReportData(db,resp)
+        return resp
+
+        exception{ do catch(db,params) }
+    }
+
+    catch::&db,&params
+    {
+        do errordet(@false)
+        code = last_error_code()
+        error = last_error()
+
+        if isset("@@_action_context") { do dbr.apps.action.log() }
+        do clear_exceptions()
+        do rise_error(code,error)
+    }
+
+    point @list to query.list
+    point @read to query.read
+}

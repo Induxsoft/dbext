@@ -8,6 +8,7 @@ module "Controller configs"
 	#include "dbr.apps.dkl"
 	#include "dbr.events.dkl"
 	#include "dbr.security.dkl"
+	#include "dbr.vars.dkl"
 	#include "crudl/crudl.dk"
 	#include "./config.dk"
 	#include "_lib/lib.dk"
@@ -38,6 +39,8 @@ module "Controller configs"
 	do crudl.routes.entity("/pais/","pais")
 	do crudl.routes.entity("/edoprov/","edoprov")
 	do crudl.routes.entity("/ciudad/","ciudad")
+	do crudl.routes.entity("/run/","run")
+	do crudl.routes.entity("/query/","query")
 
 	@dbmvc_path="crudl/"
 	
