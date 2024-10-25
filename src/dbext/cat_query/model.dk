@@ -1,0 +1,37 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    @table_name="dba_query_cat"
+    list::&db,&params
+    {
+       ref entity= entity.list(db,params)
+       if parse.bool(@@(params,"$datail_query"))
+       {
+            for i = 0; i < @count(entity)
+            {
+                ref detail=@item(entity,i)
+                detail<"queries*">:dbr.list(db,"select sys_pk,actid,id,title,parameters,properties,qry,design from dba_query where cat=@sys_pk",detail)
+            }
+       }
+       return entity
+    }
+    delete::&db,&params
+    {
+       if parse.bool(@@(params,"del_query"))
+       {
+            res=dbr.execute(db,"delete from dba_query where sys_pk=@_entity_id",params)
+       }
+       else 
+       {
+           do dbr.execute(db,"delete from dba_query where cat=@_entity_id",params)
+            res=dbr.execute(db,"delete from dba_query_cat where sys_pk=@_entity_id",params)
+       }
+       if not(res){do rise_error(500,"No se logrró eliminar el elemento seleccionado")}
+
+       return record.create()
+    }
+    
+    point @delete to delete
+    point @list to list
+}

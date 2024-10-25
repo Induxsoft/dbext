@@ -37,7 +37,7 @@ module "Galería de consultas:query"
     {
         namespace "query"
 
-        do dbr.apps.action.grant("XB120")
+        do dbr.apps.action.grant("XB140")
 
         sql = "SELECT sys_pk, CONCAT(id,' - ',title) AS descripcion FROM dba_query_cat WHERE NOT IFNULL(sys_deleted,0) ORDER BY id;"
         ref categories = dbr.list(db,sql,@null)
@@ -103,7 +103,27 @@ module "Galería de consultas:query"
 
         exception{ do catch(db,params) }
     }
-
+    create::&db,&params,&data
+    {
+        ref ndata=record.copy(data,"actid,id,title,qry")
+        if @@(data,"#categoria") > 0
+        {
+            ndata<"cat">:@@(data,"#categoria")
+        }
+        if not(isnull(@@(data,"&parameters")))
+        {
+            ndata<"parameters">:to.json(@@(data,"&parameters"))
+        }
+        if not(isnull(@@(data,"&design")))
+        {
+            ndata<"design">:to.json(@@(data,"&design"))
+        }
+        
+        ref entity= entity.create(db,params,ndata)
+        return entity
+    }
+    
+    
     catch::&db,&params
     {
         do errordet(@false)
@@ -114,7 +134,7 @@ module "Galería de consultas:query"
         do clear_exceptions()
         do rise_error(code,error)
     }
-
+    point @create to query.create
     point @list to query.list
     point @read to query.read
 }
