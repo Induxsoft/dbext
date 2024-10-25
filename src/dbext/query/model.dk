@@ -2,6 +2,8 @@
 #!
 module "Galería de consultas:query"
 {
+    #include "dbr.security.dkl"
+
     @table_name = "dba_query"
     @keyfield = "sys_pk"
 
@@ -103,9 +105,29 @@ module "Galería de consultas:query"
 
         exception{ do catch(db,params) }
     }
+    createSitem::&db,&ndata
+    {
+        ref lsitem=list.create()
+        new sitem
+        {
+            @"itemid":@@(ndata,"$actid")
+            @"description":@@(ndata,"$title")
+            @"itemparent":"dbext.query"
+        }
+        do list.add(lsitem,sitem)
+        do dbr.vars.ImportPrivs(db,lsitem)
+
+        ref permissions= list.create()
+        do list.add(permissions,@@(ndata,"$actid"))
+        admins_groupid = dbr.security.admins(db)
+        do dbr.security.assign(db,admins_groupid,permissions)
+    }
     create::&db,&params,&data
     {
         ref ndata=record.copy(data,"actid,id,title,qry")
+
+        do createSitem(db,ndata)
+
         if @@(data,"#categoria") > 0
         {
             ndata<"cat">:@@(data,"#categoria")
