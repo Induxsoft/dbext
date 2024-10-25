@@ -86,7 +86,16 @@ module "Galería de consultas:query"
             go foreach.fobj(key:key, value:def) with(controls)
             {
                 ctrl_name = ifempty(@@(def,"$name"),key)
-                if not(field.exist(params,ctrl_name)) { params<ctrl_name> : @@(def,"default") }
+                if not(field.exist(params,ctrl_name))
+                {
+                    // 1 - $ | 2 - # | 3 - * | 0 - not exist
+                    switch field.typeof(def,"default")
+                    {
+                        case 1 { params<ctrl_name> : @@(def,"$default") }
+                        case 2 { params<ctrl_name> : @@(def,"#default") }
+                        case 3 { params<ctrl_name+"*"> : @@(def,"&default") }
+                    }
+                }
             }
             
             ref data:dbr.list(db,sql,params)
@@ -105,6 +114,7 @@ module "Galería de consultas:query"
 
         exception{ do catch(db,params) }
     }
+
     createSitem::&db,&ndata
     {
         ref lsitem=list.create()
@@ -122,7 +132,7 @@ module "Galería de consultas:query"
         admins_groupid = dbr.security.admins(db)
         do dbr.security.assign(db,admins_groupid,permissions)
     }
-    create::&db,&params,&data
+    Getdata::&db,&data
     {
         ref ndata=record.copy(data,"actid,id,title,qry")
 
@@ -140,12 +150,21 @@ module "Galería de consultas:query"
         {
             ndata<"design">:to.json(@@(data,"&design"))
         }
-        
+        return ndata
+    }
+    create::&db,&params,&data
+    {
+        ref ndata=query.Getdata(db,data)
         ref entity= entity.create(db,params,ndata)
         return entity
     }
-    
-    
+    update::&db,&params,&data
+    {
+        @keyfield="id"
+        ref ndata=query.Getdata(db,data)
+        do dbr.update(db,@table_name,ndata,"id=@_entity_id",params)
+        return ndata
+    }
     catch::&db,&params
     {
         do errordet(@false)
@@ -156,7 +175,9 @@ module "Galería de consultas:query"
         do clear_exceptions()
         do rise_error(code,error)
     }
+    
     point @create to query.create
     point @list to query.list
     point @read to query.read
+    point @update to query.update
 }
