@@ -5,6 +5,8 @@ module ""
     #include "functions.dkh"
     #include "serialize.dkh"
     #include "dbr.dkh"
+    #include "dbr.apps.dkl"
+    #include "dbr.security.dkl"
     #include "batch.v12.dkl"
     
     // DECLARACIÓN DE FUNCIONES
@@ -25,6 +27,30 @@ module ""
     path_log=path.concat(path_log,qname)
     path_log=path.concat(path_log,"dbext")
     token=@@(job,"$id")
+
+    UserIDS = dbr.str(db,"SELECT ss.sys_guid FROM job jb INNER JOIN tuser tu ON tu.userid = jb.sys_user INNER JOIN sys_session ss ON ss.iuser = tu.sys_pk WHERE jb.sys_guid = @token AND NOT IFNULL(ss.sys_deleted,0) LIMIT 1;",job)
+    if UserIDS != "" { ref db:dbr.reconnect(qname,UserIDS) }
+
+    // Emular estructura @http_context necesaria para validar la acción
+    new @http_context
+    {
+        member "request"
+        {
+            @"get*": params
+            @"post*": record.create()
+            @"post_string": "{}"
+        }
+        member "session"
+        {
+            member "idp"
+            {
+                @"name": "db_idp_v12"
+                @"qname": qname
+                @"database*": db
+            }
+        }
+    }
+    do dbr.apps.action.grant("XB61")
 
     ref @_LOG=text.create()
     do text.say(@_LOG,"Inicio: "+date_str(now(),"yyyy-MM-dd hh:mm:ss") )
