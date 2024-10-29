@@ -1,0 +1,94 @@
+#include "dkli.dkh"
+#!
+module ":User"
+{
+    @table_name = "tuser"
+    @keyfield = "sys_pk"
+
+    @get_sys_pk = "SELECT IFNULL(sys_pk,0) FROM #<@table_name> WHERE (sys_pk=@_entity_id OR sys_guid=@_entity_id OR userid=@_entity_id)"
+    @read_query = "
+    SELECT
+        sys_pk,
+        sys_recver,
+        userid,
+        username
+    FROM #<@table_name>
+    WHERE (sys_pk=@_entity_id OR sys_guid=@_entity_id OR userid=@_entity_id)
+    "
+
+    NotImplemented1::&db,&params
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+    NotImplemented2::&db,&params,&data
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+
+    function validateSession(&db,_entity_id)
+    {
+        ids = @@(@http_context,"$session/user/ids")
+        ids, _entity_id >> params
+
+        iuser = dbr.num(db,"select ifnull(iuser,0) from sys_session where sys_guid = @ids and not ifnull(sys_deleted,0)",params)
+        if iuser < 1 { do rise_error(590,"Sesión inválida.") }
+
+        if dbr.num(db,ftext(@get_sys_pk),params) != iuser { do rise_error(590,"El recurso al que intenta acceder no pertenece a la sessión actual.") }
+
+        return iuser
+    }
+
+    function read(&db,&params)
+    {
+        do validateSession(db,@@(params,"$_entity_id"))
+
+        if not(isset("@just_read_entity")) { @just_read_entity = @false }
+        if @just_read_entity { return entity.read(db,params) }
+
+        new data
+        {
+            @"entity*": entity.read(db,params)
+        }
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function update(&db,&params,&data)
+    {
+        @just_read_entity = @true
+        
+        _entity_id = @@(params,"$_entity_id")
+        pk_user = validateSession(db,_entity_id)
+
+        if field.exist(data,"pwd")
+        {
+            data<"pwd"> : toupper(md5e(@@(data,"$pwd"), "Unicode"))
+            data<"pwdmd5"> : toupper(md5(@@(data,"$pwd")))
+        }
+
+        params<"_entity_id"> : str(pk_user)
+        new response
+        {
+            @"entity*": entity.update(db,params,data)
+            @"url_redir": url_dcode(@@(params,"$---from_url_e"))
+        }
+        params<"_entity_id"> : _entity_id
+        return response
+
+        exception{ do catch(db,params,data) }
+    }
+
+    catch::&db,&params,&data
+    {
+        do errordet(@false)
+        code = last_error_code()
+        error = last_error()
+
+        if dbr.in_transaction(db){ do dbr.rollback(db) }
+        if isset("@@_action_context"){ do dbr.apps.action.log() }
+
+        do clear_exceptions()
+        do rise_error(code,error)
+    }
+}

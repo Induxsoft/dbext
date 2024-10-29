@@ -1,0 +1,127 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "../config.dk"
+    // #include "../_lib/lib.dk"
+	#include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+
+    ref entity = ifnull(@("&./entity"),record.create())
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+	@is_new = (@_entity_id == "_new")
+
+    form_id = "frm_"+@_entities_type
+
+    function print_buttons()
+    {
+        btn_cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
+        #$
+        button(class="#<btn_cls>" type="button" id="btn-submit" title="Guardar"){$"#<@ICON_SAVE>"}
+        #!
+    }
+    point @buttons to print_buttons
+    new nav_config
+    {
+        @"title": @@(entity,"$username")
+        // @"urlexit": "javascript:window.history.back()"
+        @"buttons*": @buttons
+        member @"hidden"
+        {
+            @"print": @true
+        }
+    }
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container-lg" id="view")
+    {
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        // Contenido principal
+        section(id="work_area" style="overflow-y:auto; overflow-x:hidden;")
+        {
+            form(action="./" method="POST" id="#<form_id>")
+            {
+                input(type="hidden" name="sys_pk" value="#<@@(entity,'#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(entity,'#sys_recver')>")
+                #!
+                do uie.print_from_url_field()
+                #$
+
+                div(class="row")
+                {
+                    div(class="col-sm-6")
+                    {
+                        label(class="form-label fw-bold" "for"="username"){$"Nombre de usuario:"}
+                        input(class="form-control rounded-0" type="text" name="username" value="" id="username" maxlength="120" required="")
+                    }
+                    div(class="col-sm-6 align-self-end")
+                    {
+                        button(class="btn btn-light rounded-0 border" type="button" "data-bs-toggle"="modal" "data-bs-target"="#mdl-pwd"){$"Cambiar contraseña"}
+                    }
+                }
+            }
+
+            div(class="modal fade" id="mdl-pwd" tabindex="-1" "aria-labelledby"="mdl-pwd-title" "aria-hidden"="true" "data-bs-backdrop"="false")
+            {
+                div(class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable mt-0")
+                {
+                    div(class="modal-content induxsoft-corners p-0 border-0 shadow")
+                    {
+                        div(class="modal-header p-3")
+                        {
+                            h6(class="modal-title" id="mdl-pwd-title"){$"Cambiar contraseña"}
+                            button(type="button" class="btn-close btn-sm" "data-bs-dismiss"="modal" "aria-label"="Close"){$""}
+                        }
+                        div(class="modal-body p-4 bg-white" id="mdl-pwd-body")
+                        {
+                            label(class=""){$"Nueva contraseña:"}
+                            input(class="induxsoft-form-control mb-2" type="password" name="pwd" value="" id="new-pwd" maxlength="32" autocomplete="off")
+
+                            label(class=""){$"Confirmar contraseña:"}
+                            input(class="induxsoft-form-control mb-2" type="password" name="confirm" value="" id="try-pwd" maxlength="32" autocomplete="off")
+                        }
+                        div(class="modal-footer")
+                        {
+                            button(type="button" class="btn btn-sm btn-primary" id="btn-save-pwd"){$"Aceptar"}
+                            button(type="button" class="btn btn-sm btn-light border" "data-bs-dismiss"="modal"){$"Cancelar"}
+                        }
+                    }
+                }
+            }
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area"){$""}
+
+        //////////////////////////////////////////////////////////////////
+        div(id="_custom_area")
+        {
+            script(src="#<@JS_MAIN>"){$""}
+            script(src="#<@JS_USER>"){$""}
+            script(type="text/javascript")
+            {$'
+                document.addEventListener("DOMContentLoaded", () => {
+                    user.formId = "#<form_id>";
+                    user.init();
+
+                    // Script injection
+                    #<@@(@crud_context,"script")>
+                });
+            '}
+        }
+    }
+    #!
+    
+    do @context.end()
+}
