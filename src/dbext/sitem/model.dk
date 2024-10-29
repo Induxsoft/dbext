@@ -1,0 +1,18 @@
+#include "dkli.dkh"
+#!
+module ":Sitem"
+{
+    NotImplemented1::&db,&params
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+    NotImplemented2::&db,&params,&data
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+
+    function Validate(&db,&params)
+    {
+        do dbr.apps.action.grant(@@(params,"$_entity_id"))
+    }
+}

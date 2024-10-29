@@ -212,13 +212,24 @@ module "model"
         // if not(dbr.security.isauth(db,@AUT_ACCESS_USUARIOS)) { do rise_error(500,"No autorizado") }
         do dbr.apps.action.grant("XB60")
 
-        query="SELECT sys_pk, userid, username
-            FROM tuser
-            WHERE ifnull(sys_deleted,0)=0 
-            AND ifnull(external,0)=0 and IF(IFNULL(@s,'')='', true, (userid LIKE CONCAT('%',@s,'%') OR username LIKE CONCAT('%',@s,'%')))
-            ORDER BY userid
-            LIMIT #<@default_max_rows>;"
-        return dbr.list(db, ftext(query), params)
+        sql = "
+        SELECT u.sys_pk, u.userid, u.username
+        FROM tuser u
+            LEFT JOIN user_usergroup_ ug ON ug.users = u.sys_pk
+        WHERE NOT IFNULL(u.sys_deleted,0)
+            AND NOT IFNULL(u.external,0)
+            AND IF(IFNULL(@fil_gpo,'-1')='-1', TRUE, ug.groups = @fil_gpo)
+            AND IF(IFNULL(@s,'')='', TRUE, (u.userid = @s OR u.username LIKE CONCAT('%',@s,'%')))
+        ORDER BY u.userid
+        LIMIT #<@default_max_rows>;
+        "
+
+        new data
+        {
+            @"usuarios*": dbr.list(db,ftext(sql),params)
+            @"grupos*": dbr.list(db,"SELECT sys_pk, description FROM usergroup WHERE NOT IFNULL(sys_deleted,0);",@null)
+        }
+        return data
 
         exception
         {
@@ -230,7 +241,8 @@ module "model"
 
     function cu_error(table)
     {
-        new fields {
+        new fields
+        {
             @"userid": "El nombre de inicio de sesión"
         }
         do valide_duplicate(fields, table, last_error(), last_error_code())

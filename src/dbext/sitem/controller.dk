@@ -1,0 +1,20 @@
+#include "dkli.dkh"
+#!
+module "SitemController"
+{
+    point @list to Sitem.NotImplemented1
+    point @read to Sitem.NotImplemented1
+    point @blank to Sitem.NotImplemented1
+    point @create to Sitem.NotImplemented2
+    point @update to Sitem.NotImplemented2
+    point @delete to Sitem.NotImplemented1
+
+    switch @@(@http_context,"$request/get/_view/")
+    {
+        case "validate"
+        {
+            point @read to Sitem.Validate
+            break
+        }
+    }
+}

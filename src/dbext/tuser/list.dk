@@ -5,14 +5,35 @@ module "list"
     #include "functions.dkh"
     #include "serialize.dkh"
     #include "dbr.dkh"
+    #include "uielements.v12.dkl"
     #include "../config.dk"
     #include "../_lib/scape_special_charactes2.dk"
     #include "batch.v12.dkl"
 
     do @context.begin(@crud_context)
 
-    ref usuarios = @("&./")
+    ref grupos = ifnull(@("&./grupos"),list.create())
+    ref usuarios = ifnull(@("&./usuarios"),list.create())
+
     do scape_special_charactes(usuarios,"userid,username")
+
+    new fil_gpo_usuarios
+    {
+        @"id": "fil_gpo"
+        @"datatable*": grupos
+        member "attributes"
+        {
+            @"class": "form-select rounded-0"
+            @"name": "fil_gpo"
+            @"title": "Filtrar por grupo"
+            @"onchange": "document.querySelector('#form_search').submit();"
+        }
+        @"value_field": "sys_pk"
+        @"text_field": "description"
+        @"first_value": "-1"
+        @"first_text": "Todos los grupos"
+        @"selected": @("#parameters/fil_gpo")
+    }
     
     ref db=@("&database")
     new p
@@ -74,15 +95,25 @@ module "list"
         {
             form(action="./" method="GET" id="form_search" class="no-print my-1 d-flex py-1")
             {
-                "filter-text"(
-                    "id"="ft_search"
-                    "text-field"="s"
-                    "placeholder"="Buscar"
-                    "form"="#form_search"
-                    "value"="#<@@(@@(@crud_context,'&http/request/get'),'$s')>"
-                    "auto-submit"="true"
-                    "class"="w-100"
-                ){$""}
+                div(class="d-flex align-items-center gap-2 flex-wrap w-100 py-1")
+                {
+                    div(class="d-flex gap-2")
+                    {
+                        div{ #! do uie.dbSelect(fil_gpo_usuarios) } #$
+                    }
+                    div(class="flex-grow-1")
+                    {
+                        "filter-text"(
+                            "id"="ft_search"
+                            "text-field"="s"
+                            "placeholder"="Buscar"
+                            "form"="#form_search"
+                            "value"="#<@@(@@(@crud_context,'&http/request/get'),'$s')>"
+                            "auto-submit"="true"
+                            "class"="w-100"
+                        ){$""}
+                    }
+                }
             }
             div
             {
