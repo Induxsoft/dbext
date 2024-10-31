@@ -17,6 +17,36 @@ module "form.dk"
 
     titulo = @("$./title")
 
+    function before_cell(&params,&row,&cell)
+    {
+        cname = @@(cell,"$column")
+        ref column = @@(params,"&columns/"+cname)
+        if not(field.exist(cell,"attributes")){ cell<"attributes*"> : ifnull(@@(column,"&attributes"),record.create()) }
+
+        if not(containsword(@@(column,"$summary"),"sum,max,min,avg,count")) { do field.remove(column,"summary") }
+        if not(parse.bool(@@(column,"$visible"))) {
+            cell<"_abort"> : @true
+            cell<"attributes/hidden"> : ""
+        }
+    }
+
+    function after_cell(&params,&row,&cell)
+    {
+        cname = @@(cell,"$column")
+        ref column = @@(params,"&columns/"+cname)
+
+        // code...
+    }
+
+    point bf_cell to before_cell
+    point af_cell to after_cell
+
+    using design
+    {
+        @"before_cell*": bf_cell
+        // @"after_cell*": af_cell
+    }
+
     new nav_config
     {
         @"title": titulo
@@ -24,38 +54,42 @@ module "form.dk"
     }
 
     #$
-    div(class="container v12-list-view" id="view")
+    div(class="container-lg v12-list-view" id="view")
     {
+        // style
+        // {$'
+        //     tr th { font-size:.9rem; outline:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -o-text-overflow:ellipsis; }
+        //     tr td { font-size:.8rem; }
+        // '}
+        
         // Filtros y acciones
         section(class="bg-white" id="top_area")
         {
             #!
             do uie.printV12FormBar(nav_config)
             #$
-            
-            // style
-            // {$'
-            //     tr th { font-size:.9rem; outline:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -o-text-overflow:ellipsis; }
-            //     tr td { font-size:.8rem; }
-            // '}
 
             form(class="" action="./" method="GET" id="form-filter")
             {
                 div(class="row gx-2")
-                {
+                {$""
                     #!
                     do dbr.control.GenerateHtml(@("&database"),controls)
-                    #$
                     
-                    div(class="col-auto align-self-end") {
-                        button(class="btn btn-primary rounded-0" type="submit" id="btn-filter"){$"Aplicar"}
+                    if list.count(list.create_from_fields(controls)) > 0
+                    {
+                        #$
+                        div(class="col-auto align-self-end") {
+                            button(class="btn btn-primary rounded-0" type="submit" id="btn-filter"){$"Aplicar"}
+                        }
                     }
+                    #$
                 }
             }
         }
 
         div(class="bg-light w-100 p-2" style="max-height:80vh; overflow-y:auto;") {
-        div(class="" style="box-shadow: inset 0 -3em 3em rgba(0, 0, 0, 0.1), 0.3em 0.3em 1em rgba(0, 0, 0, 0.3);")
+        div(class="" style="min-width:100%; width:fit-content; box-shadow: inset 0 -3em 3em rgba(0, 0, 0, 0.1), 0.3em 0.3em 1em rgba(0, 0, 0, 0.3);")
         {
             // Contenido principal
             section(class="bg-white p-1" id="work_area")
@@ -75,10 +109,7 @@ module "form.dk"
                     {
                         h5(class="text-center"){$"#<titulo>"}
                     }
-                    div(class="col-3 text-end")
-                    {
-                        $""
-                    }
+                    div(class="col-3 text-end"){$""}
                 }
                 
                 #!

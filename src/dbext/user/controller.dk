@@ -1,0 +1,20 @@
+#include "dkli.dkh"
+#!
+module "UserController"
+{
+    point @list to User.NotImplemented1
+    point @read to User.read
+    point @blank to User.NotImplemented1
+    point @create to User.NotImplemented2
+    point @update to User.update
+    point @delete to User.NotImplemented1
+
+    switch @@(@http_context,"$request/get/_view/")
+    {
+        case ""
+        {
+            // code
+            break
+        }
+    }
+}

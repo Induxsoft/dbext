@@ -24,6 +24,7 @@ module "Controller configs"
 
 	//No modifique a menos que sepa lo que está haciendo
 	do crudl.routes.pattern("/_program/")
+	do crudl.routes.entity("/user/","user")
 	do crudl.routes.entity("/tuser/","tuser")
 	do crudl.routes.entity("/usergroup/","usergroup")
 	do crudl.routes.entity("/ugroups/","ugroups")
