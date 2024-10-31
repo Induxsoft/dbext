@@ -152,17 +152,31 @@ module "Galería de consultas:query"
         }
         return ndata
     }
+    GetDataQuery::&db,&params
+    {
+        return dbr.rec(db,"select sys_pk,actid,title from dba_query where id=@_entity_id",params)
+    }
     create::&db,&params,&data
     {
+        @keyfield="id"
         ref ndata=query.Getdata(db,data)
-        ref entity= entity.create(db,params,ndata)
+        ref query=query.GetDataQuery(db,params)
+        
+        if isnull(query){ref entity= entity.create(db,params,ndata)}
+        else{ref entity=query.update(db,params,data)}
+
         return entity
     }
     update::&db,&params,&data
     {
         @keyfield="id"
         ref ndata=query.Getdata(db,data)
-        do dbr.update(db,@table_name,ndata,"id=@_entity_id",params)
+
+        ref query=query.GetDataQuery(db,params)
+        
+        if isnull(query){ref entity= entity.create(db,params,ndata)}
+        else{do dbr.update(db,@table_name,ndata,"id=@_entity_id",params)}
+
         return ndata
     }
     catch::&db,&params
