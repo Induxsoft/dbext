@@ -14,6 +14,7 @@ module "config"
     @js_definitive_api = "/$/dbext/js/definitive.api.js"
 
     @JS_MAIN = "/$/dbext/js/main.js"
+    @JS_USER = "/$/dbext/js/user.js"
     @JS_TUSER = "/$/dbext/js/tuser.js"
     @JS_USERGROUP = "/$/dbext/js/usergroup.js"
     @JS_QUERY = "/$/dbext/js/query.js"
