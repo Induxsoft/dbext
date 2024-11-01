@@ -16,7 +16,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
         if not(isnull(@dbr.localize.country_buffer)) { return @dbr.localize.country_buffer }
 
         new p { cod_pais:= dbr.vars.getd(db,"V12-00-001",@dbr.localize.default.country) }
-        ref @dbr.localize.country_buffer=dbr.rec(db,"select * from pais where codigo=@cod_pais",p)
+        ref @dbr.localize.country_buffer=dbr.rec(db,"select sys_pk, sys_guid, codigo, codigotel, nombre, th_sep, dc_sep, iso3166, iso3166_a3 from pais where codigo=@cod_pais",p)
         
         if isnull(@dbr.localize.country_buffer) {do rise_error(510,"Código de país no encontrado: " + cod_pais) }
 
@@ -29,7 +29,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
 
         new p { cod_pais:= dbr.vars.getd(db,"V12-00-002",@dbr.localize.default.lang) }
 
-        ref @dbr.localize.lang_buffer=dbr.rec(db,"select * from idioma where iso639_1=@cod_lang",p)
+        ref @dbr.localize.lang_buffer=dbr.rec(db,"select sys_pk, sys_guid, nombre, iso639_1 from idioma where iso639_1=@cod_lang",p)
 
         if isnull(@dbr.localize.lang_buffer) { do rise_error(510,"Código de idioma no encontrado: " + cod_lang) }
 
@@ -41,7 +41,7 @@ module "Variables alojadas en la base de datos :dbr.localize"
         if field.exist(@dbr.localize.money_buffer,cod_divisa) { return @@(@dbr.localize.money_buffer,"&"+cod_divisa) }
         
         cod_divisa >> p
-        ref m=dbr.rec(db,"select * from divisa where codigo=@cod_divisa",p)
+        ref m=dbr.rec(db,"select sys_pk, sys_guid, codigo, descripcion, tcambio, decimales from divisa where codigo=@cod_divisa",p)
         
         if isnull(m) { do rise_error(510,"Código de divisa no encontrado: " + cod_divisa) }
 
