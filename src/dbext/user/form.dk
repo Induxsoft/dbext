@@ -11,7 +11,7 @@ module "form.dk"
 
     do @context.begin(@crud_context)
 
-    ref entity = ifnull(@("&./entity"),record.create())
+    // ref entity = ifnull(@("&."),record.create())
 
 	@_entities_type = @("$parameters/_entities_type")
 	@_entity_id = @("$parameters/_entity_id")
@@ -29,9 +29,10 @@ module "form.dk"
     point @buttons to print_buttons
     new nav_config
     {
-        @"title": @@(entity,"$username")
+        @"title": "Editar usuario"
+        @"urlexit": "/"
         // @"urlexit": "javascript:window.history.back()"
-        @"buttons*": @buttons
+        // @"buttons*": @buttons
         member @"hidden"
         {
             @"print": @true
@@ -51,10 +52,24 @@ module "form.dk"
         // Contenido principal
         section(id="work_area" style="overflow-y:auto; overflow-x:hidden;")
         {
+            #!
+            e_msg = @("$error/message")
+            s_msg = @("$./s_msg")
+            if e_msg != "" || s_msg != ""
+            {
+                #$
+                div(class="alert #<ifstr(s_msg!='','alert-success','alert-danger')> alert-dismissible fade show overflow-auto mb-2" role="alert")
+                {
+                    $"#<e_msg + s_msg>"
+                    button(type="button" class="btn-close" "data-bs-dismiss"="alert" "aria-label"="Close"){$""}
+                }
+            }
+            #$
+
             form(action="./" method="POST" id="#<form_id>")
             {
-                input(type="hidden" name="sys_pk" value="#<@@(entity,'#sys_pk')>")
-                input(type="hidden" name="sys_recver" value="#<@@(entity,'#sys_recver')>")
+                input(type="hidden" name="sys_pk" value="#<@('#./sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@('#./sys_recver')>")
                 #!
                 do uie.print_from_url_field()
                 #$
@@ -63,17 +78,40 @@ module "form.dk"
                 {
                     div(class="col-sm-6")
                     {
-                        label(class="form-label fw-bold" "for"="username"){$"Nombre de usuario:"}
-                        input(class="form-control rounded-0" type="text" name="username" value="" id="username" maxlength="120" required="")
-                    }
-                    div(class="col-sm-6 align-self-end")
-                    {
-                        button(class="btn btn-light rounded-0 border" type="button" "data-bs-toggle"="modal" "data-bs-target"="#mdl-pwd"){$"Cambiar contraseña"}
+                        label(class="form-label fw-bold" "for"="username"){$"Nombre propio:"}
+                        input(class="form-control rounded-0" type="text" name="username" value="#<@('$./username')>" id="username" minlength="3" maxlength="120" required="")
+                        
+                        div(class="card my-2")
+                        {
+                            div(class="card-header bg-transparent")
+                            {
+                                #!
+                                check_pwd = ifstr(parse.bool(@("$./chk-pwd")), "checked", "")
+                                enable_pwd = ifstr(parse.bool(@("$./chk-pwd")), "", "disabled")
+                                #$
+                                div(class="form-check")
+                                {
+                                    input(class="form-check-input" type="checkbox" name="chk-pwd" id="chk-pwd" onchange="user.enablePwdCtrls(this);" "#<check_pwd>"="")
+                                    label(class="form-check-label fw-bolder" "for"="chk-pwd"){$"Cambiar contraseña"}
+                                }
+                            }
+                            fieldset(class="card-body" id="pwd-ctrls" "#<enable_pwd>"="")
+                            {
+                                label(class=""){$"Nueva contraseña:"}
+                                input(class="induxsoft-form-control mb-2" type="password" name="pwd" value="#<@('$./pwd')>" id="new-pwd" maxlength="32" autocomplete="off")
+
+                                label(class=""){$"Confirmar contraseña:"}
+                                input(class="induxsoft-form-control mb-2" type="password" name="confirm" value="#<@('$./confirm')>" id="try-pwd" maxlength="32" autocomplete="off")
+                            }
+                        }
+
+                        button(class="btn btn-sm btn-primary rounded-0 float-end" type="submit" id=""){$"Guardar"}
                     }
                 }
             }
 
-            div(class="modal fade" id="mdl-pwd" tabindex="-1" "aria-labelledby"="mdl-pwd-title" "aria-hidden"="true" "data-bs-backdrop"="false")
+            // button(class="btn btn-light rounded-0 border" type="button" "data-bs-toggle"="modal" "data-bs-target"="#mdl-pwd"){$"Cambiar contraseña"}
+            /* div(class="modal fade" id="mdl-pwd" tabindex="-1" "aria-labelledby"="mdl-pwd-title" "aria-hidden"="true" "data-bs-backdrop"="false")
             {
                 div(class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable mt-0")
                 {
@@ -99,7 +137,7 @@ module "form.dk"
                         }
                     }
                 }
-            }
+            } */
         }
         // Resúmenes y datos al pie
         section(id="bottom_area"){$""}

@@ -42,41 +42,52 @@ module ":User"
     {
         do validateSession(db,@@(params,"$_entity_id"))
 
-        if not(isset("@just_read_entity")) { @just_read_entity = @false }
-        if @just_read_entity { return entity.read(db,params) }
+        ref entity = entity.read(db,params)
+        // if not(isset("@just_read_entity")) { @just_read_entity = @false }
+        // if @just_read_entity { return entity }
 
-        new data
-        {
-            @"entity*": entity.read(db,params)
+        if field.exist(params,"success") {
+            if @@(params,"$success")=="update" { entity<"s_msg"> : "Información actualizada" }
+            do field.remove(params,"success")
         }
-        return data
+        return entity
 
         exception{ do catch(db,params,@null) }
     }
 
     function update(&db,&params,&data)
     {
-        @just_read_entity = @true
+        // @just_read_entity = @true
         
         _entity_id = @@(params,"$_entity_id")
         pk_user = validateSession(db,_entity_id)
 
-        if field.exist(data,"pwd")
+        ref cdata = record.copy(data,"*")
+
+        if parse.bool(@@(data,"$chk-pwd")) || field.exist(data,"pwd")
         {
-            data<"pwd"> : toupper(md5e(@@(data,"$pwd"), "Unicode"))
-            data<"pwdmd5"> : toupper(md5(@@(data,"$pwd")))
+            if @@(data,"$pwd") != @@(data,"$confirm") { do rise_error(511,"Las contraseñas no coinciden.") }
+            do field.remove(cdata,"confirm")
+
+            cdata<"pwd"> : toupper(md5e(@@(data,"$pwd"), "Unicode"))
+            cdata<"pwdmd5"> : toupper(md5(@@(data,"$pwd")))
         }
+        do field.remove(cdata,"chk-pwd")
 
         params<"_entity_id"> : str(pk_user)
-        new response
-        {
-            @"entity*": entity.update(db,params,data)
-            @"url_redir": url_dcode(@@(params,"$---from_url_e"))
-        }
-        params<"_entity_id"> : _entity_id
-        return response
+        ref entity = entity.update(db,params,cdata)
 
-        exception{ do catch(db,params,data) }
+        @url_redir = "/!/dbext/user/"+_entity_id+"/?success=update" //url_dcode(@@(params,"$---from_url_e"))
+        entity<"url_redir"> : @url_redir
+        params<"_entity_id"> : _entity_id
+        
+        return entity
+
+        exception
+        {
+            params<"_entity_id"> : _entity_id
+            do catch(db,params,data)
+        }
     }
 
     catch::&db,&params,&data
