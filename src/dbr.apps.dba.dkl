@@ -1,0 +1,106 @@
+#include "dkli.dkh"
+#!
+module "APIs para administrar consultas y sus categorías. :dbr.apps.dba"
+{
+    function newrec()
+    {
+        new record
+        {
+            @"sys_pk": 0 // Clave primaria para la tabla (alcance local)
+            @"sys_guid": uuid() // GUID que puede usarse como clave primaria de alcance global
+            @"sys_dtcreated*": dbr.sql("now()") // Fecha y hora de creación del registro
+            @"sys_timestamp*": dbr.sql("now()") // Fecha y hora de la última actualización del registro (marca de tiempo con precisión hasta segundos)
+            @"sys_info": ""
+            @"sys_user": "" // UserId del usuario logueado que creo el registro.
+            @"sys_lastuser": "" // UserId del usuario logueado que modifico el registro.
+            @"sys_exported": @false // Indica si el registro ha sido exportado por las utilidades de transporte de datos
+            @"sys_dtexported*": dbr.sql("now()") // Indica la fecha en que se exportó por última vez
+            @"sys_recver": 0 // Número de versión de instancia de registro
+            @"sys_deleted": @false // Indica si la fila está marcada como eliminada
+            /**
+            * Clave foránea que indica si se ha establecido un bloqueo pesimista sobre la fila.
+            * Este campo admite valores Nulos que significan que el registro no está bloqueado.
+            * No se admiten duplicados
+            */
+            @"sys_lock*": @null
+        }
+        return record
+    }
+
+    function setquerycat(&db,id,title)
+    {
+        namespace "dbr.apps.dba"
+
+        if existquerycat(db,id)
+        {
+            id, title >> params
+            sql = "
+            update dba_query_cat set
+                sys_timestamp = now(),
+                sys_recver = (ifnull(sys_recver,0)+1),
+                id = @id,
+                title = @title
+            where id = @id
+            "
+            do dbr.execute(db,sql,params)
+            return dbr.num(db,"select sys_pk from dba_query_cat where id = @id",params)
+        }
+        else
+        {
+            ref category = newrec()
+            id, title >> category
+            
+            do dbr.insert(db,"dba_query_cat",category)
+            return dbr.num(db,"select last_insert_id()",@null)
+        }
+    }
+
+    function delquerycat(&db,id)
+    {
+        id >> params
+        do dbr.delete(db,"dba_query_cat","sys_pk=@id or sys_guid=@id or id=@id",params)
+    }
+
+    function existquerycat(&db,id)
+    {
+        id >> params
+        sql = "select ifnull(sys_pk,0) from dba_query_cat where sys_pk=@id or sys_guid=@id or id=@id limit 1"
+        return dbr.num(db,sql,params) > 0
+    }
+
+    function setquery(&db,&data)
+    {
+        namespace "dbr.apps.dba"
+
+        data<"properties"> : to.json(@@(data,"&properties"))
+        data<"parameters"> : to.json(@@(data,"&parameters"))
+        data<"design"> : to.json(@@(data,"&design"))
+
+        if existquery(db,@@(data,"$id"))
+        {
+            new params { @"id":@@(data,"id") }
+            do dbr.update(db,"dba_query",data,"id=@id",params)
+            do dbr.execute(db,"update dba_query set sys_timestamp = now(), sys_recver = (ifnull(sys_recver,0)+1) where id = @id",params)
+        }
+        else
+        {
+            ref query = newrec()
+            ref query:record.copyex(query,data,"*",",","",":")
+            
+            do dbr.insert(db,"dba_query",query)
+        }
+    }
+
+    function delquery(&db,id)
+    {
+        id >> params
+        do dbr.delete(db,"dba_query","sys_pk=@id or sys_guid=@id or actid=@id or id=@id",params)
+    }
+
+    function existquery(&db,id)
+    {
+        id >> params
+        sql = "select ifnull(sys_pk,0) from dba_query where sys_pk=@id or sys_guid=@id or actid=@id or id=@id limit 1"
+        return dbr.num(db,sql,params) > 0
+    }
+}
