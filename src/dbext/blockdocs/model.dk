@@ -3,7 +3,8 @@
 module ""
 {
     @table_name="blockdocumentos"
-    like=" having if(ifnull(@s,'')='',true, concat_ws('',tipo,serie,finicial,fultimo,factivo,ffiscal) like concat('%',@s,'%') )"
+    like=" having if(ifnull(@s,'')='',true, concat_ws('',tipo,serie,finicial,fultimo,factivo) like concat('%',@s,'%') )"
+
     @list_query="SELECT bd.sys_pk,cd.const tipo,bd.serie,bd.finicial,bd.fultimo,if(IFNULL(bd.activo,0),'Activo','Inactivo')factivo,if(IFNULL(bd.fiscal,0),'Sí','No')ffiscal
     FROM blockdocumentos bd
     INNER JOIN cdocumentos cd ON bd.documento=cd.id 
