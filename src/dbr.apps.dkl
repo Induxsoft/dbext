@@ -57,6 +57,17 @@ module ":dbr.apps"
         }
     }
 
+    // Agrega o actualiza un conjunto de buscadores por tipos de elementos de datos.
+    detfinder.import::&db,&list
+    {
+        for i = 0; i < list.count(list)
+        {
+            ref act = list.obj(list,i)
+            do dbr.apps.detfinder.set(db,act)
+            do print("- " + @@(act,"$det"))
+        }
+    }
+
     // Agrega o actualiza la información de una categoría de aplicaciones
     category.set::&db,&data
     {
@@ -392,6 +403,12 @@ module ":dbr.apps"
     {
         //sys_app_item_type
         return dbr.list(db,"select id, title from sys_app_item_type order by id;",@null)
+    }
+
+    //Agrega o actualiza el buscador para un tipo de elemento de dato
+    detfinder.set::&db,&data
+    {
+        return dbr.apps.save(db, "sys_app_item_type_finder", data)
     }
 
     //Agrega o actualiza una acción
