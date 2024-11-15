@@ -239,7 +239,11 @@ module "Variables alojadas en la base de datos :dbr.vars"
         
         varname=dbr.str(db,"select varname from globalvar where varname=@varname",var)
         if trim(varname)==""{do dbr.insert(db,"globalvar",var)}
-        else{do dbr.update(db,"globalvar",var,"varname=@varname",var)}
+        else
+        {
+            if field.exist(var,"varvalue"){ do field.remove(var,"varvalue") } // Omitir establecer el valor
+            do dbr.update(db,"globalvar",var,"varname=@varname",var)
+        }
         
         do print(" - " + @@(var,"$varname"))
 
