@@ -13,6 +13,8 @@ module ":dbr.control"
         go foreach.fobj(key:ctrlKey, value:ctrlDef) with(controls)
         {
             control = tolower(trim(@@(ctrlDef,"$control")))
+            control = ranychars(control,"abcdefghijklmnopqrstuvwxyz","-")
+            control = replace(control,"-","")
             name = @@(ctrlDef,"$name")
             id = @@(ctrlDef,"$id")
             caption = trim(@@(ctrlDef,"$caption"))
@@ -200,7 +202,7 @@ module ":dbr.control"
                     }
                     break
                 }
-                case "input-key"
+                case "inputkey"
                 {
                     type = @@(ctrlDef,"$source/type") //[list, query, service]
                     query = @@(ctrlDef,"$source/query")

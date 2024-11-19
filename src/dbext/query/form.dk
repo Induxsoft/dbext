@@ -7,6 +7,7 @@ module "form.dk"
     #include "dbr.dkh"
     #include "uielements.v12.dkl"
     #include "dbr.controls.dkl"
+    #include "dbext/_lib/lib.dk"
 
     do @context.begin(@crud_context)
 
@@ -21,12 +22,24 @@ module "form.dk"
     {
         cname = @@(cell,"$column")
         ref column = @@(params,"&columns/"+cname)
+        
         if not(field.exist(cell,"attributes")){ cell<"attributes*"> : ifnull(@@(column,"&attributes"),record.create()) }
-
-        if not(containsword(@@(column,"$summary"),"sum,max,min,avg,count")) { do field.remove(column,"summary") }
+        if not(isanyword(@@(column,"$summary"),"sum,max,min,avg,count")) { do field.remove(column,"summary") }
         if not(parse.bool(@@(column,"$visible"))) {
             cell<"_abort"> : @true
             cell<"attributes/hidden"> : ""
+            return
+        }
+        href = trim(@@(column,"$anchor/href"))
+        if href != "" {
+            field = ifempty(@@(cell,"$field"),@@(cell,"$text"))
+            textContent = @@(row,field)
+            go foreach.fstr(key:key, value:value) with(row)
+            {
+                href = replace(href,"@"+key,value)
+                exception{ do pop_exception() }
+            }
+            cell<"text"> : ftext('<a href="#<href>">#<textContent></a>')
         }
     }
 
