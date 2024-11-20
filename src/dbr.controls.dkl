@@ -13,8 +13,9 @@ module ":dbr.control"
         go foreach.fobj(key:ctrlKey, value:ctrlDef) with(controls)
         {
             control = tolower(trim(@@(ctrlDef,"$control")))
-            control = ranychars(control,"abcdefghijklmnopqrstuvwxyz","-")
+            control = ranydiffchars(control,"abcdefghijklmnopqrstuvwxyz","-")
             control = replace(control,"-","")
+            
             name = @@(ctrlDef,"$name")
             id = @@(ctrlDef,"$id")
             caption = trim(@@(ctrlDef,"$caption"))
