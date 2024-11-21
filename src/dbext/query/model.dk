@@ -221,20 +221,19 @@ module "Galería de consultas:query"
     Getdata::&db,&data
     {
         ref ndata=record.copy(data,"actid,id,title,qry,app,det")
-
         do createSitem(db,data)
+        ndata<"cat">:dbr.num(db,"select sys_pk from dba_query_cat where id=@category",data)
 
-        if @@(data,"#category") > 0
+        if not(isnull(@@(data,"&properties"))) 
         {
-            ndata<"cat">:@@(data,"#category")
-        }
-        if not(isnull(@@(data,"&properties"))) {
             ndata<"properties">:to.json(@@(data,"&properties"))
         }
-        if not(isnull(@@(data,"&parameters"))) {
+        if not(isnull(@@(data,"&parameters"))) 
+        {
             ndata<"parameters">:to.json(@@(data,"&parameters"))
         }
-        if not(isnull(@@(data,"&design"))) {
+        if not(isnull(@@(data,"&design"))) 
+        {
             ndata<"design">:to.json(@@(data,"&design"))
         }
         return ndata
