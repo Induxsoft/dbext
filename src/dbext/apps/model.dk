@@ -1,0 +1,35 @@
+#include "dkli.dkh"
+#!
+module ":Apps"
+{
+    @table_name = "sys_app_catalog"
+    @keyfield = "app_id"
+
+    @list_query = "SELECT * FROM #<@table_name> WHERE TRUE #<conditions>"
+    @read_query = "SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id"
+
+    NotImplemented1::&db,&params
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+    NotImplemented2::&db,&params,&data
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+
+    function list(&db,&params)
+    {
+        conditions = ""
+
+        if @@(params,"$pack") != "" { conditions = "AND pack_id = @pack " }
+        if @@(params,"$text") != "" { conditions = conditions + "AND (app_title LIKE CONCAT('%',@text,'%') OR app_info LIKE CONCAT('%',@text,'%'))" }
+        
+        @list_query = ftext(@list_query)
+        return entity.list(db,params)
+    }
+
+    function read(&db,&params)
+    {
+        return entity.read(db,params)
+    }
+}

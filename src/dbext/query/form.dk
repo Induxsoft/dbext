@@ -11,15 +11,59 @@ module "form.dk"
 
     do @context.begin(@crud_context)
 
+    ref @properties = ifnull(@("&./properties"),record.create())
+    ref @controls = ifnull(@("&./controls"),record.create())
+    ref @design = ifnull(@("&./design"),record.create())
+    ref @titles = ifnull(@("&./titles"),record.create())
     // ref data = ifnull(@("&./data"),list.create())
-    ref controls = ifnull(@("&./controls"),record.create())
-    ref design = ifnull(@("&./design"),record.create())
-    ref titles = ifnull(@("&./titles"),record.create())
 
-    titulo = @("$./title")
+    @titulo = @("$./title")
+    @layout = ifempty(@@(@properties,"$layout"), "document")
+
+    function print_work_area()
+    {
+        #$
+        // Contenido principal
+        section(class="bg-white p-1" id="work_area")
+        {
+            div(class="printable-element #<ifstr(@layout=='view','show-on-print','')>")
+            {
+                p(class="text-center mb-0"){$"#<@@(@titles,'$title')>"}
+                p(class="text-center mb-0"){$"#<@@(@titles,'$subtitle')>"}
+                p(class="text-center mb-0"){$"#<@@(@titles,'$subtitle_2')>"}
+
+                div(class="row")
+                {
+                    div(class="col-3")
+                    {
+                        small(class="d-block"){ $"#<cut(@('$http/session/user/name'),25)>" }
+                        small(class="d-block"){ b{$"Impresión: "} $"#<date_str(now(),'dd/MMM/yyyy')>" }
+                    }
+                    div(class="col-6")
+                    {
+                        h5(class="text-center"){$"#<@titulo>"}
+                    }
+                    div(class="col-3 text-end"){$""}
+                }
+            }
+            
+            #!
+            do uie.dbTable(@design)
+            #$
+
+            // div(class="#<ifstr(@layout=='view','show-on-print','')>"){p(class="fixed-bottom text-center my-1"){$"#<@@(@titles,'$footer')>"}}
+        }
+        #!
+    }
 
     function before_cell(&params,&row,&cell)
     {
+        /**
+        * params = Parámetros de la table
+        * row = Datos de la fila
+        * cell = Información de la celda
+        */
+
         cname = @@(cell,"$column")
         ref column = @@(params,"&columns/"+cname)
         
@@ -62,12 +106,12 @@ module "form.dk"
 
     new nav_config
     {
-        @"title": titulo
+        @"title": @titulo
         @"urlexit": "../"
     }
 
     #$
-    div(class="container-lg v12-list-view" id="view")
+    div(class="v12-list-view #<ifstr(@layout=='view','container-fluid','container-lg')>" id="view")
     {
         // style
         // {$'
@@ -87,9 +131,9 @@ module "form.dk"
                 div(class="row gx-2")
                 {$""
                     #!
-                    do dbr.control.GenerateHtml(@("&database"),controls)
+                    do dbr.control.GenerateHtml(@("&database"),@controls)
                     
-                    if list.count(list.create_from_fields(controls)) > 0
+                    if list.count(list.create_from_fields(@controls)) > 0
                     {
                         #$
                         div(class="col-auto align-self-end") {
@@ -101,52 +145,34 @@ module "form.dk"
             }
         }
 
-        div(class="bg-light w-100 p-2" style="max-height:80vh; overflow-y:auto;") {
-        div(class="" style="min-width:100%; width:fit-content; box-shadow: inset 0 -3em 3em rgba(0, 0, 0, 0.1), 0.3em 0.3em 1em rgba(0, 0, 0, 0.3);")
-        {
-            // Contenido principal
-            section(class="bg-white p-1" id="work_area")
-            {
-                p(class="text-center mb-0"){$"#<@@(titles,'$title')>"}
-                p(class="text-center mb-0"){$"#<@@(titles,'$subtitle')>"}
-                p(class="text-center mb-0"){$"#<@@(titles,'$subtitle_2')>"}
-
-                div(class="row")
-                {
-                    div(class="col-3")
-                    {
-                        small(class="d-block"){ $"#<cut(@('$http/session/user/name'),25)>" }
-                        small(class="d-block"){ b{$"Impresión: "} $"#<date_str(now(),'dd/MMM/yyyy')>" }
-                    }
-                    div(class="col-6")
-                    {
-                        h5(class="text-center"){$"#<titulo>"}
-                    }
-                    div(class="col-3 text-end"){$""}
-                }
-                
+        #!
+        if @layout == "document" {#$
+            div(class="bg-light w-100 p-2" style="max-height:80vh; overflow-y:auto;") {
+            div(class="" style="min-width:100%; width:fit-content; box-shadow: inset 0 -3em 3em rgba(0, 0, 0, 0.1), 0.3em 0.3em 1em rgba(0, 0, 0, 0.3);") {
                 #!
-                do uie.dbTable(design)
+                do print_work_area()
                 #$
-
-                p(class="text-center mb-0"){$"#<@@(titles,'$footer')>"}
-            }
-        }}
+            }}
+        }
+        #!
+        else { do print_work_area() }
+        #$
 
         // Resúmenes y datos al pie
-        section(id="bottom_area"){$""}
-
-        //////////////////////////////////////////////////////////////////
-        div(id="_custom_area")
+        section(id="bottom_area")
         {
-            // script(src=""){$""}
-            script(type="text/javascript")
-            {$'
-                document.addEventListener("DOMContentLoaded", () => {
-                    // Script injection
-                    #<@@(@crud_context,"script")>
-                });
-            '}
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                // script(src=""){$""}
+                script(type="text/javascript")
+                {$'
+                    document.addEventListener("DOMContentLoaded", () => {
+                        // Script injection
+                        #<@@(@crud_context,"script")>
+                    });
+                '}
+            }
         }
     }
     #!

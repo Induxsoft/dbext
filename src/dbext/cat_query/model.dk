@@ -11,7 +11,7 @@ module ""
             for i = 0; i < @count(entity)
             {
                 ref detail=@item(entity,i)
-                detail<"queries*">:dbr.list(db,"select sys_pk,actid,id,title,parameters,properties,qry,design from dba_query where cat=@sys_pk",detail)
+                detail<"queries*">:dbr.list(db,"select sys_pk,actid,id,title,parameters,properties,qry,design,app,det from dba_query where cat=@sys_pk",detail)
             }
        }
        return entity

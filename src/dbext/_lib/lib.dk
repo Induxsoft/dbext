@@ -44,6 +44,21 @@ module
         return meth+"://"+host+":"+port+prms
     }
 
+    function contains_all_words(sentence,keywords)
+    {
+        ref list = split(trim(keywords),",")
+        success = @false
+        for i = 0; i < list.count(list)
+        {
+            word = trim(list.str(list,i))
+            if word != "" {
+                if not(contains(sentence,word)) { return @false }
+                success = @true
+            }
+        }
+        return success
+    }
+
     function ifempty(s,d)
     {
         if trim(str(s)) == "" { return str(d) }

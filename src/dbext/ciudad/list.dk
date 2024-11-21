@@ -4,8 +4,6 @@
 module "list.dk"
 {
     #include "functions.dkh"
-    #include "uielements.dbtable.dkl"
-    #include "uielements.dkl"
     #include "../config.dk"
 
     @gender="a"
@@ -30,7 +28,7 @@ module "list.dk"
             }
             member @"estado"
             {
-                @"caption":"estado"
+                @"caption":"Estado"
             }
             member @"_actions"
             {

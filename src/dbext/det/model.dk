@@ -1,0 +1,29 @@
+#include "dkli.dkh"
+#!
+module ":Det"
+{
+    @table_name = "sys_app_item_type"
+    @keyfield = "id"
+
+    @list_query = "SELECT * FROM #<@table_name> WHERE IF(IFNULL(@text,'')!='', title LIKE CONCAT('%',@text,'%'), TRUE)"
+    @read_query = "SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id"
+
+    NotImplemented1::&db,&params
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+    NotImplemented2::&db,&params,&data
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+
+    function list(&db,&params)
+    {
+        return entity.list(db,params)
+    }
+
+    function read(&db,&params)
+    {
+        return entity.read(db,params)
+    }
+}

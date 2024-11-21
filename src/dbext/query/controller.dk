@@ -1,0 +1,14 @@
+#include "dkli.dkh"
+#!
+module "QueryController"
+{
+    point @list to query.list
+    point @read to query.read
+    point @create to query.create
+    point @update to query.update
+
+    if @@(@http_context,"$request/get/_view") != "" {
+        point @list to query.inputkey
+        point @read to query.inputkey
+    }
+}

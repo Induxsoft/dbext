@@ -1,0 +1,19 @@
+#include "dkli.dkh"
+#!
+module "PacksController"
+{
+    point @list to Packs.list
+    point @read to Packs.read
+    point @blank to Packs.NotImplemented1
+    point @create to Packs.NotImplemented2
+    point @update to Packs.NotImplemented2
+    point @delete to Packs.NotImplemented1
+
+    switch @@(@http_context,"$request/get/_view/")
+    {
+        case ""
+        {
+            break
+        }
+    }
+}

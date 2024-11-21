@@ -4,9 +4,6 @@
 module "list.dk"
 {
     #include "functions.dkh"
-    #include "uielements.dkl"
-    #include "uielements.dbtable.dkl"
-    #include "serialize.dkh"
     #include "../config.dk"
 
     @gender="o"

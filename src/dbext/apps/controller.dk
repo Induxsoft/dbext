@@ -1,0 +1,19 @@
+#include "dkli.dkh"
+#!
+module "AppsController"
+{
+    point @list to Apps.list
+    point @read to Apps.read
+    point @blank to Apps.NotImplemented1
+    point @create to Apps.NotImplemented2
+    point @update to Apps.NotImplemented2
+    point @delete to Apps.NotImplemented1
+
+    switch @@(@http_context,"$request/get/_view/")
+    {
+        case ""
+        {
+            break
+        }
+    }
+}

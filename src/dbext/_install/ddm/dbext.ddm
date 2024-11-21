@@ -15,16 +15,23 @@ model "Variables globales"
     // Tipos de documentos comerciales
     entity "cdocumentos" : "EnumModel" {}
 
-    entity "jobsgroup" : "TableModel"
-    {
-        @"name" string (150) unique required
-        @"apikey" string (32) required // Digestión MD5 de la contraseña del grupo de trabajo
-    }
-
     //#region Usuarios, grupos, perfiles y permisos
     // Usuarios
-    entity "tuser" : "TableModel"
+    entity "tuser"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"locked" bool 
         @"message" string(255) 
         @"notes" memo 
@@ -36,8 +43,21 @@ model "Variables globales"
         @"external" bool    //Si es true, el usuario se consiera externo
     }
     // Grupo de usuarios
-    entity "usergroup" : "TableModel"
+    entity "usergroup"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"description" string(80) required
         @"groupid" string(15) unique required
         @"notes" memo 
@@ -50,15 +70,41 @@ model "Variables globales"
         @"users" ref:"tuser" required
     }
     // Permisos disponibles
-    entity "sitem" : "TableModel"
+    entity "sitem"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"description" string(250) 
         @"itemid" string(32) unique required
         @"itemparent" ref:"sitem" 
     }
     // Permisos que tiene un grupo de usuario
-    entity "profile" : "TableModel"
+    entity "profile"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"item"  ref:"sitem"  required
         @"usergroup"  ref:"usergroup"  required
 
@@ -69,8 +115,21 @@ model "Variables globales"
         }
     }
     // Valores del usuario
-    entity "uservar" : "TableModel"
+    entity "uservar"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"vardefault" string(255) 
         @"varname" string(32) unique required
         @"varvalue" string(32000) 
@@ -87,25 +146,50 @@ model "Variables globales"
         @"parent" ref:"varcategory"
     }
     // Variables globales
-    entity "globalvar" : "TableModel"
+    entity "globalvar"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"varname" string(32) unique required
         @"vardefault" string(255)
         @"varvalue" mmemo
-        @"varcaption" string(50) // Etiqueta de la variable
-        @"varhelp" memo // Ayuda o información adicional
-        @"vartype" string(15) // Tipo de dato: string,integer,decimal,bool,date,datetime,time
-        @"varinput" memo // Json con especificaciones al tipo de control de entrada: null or 'default', color, select,inputkey,dkl,json,textarea
+        @"varcaption" string(50)    // Etiqueta de la variable
+        @"varhelp" memo         // Ayuda o información adicional
+        @"vartype" string(15)   // Tipo de dato: string,integer,decimal,bool,date,datetime,time
+        @"varinput" memo        // Json con especificaciones al tipo de control de entrada: null or 'default', color, select,inputkey,dkl,json,textarea
         @"ref_varcat" ref:"varcategory" // Categoría de variable
         @"userenable" bool // Si es true, la variable puede establecerse por usuario
     }
     // Variables del usuario
-    entity "uservarval" : "TableModel"
+    entity "uservarval"
     {
+        @"sys_pk" int key required autoincrement
+        @"sys_guid" string(32) unique required
+        @"sys_dtcreated" datetime
+        @"sys_timestamp" datetime required
+        @"sys_info" string(32)
+        @"sys_user" string(32)
+        @"sys_lastuser" string(32)
+        @"sys_exported" bool
+        @"sys_dtexported" datetime
+        @"sys_recver" int
+        @"sys_deleted" bool
+        @"sys_lock" int
+
         @"varname" string(32) required
         @"varvalue" mmemo 
         @"userid" string(45) required
-        
         index "uv_u" unique
         {
             field "varname"
@@ -261,6 +345,8 @@ model "Variables globales"
         @"qry" mmemo
         @"design" memo
         @"cat" ref:"dba_query_cat" required
+        @"app" ref:"sys_app_catalog"
+        @"det" ref:"sys_app_item_type"
     }
 
     //#region sys_*

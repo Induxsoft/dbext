@@ -4,10 +4,7 @@
 module "list.dk"
 {
     #include "functions.dkh"
-    #include "uielements.dkl"
-    #include "uielements.dbtable.dkl"
     #include "../config.dk"
-    #include "serialize.dkh"
 
     @gender="o"
     @title="Estados"

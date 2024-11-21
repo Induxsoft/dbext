@@ -3,34 +3,53 @@
 #!
 module "list.dk"
 {
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "dbr.dkh"
+    #include "dbr.vars.dkl"
     #include "uielements.dkl"
     #include "uielements.dbtable.dkl"
-    #include "serialize.dkh"
     #include "../_lib/icons.dk"
+
+    ref db = @@(@crud_context,"&database")
+    new titles
+    {
+        @"title": dbr.vars.getd(db,"FXCA108","")
+        @"subtitle": dbr.vars.getd(db,"FXCA109","")
+        @"subtitle_2": dbr.vars.getd(db,"FXCA110","")
+        @"footer": dbr.vars.getd(db,"FXCA111","")
+    }
 
     cell_link_func::&params, &row, &cell
     {
-        //params=Parámetros de la table (def_table)
-        //row=Datos (registro) de la fila
-        //cell=Información de la celda
+        /**
+        * params = Parámetros de la table (def_table)
+        * row = Datos (registro) de la fila
+        * cell = Información de la celda
+        */
 
-        //cell<"text">:@@(cell,"cell_type")
-        // do rise_error(99,to.json(cell))
+        cname = @@(cell,"$column")
+        ref column = @@(params,"&columns/"+cname)
+
         new headers
         {
-            @"style":"position: sticky !important;top:0 !important;background-color:#fff;"
+            @"style":"position:sticky !important; top:0 !important; background-color:#fff;"
             @"class":"h6"
         }
-        if @@(cell,"element")=="th"
+
+        if not(field.exist(cell,"attributes")){ cell<"attributes*"> : ifnull(@@(column,"&attributes"),record.create()) }
+        if @@(cell,"element") == "th"
         {
-            cell<"attributes*">:headers
-            if @@(cell,"column")=="_actions" { headers<"class">:"h6 text-center no-print" }
+            cell<"attributes*"> : headers
+            if @@(cell,"column") == "_actions" { headers<"class">:"h6 text-center hide-on-print" }
         }
-        if @@(cell,"cell_type")!="data" &&  @@(cell,"cell_type")!="unknow" { return }
-        if @@(cell,"column")=="_actions"
+
+        if @@(cell,"cell_type") != "data" && @@(cell,"cell_type") != "unknow" { return }
+        if @@(cell,"column") == "_actions"
         {
+            cell<"attributes/class"> : "hide-on-print"
             cell<"text">:ftext('
-                <div class="d-flex gap-2 justify-content-center no-print">
+                <div class="d-flex gap-2 justify-content-center">
                     <a class="btn btn-sm btn-light btn-row-edit" id="btnEditar" href="./#<@@(row,"sys_pk")>/">Editar</a>
                     <a class="btn btn-sm btn-light" onclick="deleteEntity(#<@@(row,"sys_pk")>)" href="#" id="btnEliminar">Eliminar</a>
                 </div>
@@ -51,27 +70,42 @@ module "list.dk"
     ref buttons=@@(@table_definition,"&buttons")
 
     #$
-    div(class="container p-0" id="div-first")
+    div(class="container-lg p-0" id="view")
     {
-        div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
-        {
-            div(class="col-4 d-flex align-items-center p-0")
-            {
-                h5(class="tex-no-break m-0"){$"#<ifstr(isset('@title'), @title, '')>"}
+        style
+        {$'
+            @media only screen and (max-width: 500px) and (min-width: 341px) {
+                #view{
+                    margin-top:30 !important
+                }
             }
-            div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
-            {
-                #!
-                if not(isnull(buttons)){that buttons(@table_definition)}
-                #$
-                a(href="./_new/" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Agregar" id="btnAgregar"){$"Agregar"}
-                button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Imprimir" onclick="window.print()"){$"#<@ICON_PRINTER>"}
-                a(href="#" onclick="window.location.reload();" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Refrescar"){$"#<@ICON_ARROW_CLOCKWISE>"}
-                a(href="/" target="_top" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Salir" id="btn_go_back"){$"#<@ICON_X_LG>"}
+
+            @media print {
+                tr th { background-color: #DCDCDC !important; }
+                tr td { background-color: #FFF !important; color:#000 !important; }
             }
-        }
-        div(class="pt-2")
+        '}
+
+        section(id="top_area")
         {
+            div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
+            {
+                div(class="col-4 d-flex align-items-center p-0")
+                {
+                    h5(class="tex-no-break m-0"){$"#<ifstr(isset('@title'), @title, '')>"}
+                }
+                div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-1")
+                {
+                    #!
+                    if not(isnull(buttons)){that buttons(@table_definition)}
+                    #$
+                    a(href="./_new/" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Agregar" id="btnAgregar"){$"Agregar"}
+                    button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Imprimir" onclick="window.print()"){$"#<@ICON_PRINTER>"}
+                    button(class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Refrescar" onclick="window.location.reload();"){$"#<@ICON_ARROW_CLOCKWISE>"}
+                    a(href="/" target="_top" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Salir" id="btn_go_back"){$"#<@ICON_X_LG>"}
+                }
+            }
+
             form(action="./" method="GET" id="form_search" class="no-print my-1 d-flex py-1")
             {
                 "filter-text"(
@@ -86,6 +120,36 @@ module "list.dk"
                 input(type="hidden" id="input_search_hidden")
                 input(type="hidden" id="input_search_hidden2")
             }
+        }
+
+        section(id="work_area")
+        {
+            div(class="show-on-print")
+            {
+                p(class="text-center my-0"){$"#<@@(titles,'$title')>"}
+                p(class="text-center my-0"){$"#<@@(titles,'$subtitle')>"}
+                p(class="text-center my-0"){$"#<@@(titles,'$subtitle_2')>"}
+
+                div(class="row")
+                {
+                    div(class="col-3 text-start")
+                    {
+                        small(class="d-block"){ $"#<cut(@('$http/session/user/name'),25)>" }
+                        small(class="d-block"){ $"#<date_str(now(),'dd/MMM/yyyy')>" }
+                    }
+                    div(class="col-6 text-center")
+                    {
+                        h4(class=""){$"Informe general de #<@title>"}
+                    }
+                    div(class="col-3 text-end")
+                    {
+                        small(class="d-block" id="lbl_filter_1"){$""}
+                        small(class="d-block" id="lbl_filter_2"){$""}
+                        small(class="d-block" id="lbl_filter_3"){$""}
+                    }
+                }
+            }
+
             div
             {
                 div(style="overflow-y:auto;max-height: 75vh;" class="mb-2" id="list_table_container")
@@ -114,22 +178,26 @@ module "list.dk"
                     ordby = "código"
                     if isset("order_by"){ ordby = order_by }
                     a1 = ftext("Mostrando l#<@gender>s primer#<@gender>s #<lenght> #<@title> ordenad#<@gender>s por #<ordby>.")
-                    #$ small(class="text-secondary"){$"#<a1>"}
+                    #$ small(class="text-secondary hide-on-print"){$"#<a1>"}
                 }
             }
         }
 
-        style
-        {$'
-            @media only screen and (max-width: 500px) and (min-width: 341px)
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
             {
-                #div-first{
-                    margin-top:30 !important
-                }
+                script(src="#<@jQuery>"){$""}
+                script(src="#<@js_definitive_api>"){$""}
+                script(type="text/javascript")
+                {$' 
+                    document.addEventListener("DOMContentLoaded", () => {
+                        // Script injection
+                        #<@@(@crud_context,"script")>
+                    });
+                '}
             }
-        '}
-
-        script(src="#<@jQuery>"){$""}
-        script(src="#<@js_definitive_api>"){$""}
+        }
     }
 }

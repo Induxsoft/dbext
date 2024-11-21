@@ -27,6 +27,8 @@ module "list.dk"
         }
         @"value_field": "sys_pk"
         @"text_field": "descripcion"
+        @"first_value": "-1"
+        @"first_text": "(Todas las categorías)"
         @"selected": @("parameters/fil_cat")
     }
 
@@ -43,7 +45,7 @@ module "list.dk"
                 @"caption":"Acciones" 
                 @"template":ftext('
                     <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
-                        <a href="./${DataRow.sys_pk}/" style="#<tbtn_style>">Ejecutar</a>
+                        <a href="./${DataRow.id}/" style="#<tbtn_style>">Ejecutar</a>
                     </div>')
                 @"no-print":@true
             }

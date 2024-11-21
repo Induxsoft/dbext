@@ -1,0 +1,29 @@
+#include "dkli.dkh"
+#!
+module ":Packs"
+{
+    @table_name = "sys_app_catalog"
+    @keyfield = "pack_id"
+
+    @list_query = "SELECT DISTINCT pack_id AS pack FROM #<@table_name>"
+    @read_query = "SELECT pack_id AS pack FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
+
+    NotImplemented1::&db,&params
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+    NotImplemented2::&db,&params,&data
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+
+    function list(&db,&params)
+    {
+        return entity.list(db,params)
+    }
+
+    function read(&db,&params)
+    {
+        return entity.read(db,params)
+    }
+}

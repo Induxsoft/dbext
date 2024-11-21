@@ -1,0 +1,19 @@
+#include "dkli.dkh"
+#!
+module "DetController"
+{
+    point @list to Det.list
+    point @read to Det.read
+    point @blank to Det.NotImplemented1
+    point @create to Det.NotImplemented2
+    point @update to Det.NotImplemented2
+    point @delete to Det.NotImplemented1
+
+    switch @@(@http_context,"$request/get/_view/")
+    {
+        case ""
+        {
+            break
+        }
+    }
+}
