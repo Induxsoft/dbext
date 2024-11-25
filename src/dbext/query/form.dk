@@ -75,7 +75,7 @@ module "form.dk"
             return
         }
         href = trim(@@(column,"$anchor/href"))
-        if href != "" {
+        if href != "" && @@(cell,"$element") != "th" {
             field = ifempty(@@(cell,"$field"),@@(cell,"$text"))
             textContent = @@(row,field)
             go foreach.fstr(key:key, value:value) with(row)
@@ -98,7 +98,7 @@ module "form.dk"
     point bf_cell to before_cell
     point af_cell to after_cell
 
-    using design
+    using @design
     {
         @"before_cell*": bf_cell
         // @"after_cell*": af_cell

@@ -97,11 +97,13 @@ module "Gestión de folios :dbr.folios"
             return info
         }
 
-        new::&db,table, field, &config
+        new::&db, table, field, &config
         {
-            sqlLast="select #<field> from #<table> order by #<field> desc limit 1;"
             prf=""
             num=@@(config,"#start")
+            pos=@@(config,"#positions")
+            sqlLast="select #<field> from #<table> where #<field> regexp '^[0-9]{#<pos>}$' order by #<field> desc limit 1;"
+            
             if num<1 { num=1  }
 
             if trim(@@(config,"$prefix"))!=""
@@ -118,19 +120,18 @@ module "Gestión de folios :dbr.folios"
                 if prf!="" { cod=replace(cod,prf,"") }
                 cod=ranydiffchars(cod,"0123456789","0")
                 num=val(cod)+1
-                exception{}
+                exception{/*ignore*/}
             }
 
             fmt=""
-            for i=0;i<@@(config,"#positions")
-            {
+            repeat pos {
                 fmt=fmt+"0"
             }
 	
 			for i=0;i<@max_autocode_attemps+1
 			{
-				autocode= prf+format(num,fmt)
-				if isnull(dbr.rec(db,ftext("select #<field> from #<table> where #<field>='#<autocode>' limit 1;"),@null)) { break }
+				autocode=prf+format(num,fmt)
+				if isnull(dbr.rec(db,ftext("select #<field> from #<table> where #<field> = '#<autocode>' limit 1;"),@null)) { break }
 				num=num+1
 			}
 			
