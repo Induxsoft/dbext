@@ -221,8 +221,11 @@ module "Galería de consultas:query"
     Getdata::&db,&data
     {
         ref ndata=record.copy(data,"actid,id,title,qry,app,det")
+        
+        new params{@"category":@@(data,"#category")}
+
         do createSitem(db,data)
-        ndata<"cat">:dbr.num(db,"select sys_pk from dba_query_cat where id=@category",data)
+        ndata<"cat">:dbr.num(db,"select sys_pk from dba_query_cat where id=@category",params)
 
         if not(isnull(@@(data,"&properties"))) 
         {
