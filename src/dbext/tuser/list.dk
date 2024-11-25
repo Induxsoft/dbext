@@ -141,6 +141,7 @@ module "list"
                                 {
                                     th(class="h6"){$"User ID"}
                                     th(class="h6"){$"Nombre"}
+                                    th(class="h6"){$"Grupo(s)"}
                                     th(class="h6 text-center no-print"){$"Acciones"}
                                 }
                             }
@@ -155,6 +156,7 @@ module "list"
                                     {
                                         td{$"#<@@(usuario,'$userid')>"}
                                         td{$"#<@@(usuario,'$username')>"}
+                                        td{$"#<@@(usuario,'$grupos')>"}
                                         td(class="no-print")
                                         {
                                             div(class="d-flex gap-2 justify-content-center")

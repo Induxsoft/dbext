@@ -213,13 +213,15 @@ module "model"
         do dbr.apps.action.grant("XB60")
 
         sql = "
-        SELECT u.sys_pk, u.userid, u.username
+        SELECT u.sys_pk, u.userid, u.username,GROUP_CONCAT(g.description SEPARATOR ', ')grupos
         FROM tuser u
             LEFT JOIN user_usergroup_ ug ON ug.users = u.sys_pk
+            LEFT JOIN usergroup g ON ug.groups=g.sys_pk
         WHERE NOT IFNULL(u.sys_deleted,0)
             AND NOT IFNULL(u.external,0)
             AND IF(IFNULL(@fil_gpo,'-1')='-1', TRUE, ug.groups = @fil_gpo)
             AND IF(IFNULL(@s,'')='', TRUE, (u.userid = @s OR u.username LIKE CONCAT('%',@s,'%')))
+        GROUP BY u.userid
         ORDER BY u.userid
         LIMIT #<@default_max_rows>;
         "
