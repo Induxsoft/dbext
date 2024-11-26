@@ -78,10 +78,15 @@ module "form.dk"
         if href != "" && @@(cell,"$element") != "th" {
             field = ifempty(@@(cell,"$field"),@@(cell,"$text"))
             textContent = @@(row,field)
+            exclude_empty = parse.bool(field.dstr(column,"anchor/pmtrs-exc-empty","false"))
+            exclude_zeros = parse.bool(field.dstr(column,"anchor/pmtrs-exc-zeros","false"))
+
             go foreach.fstr(key:key, value:value) with(row)
             {
-                href = replace(href,"@"+key,value)
-                exception{ do pop_exception() }
+                if vartype('value') != 3 && contains(href,"@"+key) {
+                    if exclude_empty && value=="" || exclude_zeros && str(value)=="0" { return }
+                    href = replace(href,"@"+key,value)
+                }
             }
             cell<"text"> : ftext('<a href="#<href>">#<textContent></a>')
         }

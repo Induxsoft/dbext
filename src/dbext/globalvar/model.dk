@@ -34,12 +34,12 @@ module "model"
             do rise_error(last_error_code(),last_error())
         }
     }
+
     function globalvar_list(&db, &params)
     {
-        // if not(dbr.security.isauth(db,@AUT_ACCESS_GLOBALVARS)) { do rise_error(500,"No autorizado") }
         do dbr.apps.action.grant("XB40")
 
-        sql = "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent FROM varcategory order by caption;"
+        sql = "SELECT IFNULL(id,'') id, IFNULL(caption,'') caption, IFNULL(help,'') help, IFNULL(parent,'') parent FROM varcategory ORDER BY caption;"
         return dbr.list(db, sql, @null)
 
         exception
@@ -49,6 +49,7 @@ module "model"
             do rise_error(last_error_code(),last_error())
         }
     }
+    
     function get_category_vars(&db, &category)
     {
         sql = "
@@ -77,13 +78,8 @@ module "model"
 
     function globalvar_create(&db, &params, &data)
     {
-        // if not(dbr.security.isauth(db,@AUT_UPDATE_GVAR)) { do rise_error(500,"No autorizado") }
-
         ref vars = @@(data, "&vars")
         
-        // @use_transaction = @false
-        // do dbr.begin(db)
-
         if not(isnull(vars)) && list.count(vars) > 0
         {
             for i = 0; i < list.count(vars)
@@ -94,15 +90,7 @@ module "model"
             }
         }
 
-        // do dbr.commit(db)
         return vars
-        
-        /* exception
-        {
-            if dbr.in_transaction(db) { do dbr.rollback(db) }
-            do errordet(@false)
-			do rise_error(last_error_code(),last_error())
-        } */
     }
 
     function create(&db,&params,&data)
