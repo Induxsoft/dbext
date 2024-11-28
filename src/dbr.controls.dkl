@@ -120,7 +120,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" value="#<value>" step="1" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        input(class="form-control rounded-0" type="number" name="#<name>" id="#<id>" value="#<value>" step="1" oninput="validInteger(this);" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
                     break
@@ -160,6 +160,35 @@ module ":dbr.control"
                     {
                         input(class="form-check-input" type="checkbox" name="#<name>" id="#<id>" "#<checked>"="")
                         label(class="form-check-label" "for"="#<id>"){$"#<caption>"}
+                    }
+                    #!
+                    break
+                }
+                case "numrange"
+                {
+                    mincaption = field.dstr(ctrlDef,"mincaption","Min:")
+                    maxcaption = field.dstr(ctrlDef,"maxcaption","Max:")
+                    minname = field.dstr(ctrlDef,"minname","min")
+                    maxname = field.dstr(ctrlDef,"maxname","max")
+                    minid = field.dstr(ctrlDef,"minid",minname)
+                    maxid = field.dstr(ctrlDef,"maxid",maxname)
+                    minvalue = field.dnum(ctrlDef,"minvalue",0)
+                    maxvalue = field.dnum(ctrlDef,"maxvalue",1)
+
+                    if field.exist(parameters,minname){ minvalue = @@(parameters,"#"+minname) }
+                    if field.exist(parameters,maxname){ maxvalue = @@(parameters,"#"+maxname) }
+
+                    #$
+                    div("#<wrap_attr>"="")
+                    {
+                        label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
+                        fieldset(class="input-group" id="#<id>" "#<disabled>"="")
+                        {
+                            span(class="input-group-text rounded-0"){$"#<mincaption>"}
+                            input(class="form-control rounded-0" type="number" name="#<minname>" value="#<minvalue>" id="#<minid>" min="0" oninput="validInteger(this);" "#<required>"="" "#<readonly>"="")
+                            span(class="input-group-text rounded-0"){$"#<maxcaption>"}
+                            input(class="form-control rounded-0" type="number" name="#<maxname>" value="#<maxvalue>" id="#<maxid>" min="1" oninput="validInteger(this);" "#<required>"="" "#<readonly>"="")
+                        }
                     }
                     #!
                     break
@@ -249,5 +278,14 @@ module ":dbr.control"
                 }
             }
         }
+
+        #$
+        script(type="text/javascript")
+        {$'
+            function validInteger(input) {
+                input.value = input.value.replace(/[^-?0-9]/g,'');
+            }
+        '}
+        #!
     }
 }
