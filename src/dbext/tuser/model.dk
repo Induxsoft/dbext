@@ -209,11 +209,15 @@ module "model"
 
     function list(&db, &params)
     {
-        // if not(dbr.security.isauth(db,@AUT_ACCESS_USUARIOS)) { do rise_error(500,"No autorizado") }
         do dbr.apps.action.grant("XB60")
 
         sql = "
-        SELECT u.sys_pk, u.userid, u.username,GROUP_CONCAT(g.description SEPARATOR ', ')grupos
+        SELECT
+            u.sys_pk,
+            u.userid,
+            u.username,
+            GROUP_CONCAT(g.groupid SEPARATOR '; ') _grupos,
+            GROUP_CONCAT(g.description SEPARATOR '; ') grupos
         FROM tuser u
             LEFT JOIN user_usergroup_ ug ON ug.users = u.sys_pk
             LEFT JOIN usergroup g ON ug.groups=g.sys_pk
@@ -222,14 +226,14 @@ module "model"
             AND IF(IFNULL(@fil_gpo,'-1')='-1', TRUE, ug.groups = @fil_gpo)
             AND IF(IFNULL(@s,'')='', TRUE, (u.userid = @s OR u.username LIKE CONCAT('%',@s,'%')))
         GROUP BY u.userid
-        ORDER BY u.userid
+        ORDER BY u.username ASC
         LIMIT #<@default_max_rows>;
         "
 
         new data
         {
             @"usuarios*": dbr.list(db,ftext(sql),params)
-            @"grupos*": dbr.list(db,"SELECT sys_pk, description FROM usergroup WHERE NOT IFNULL(sys_deleted,0);",@null)
+            @"grupos*": dbr.list(db,"SELECT sys_pk, groupid, description FROM usergroup WHERE NOT IFNULL(sys_deleted,0) ORDER BY description ASC;",@null)
         }
         return data
 
