@@ -216,8 +216,8 @@ module "model"
             u.sys_pk,
             u.userid,
             u.username,
-            GROUP_CONCAT(g.groupid SEPARATOR '; ') _grupos,
-            GROUP_CONCAT(g.description SEPARATOR '; ') grupos
+            GROUP_CONCAT(DISTINCT g.groupid SEPARATOR ';') _grupos,
+            GROUP_CONCAT(DISTINCT g.description SEPARATOR '; ') grupos
         FROM tuser u
             LEFT JOIN user_usergroup_ ug ON ug.users = u.sys_pk
             LEFT JOIN usergroup g ON ug.groups=g.sys_pk
