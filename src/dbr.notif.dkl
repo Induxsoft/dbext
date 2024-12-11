@@ -76,51 +76,100 @@ module "dbr.notif"
 
     // Número máximo de notificaciones no leidas a devolver por la función dbr.notif.list
     @__dbr.notif.no.readed = 10
-
-    // Retorna una lista de las últimas (var:@__dbr.notif.no.readed) notificaciones del  
-    // usuario conectado, no marcadas como leídas
+    /**
+    * Retorna una lista de las últimas (var:@__dbr.notif.no.readed) notificaciones del usuario conectado, no marcadas como leídas.
+    */
     dbr.notif.list::&db
     {
-        new prm { 
+        new params
+        {
             @"limit": @__dbr.notif.no.readed
             @"sesion_id": dbr.getSID(db) 
         }
 
         sql = "
-            SELECT n.sys_guid id, n.sndrid, n.title, n.body, n.href, n.target, 
-                DATE_FORMAT(n.start,'%Y-%m-%d %H:%i:%s') start, DATE_FORMAT(n.end, '%Y-%m-%d %H:%i:%s') end
-            FROM sys_notif n
-                INNER JOIN sys_notif_usr nu ON nu.notif = n.sys_pk
-                INNER JOIN tuser u ON nu.user = u.sys_pk
-                INNER JOIN sys_session ss ON ss.iuser = u.sys_pk
-            WHERE ss.sys_guid = @sesion_id
-                AND (NOW() BETWEEN n.start AND n.end)
-                AND IFNULL(nu.readed, 0) = 0
-            LIMIT @limit;
+        SELECT
+            n.sys_guid id,
+            IFNULL(DATE_FORMAT(n.sys_dtcreated,'%Y-%m-%d %H:%i:%s'),'') created,
+            n.sndrid,
+            n.title,
+            n.body,
+            n.href,
+            n.target, 
+            IFNULL(DATE_FORMAT(n.start,'%Y-%m-%d %H:%i:%s'),'') start,
+            IFNULL(DATE_FORMAT(n.end,'%Y-%m-%d %H:%i:%s'),'') end
+        FROM sys_notif n
+            INNER JOIN sys_notif_usr nu ON nu.notif = n.sys_pk
+            INNER JOIN tuser u ON nu.user = u.sys_pk
+            INNER JOIN sys_session ss ON ss.iuser = u.sys_pk
+        WHERE ss.sys_guid = @sesion_id
+            AND (NOW() BETWEEN n.start AND n.end)
+            AND IFNULL(nu.readed, 0) = 0
+        LIMIT @limit;
         "
 
-        return dbr.list(db, sql, prm)
+        return dbr.list(db,sql,params)
+    }
+
+    // Número máximo de notificaciones leidas a devolver por la función dbr.notif.list.readed
+    @__dbr.notif.readed = 10
+    /**
+    * Retorna una lista de las últimas (var:@__dbr.notif.readed) notificaciones del usuario conectado, marcadas como leídas.
+    */
+    dbr.notif.list.readed::&db
+    {
+        new params
+        {
+            @"limit": @__dbr.notif.readed
+            @"sesion_id": dbr.getSID(db) 
+        }
+
+        sql = "
+        SELECT
+            n.sys_guid id,
+            IFNULL(DATE_FORMAT(n.sys_dtcreated,'%Y-%m-%d %H:%i:%s'),'') created,
+            n.sndrid,
+            n.title,
+            n.body,
+            n.href,
+            n.target, 
+            IFNULL(DATE_FORMAT(n.start,'%Y-%m-%d %H:%i:%s'),'') start,
+            IFNULL(DATE_FORMAT(n.end,'%Y-%m-%d %H:%i:%s'),'') end
+        FROM sys_notif n
+            INNER JOIN sys_notif_usr nu ON nu.notif = n.sys_pk
+            INNER JOIN tuser u ON nu.user = u.sys_pk
+            INNER JOIN sys_session ss ON ss.iuser = u.sys_pk
+        WHERE ss.sys_guid = @sesion_id
+            AND (NOW() BETWEEN n.start AND n.end)
+            AND IFNULL(nu.readed, 0)
+        LIMIT @limit;
+        "
+
+        return dbr.list(db,sql,params)
     }
 
     //Marca como leída la notificación indicada para el usuario conectado
     dbr.notif.readed::&db,notifid
     {
-        new prm { 
+        new params
+        {
             @"notifid": notifid
             @"sesion_id": dbr.getSID(db) 
         }
 
         sql = "
-            UPDATE sys_notif_usr nu
-                INNER JOIN sys_notif n ON nu.notif = n.sys_pk
-                INNER JOIN tuser u ON nu.user = u.sys_pk
-                INNER JOIN sys_session ss ON ss.iuser = u.sys_pk
-            SET nu.readed = 1
-            WHERE n.sys_guid = @notifid
-                AND ss.sys_guid = @sesion_id;
+        UPDATE sys_notif_usr nu
+            INNER JOIN sys_notif n ON nu.notif = n.sys_pk
+            INNER JOIN tuser u ON nu.user = u.sys_pk
+            INNER JOIN sys_session ss ON ss.iuser = u.sys_pk
+        SET
+            nu.sys_recver = (IFNULL(nu.sys_recver,0) + 1),
+            nu.sys_timestamp = NOW(),
+            nu.readed = 1
+        WHERE n.sys_guid = @notifid
+            AND ss.sys_guid = @sesion_id;
         "
-
-        return dbr.execute(db, sql, prm)
+        return dbr.execute(db,sql,params)
     }
 
     // Devuelve una lista de pk de los usuarios existentes en tuser dada
