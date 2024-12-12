@@ -75,6 +75,8 @@ module ":User"
         do field.remove(cdata,"chk-pwd")
 
         params<"_entity_id"> : str(pk_user)
+
+        do dbr.execute(db,"update tuser set sys_recver = ifnull(sys_recver,0) where sys_pk=@_entity_id",params)
         ref entity = entity.update(db,params,cdata)
 
         @url_redir = "/!/dbext/user/"+_entity_id+"/?success=update" //url_dcode(@@(params,"$---from_url_e"))
