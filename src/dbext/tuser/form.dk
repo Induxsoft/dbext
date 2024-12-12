@@ -14,6 +14,7 @@ module "form.dk"
     error = @("$error/message")
     isNew = (entity_id == "_new")
     action = replace(@DBEXT_ADD_EDIT_TUSER, "@id", entity_id)
+    locked = ifstr(parse.bool(@@(user,"$locked")), "checked", "")
 
     function get_checklist_data(&groups)
     {
@@ -121,7 +122,8 @@ module "form.dk"
                             }
                             #! else 
                             {
-                                #$ div(class="col-sm-6")
+                                #$
+                                div(class="col-sm-6")
                                 {
                                     button(type="button" class="btn btn-sm btn-light induxsoft-corners d-block mb-2 border" "data-bs-toggle"="modal" "data-bs-target"="#modal_change_pwd"){$"Cambiar contraseña"}
                                 }
@@ -129,6 +131,15 @@ module "form.dk"
                         }
                         small{$"Notas:"}
                         textarea(name="notes" class="induxsoft-form-control mb-2"){$"#<@@(user, '$notes')>"}
+
+                        #! if not(isNew) {
+                            #$
+                            div(class="form-check mt-2") {
+                                input(class="form-check-input" type="checkbox" name="locked" id="locked" "#<locked>"="")
+                                label(class="form-check-label" "for"="locked"){$"Bloquear"}
+                            }
+                        }
+                        #$
                     }
                     div(class="tab-pane fade" id="groups" role="tabpanel" "aria-labelledby"="goups-tab")
                     {
