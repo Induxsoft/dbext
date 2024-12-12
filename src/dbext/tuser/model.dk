@@ -182,19 +182,40 @@ module "model"
 
     function tuser_delete(&db, &params)
     {
-        // if not(dbr.security.isauth(db,@AUT_DELETE_USUARIO)) { do rise_error(500,"No autorizado") }
         @use_transaction = @false
 
         do dbr.apps.action.pre("XB63")
         do dbr.begin(db)
 
-        do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@_entity_id;", params)
-        do dbr.execute(db, "DELETE FROM uservar WHERE fuser=@_entity_id;", params)
-        do entity.delete(db, params)
+        ref entity = @null
+        deleted = @false
+
+        codeblock "Intentar eliminacón física"
+        {
+            do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@_entity_id;", params)
+            do dbr.execute(db, "DELETE FROM uservar WHERE fuser=@_entity_id;", params)
+            do entity.delete(db, params)
+
+            deleted = @true
+            exception{ do pop_exception() }
+        }
+        if not(deleted)
+        {
+            sql = "
+            UPDATE tuser SET
+                sys_deleted = 1,
+                sys_info = userid,
+                userid = CONCAT('~',sys_pk)
+            WHERE sys_pk = @_entity_id
+            "
+            do dbr.execute(db,sql,params)
+            
+            ref entity:entity.read(db,params)
+        }
         
-        do dbr.apps.action.pos(@null)
+        do dbr.apps.action.pos(entity)
         do dbr.commit(db)
-        do dbr.apps.action.ext(@null)
+        do dbr.apps.action.ext(entity)
 
         return @true
         
