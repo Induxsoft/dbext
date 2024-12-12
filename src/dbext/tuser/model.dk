@@ -36,7 +36,7 @@ module "model"
 
         ref res = record.caseinsensitive(entity.create(db,params,data))
 
-        if not(isnull(groups)) && list.count(groups) > 0 { do tuser_add_to_groups(db, groups, @@(res,"#sys_pk")) }
+        do tuser_add_to_groups(db, ifnull(groups,list.create()), @@(res,"#sys_pk"))
         
         // do dbr.commit(db)
 
