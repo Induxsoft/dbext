@@ -9,9 +9,6 @@ module "model"
 
     function usergroup_create(&db,&params,&data)
     {
-        // if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
-        // if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
-
         ref res = entity.create(db,params,data)
         return res
         
@@ -72,20 +69,39 @@ module "model"
 
     function usergroup_delete(&db, &params)
     {
-        // if not(dbr.security.isauth(db,@AUT_DELETE_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
-
         @use_transaction = @false
 
         do dbr.apps.action.pre("XB73")
         do dbr.begin(db)
 
+        ref entity = @null
+        deleted = @false
+
         do dbr.execute(db, "DELETE FROM profile WHERE usergroup=@_entity_id;", params)
         do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE groups=@_entity_id;", params)
-        do entity.delete(db, params)
+        
+        codeblock "Intentar eliminación física"
+        {
+            do entity.delete(db,params)
+            deleted = @true
+            exception{ do pop_exception() }
+        }
+        if not(deleted)
+        {
+            sql = "
+            UPDATE usergroup SET
+                sys_deleted = 1,
+                sys_info = groupid,
+                groupid = CONCAT('~',sys_pk)
+            WHERE sys_pk = @_entity_id
+            "
+            do dbr.execute(db,sql,params)
+            ref entity:entity.read(db,params)
+        }
 
-        do dbr.apps.action.pos(@null)
+        do dbr.apps.action.pos(entity)
         do dbr.commit(db)
-        do dbr.apps.action.ext(@null)
+        do dbr.apps.action.ext(entity)
 
         return @true
         
@@ -100,14 +116,21 @@ module "model"
 
     function list(&db, &params)
     {
-        // if not(dbr.security.isauth(db,@AUT_ACCESS_GPO_USUARIOS)) { do rise_error(500,"No autorizado") }
         do dbr.apps.action.grant("XB70")
 
-        query="SELECT sys_pk, groupid, description, notes
-            FROM usergroup
-            WHERE IF(IFNULL(@s,'')='', true, (groupid LIKE CONCAT('%',@s,'%') OR description LIKE CONCAT('%',@s,'%')))
-            ORDER BY groupid
-            LIMIT #<@default_max_rows>;"
+        query = "
+        SELECT
+            sys_pk,
+            groupid,
+            description,
+            notes
+        FROM usergroup
+        WHERE
+            NOT IFNULL(sys_deleted,0)
+            AND IF(IFNULL(@s,'')='', TRUE, (groupid = @s OR description LIKE CONCAT('%',@s,'%')))
+        ORDER BY groupid
+        LIMIT #<@default_max_rows>;
+        "
         return dbr.list(db, ftext(query), params)
 
         exception
@@ -120,7 +143,6 @@ module "model"
 
     function read(&db,&params)
     {
-        // if not(dbr.security.isauth(db,@AUT_READ_GPO_USUARIO)) { do rise_error(500,"No autorizado") }
         do dbr.apps.action.grant("XB70")
 
         return entity.read(db,params)

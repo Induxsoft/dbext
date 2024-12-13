@@ -41,7 +41,7 @@ model "Variables globales"
     entity "usergroup" : "TableModel"
     {
         @"description" string(80) required
-        @"groupid" string(15) unique required
+        @"groupid" string(32) unique required
         @"notes" memo 
         @"uf_hidetoolbar" string(1) 
     }
