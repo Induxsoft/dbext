@@ -31,7 +31,7 @@ module "model"
 
         // do dbr.begin(db)
 
-        do dbr.execute(db,"update tuser set sys_recver = ifnull(sys_recver,0) where sys_pk=@sys_pk",data)
+        do dbr.execute(db,"update tuser set sys_recver = ifnull(sys_recver,0), sys_lock = null where sys_pk=@sys_pk",data)
         data<"locked"> : parse.bool(@@(data,"$locked"))
 
         ref res = record.caseinsensitive(entity.create(db,params,data))
