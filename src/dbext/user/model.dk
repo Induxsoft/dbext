@@ -25,8 +25,9 @@ module ":User"
         do rise_error(500,"Acción no implementada")
     }
 
-    function validateSession(&db,_entity_id)
+    function validateSession(&db,&params)
     {
+        _entity_id=urldecode(@@(params,"$_entity_id"))
         ids = @@(@http_context,"$session/user/ids")
         ids, _entity_id >> params
 
@@ -40,7 +41,7 @@ module ":User"
 
     function read(&db,&params)
     {
-        do validateSession(db,@@(params,"$_entity_id"))
+        do validateSession(db,params)
 
         ref entity = entity.read(db,params)
         // if not(isset("@just_read_entity")) { @just_read_entity = @false }
@@ -58,9 +59,8 @@ module ":User"
     function update(&db,&params,&data)
     {
         // @just_read_entity = @true
-        
+        pk_user = validateSession(db,params)
         _entity_id = @@(params,"$_entity_id")
-        pk_user = validateSession(db,_entity_id)
 
         ref cdata = record.copy(data,"*")
 

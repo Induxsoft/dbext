@@ -13,6 +13,9 @@ module "Controller configs"
 	#include "./config.dk"
 	#include "_lib/lib.dk"
 
+	ref @web_utility=_import_library("System.Web.HttpUtility.dll")
+    do _map_function(@web_utility, "System.Web.HttpUtility", "UrlDecode", "urldecode","System.String","$")
+
 	@base_path="dbext"
 	@path_root="" // Establezca una ruta de ser necesario
 
