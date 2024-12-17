@@ -12,10 +12,6 @@ module "model"
 
     function tuser_create(&db,&params,&data)
     {
-        // if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_USUARIO)) { do rise_error(500,"No autorizado") }
-        // if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_USUARIO)) { do rise_error(500,"No autorizado") }
-
-        // @use_transaction = @false
         ref groups = @null
 
         if field.exist(data,"groups")
@@ -29,22 +25,17 @@ module "model"
             data<"pwdmd5">:toupper(md5(@@(data,"pwd")))
         }
 
-        // do dbr.begin(db)
-
         do dbr.execute(db,"update tuser set sys_recver = ifnull(sys_recver,0), sys_lock = null where sys_pk=@sys_pk",data)
         data<"locked"> : parse.bool(@@(data,"$locked"))
 
         ref res = record.caseinsensitive(entity.create(db,params,data))
 
-        do tuser_add_to_groups(db, ifnull(groups,list.create()), @@(res,"#sys_pk"))
-        
-        // do dbr.commit(db)
+        if not(isnull(groups)){do tuser_add_to_groups(db, groups, @@(res,"#sys_pk"))}
 
         return res
 
         exception
         {
-            // if dbr.in_transaction(db) { do dbr.rollback(db) }
             do cu_error("usuario")
             do rise_error(500, last_error())
         }
