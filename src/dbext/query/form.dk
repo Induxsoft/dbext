@@ -18,6 +18,13 @@ module "form.dk"
     // ref data = ifnull(@("&./data"),list.create())
 
     @titulo = @("$./title")
+
+    url_exit_encode=trim(@("$parameters/_from_url_e"))
+    url_exit=trim(@("$parameters/---from_ur"))
+
+    title_encode=trim(@("$parameters/title_encode"))
+    title=trim(@("$parameters/title"))
+
     @layout = ifempty(@@(@properties,"$layout"), "document")
 
     function print_work_area()
@@ -109,10 +116,17 @@ module "form.dk"
         // @"after_cell*": af_cell
     }
 
+    if title_encode!=""{@titulo=url_dcode(title_encode)}
+    else if title!=""{@titulo=title}
+
+    if url_exit_encode!=""{url=url_dcode(url_exit_encode)}
+    else if url_exit!=""{url=url_exit}
+    else{url="../"}
+
     new nav_config
     {
         @"title": @titulo
-        @"urlexit": "../"
+        @"urlexit":url
     }
 
     #$
