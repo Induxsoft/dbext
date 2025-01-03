@@ -316,7 +316,7 @@ var globalvar =
                 });
                 
                 let values = varInput?.source?.values ?? [];
-                let first_value="";
+                
                 const fillSelect = (data) => 
                 {
                     data.forEach(itm => {
@@ -326,7 +326,6 @@ var globalvar =
                         if (itm[keyfield] == varValue) option.setAttribute("selected","");
                         
                         scontrol.appendChild(option);
-                        if(first_value=="")first_value=itm[keyfield];
                     });
                 }
                 fillSelect(values);
@@ -338,7 +337,7 @@ var globalvar =
                 audio_control.style.cssText="width: 100%;height: 20px;";
                 
                 let source = document.createElement('source');
-                source.src=first_value;
+                source.src=varValue;
                 audio_control.appendChild(source);
                 
                 idElement="div-file-"+varData.sys_pk;
@@ -375,6 +374,8 @@ var globalvar =
 
         let audio_control=document.getElementById("audio-file-"+select.getAttribute("pk"));
         if(audio_control)audio_control.src=select.value;
+
+        this.updateVarValue(select.getAttribute('pk'), select.value);
     },
     getJsonDef(string)
     {
