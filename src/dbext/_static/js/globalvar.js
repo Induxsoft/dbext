@@ -303,6 +303,54 @@ var globalvar =
 
                 break;
             }
+            case "audio":
+            {
+                let idElement = "select-audio-"+varData.sys_pk;
+                let showfield = varInput?.source?.showfield ?? '';
+                let keyfield = varInput?.source?.keyfield ?? '';
+
+                let scontrol = main.createFullElement('select',{
+                    class: 'form-select rounded-0',
+                    id: idElement,
+                    pk: varData.sys_pk,
+                });
+                
+                let values = varInput?.source?.values ?? [];
+                let first_value="";
+                const fillSelect = (data) => 
+                {
+                    data.forEach(itm => {
+                        const option = document.createElement('option');
+                        option.value = itm[keyfield];
+                        option.text = itm[showfield];
+                        if (itm[keyfield] == varValue) option.setAttribute("selected","");
+                        
+                        scontrol.appendChild(option);
+                        if(first_value=="")first_value=itm[keyfield];
+                    });
+                }
+                fillSelect(values);
+
+                idElement="audio-file-"+varData.sys_pk;
+
+                let audio_control = main.createFullElement('audio',{id:idElement});
+                audio_control.controls="true";
+                audio_control.style.cssText="width: 100%;height: 20px;";
+                
+                let source = document.createElement('source');
+                source.src=first_value;
+                audio_control.appendChild(source);
+                
+                idElement="div-file-"+varData.sys_pk;
+
+                control=main.createFullElement("div",{id:idElement});
+                control.appendChild(scontrol);
+                control.appendChild(audio_control);
+                if (varValue) control.value = varValue;
+                
+                scontrol.setAttribute("onchange","globalvar.ChangeAudio(event);")
+                break;
+            }
             default:
             {
                 control = main.createFullElement('input', { 
@@ -319,6 +367,14 @@ var globalvar =
 
         control.classList.add('show-hint', 'var-control');
         return control.outerHTML;
+    },
+    ChangeAudio(e)
+    {
+        let select=e.target;
+        if(!select)return;
+
+        let audio_control=document.getElementById("audio-file-"+select.getAttribute("pk"));
+        if(audio_control)audio_control.src=select.value;
     },
     getJsonDef(string)
     {
