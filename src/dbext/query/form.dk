@@ -26,6 +26,7 @@ module "form.dk"
     title=trim(@("$parameters/title"))
 
     @layout = ifempty(@@(@properties,"$layout"), "document")
+    @numcols = 0
 
     function print_work_area()
     {
@@ -76,9 +77,16 @@ module "form.dk"
         
         if not(field.exist(cell,"attributes")){ cell<"attributes*"> : ifnull(@@(column,"&attributes"),record.create()) }
         if not(isanyword(@@(column,"$summary"),"sum,max,min,avg,count")) { do field.remove(column,"summary") }
-        if not(parse.bool(@@(column,"$visible"))) {
-            cell<"_abort"> : @true
-            cell<"attributes/hidden"> : ""
+        if not(parse.bool(@@(column,"$visible"))) 
+        {
+            if trim(tolower(@@(cell,"$cell_type"))) != "header_group" 
+            {
+                if @numcols == 0 { @numcols = list.count(list.create_from_fields(@@(params,"&columns"))) }
+
+                cell<"_abort"> : @true
+                cell<"attributes/colspan"> : @numcols
+                // cell<"attributes/hidden"> : ""
+            }
             return
         }
         href = trim(@@(column,"$anchor/href"))

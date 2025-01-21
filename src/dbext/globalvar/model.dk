@@ -99,7 +99,7 @@ module "model"
 
         do dbr.apps.action.pre("XB41")
         do dbr.begin(db)
-
+        
         ref result = globalvar_create(db,params,data)
 
         do dbr.apps.action.pos(result)
@@ -120,10 +120,10 @@ module "model"
     function update(&db,&params,&data)
     {
         @use_transaction = @false
-
+        
         do dbr.apps.action.pre("XB42")
         do dbr.begin(db)
-
+        
         ref result = globalvar_create(db,params,data)
 
         do dbr.apps.action.pos(result)
