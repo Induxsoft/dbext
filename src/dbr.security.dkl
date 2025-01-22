@@ -6,9 +6,23 @@ module "Extensiones DBR para gestión de permisos:dbr.security"
 	// determina si tiene el privilegio indicado.
 	isauth::&db, privid
 	{
-		sql="select ifnull(ug.sys_pk,0) 
-			from sitem si inner join profile p on p.item=si.sys_pk inner join user_usergroup_ ug on ug.groups=p.usergroup inner join sys_session ses on ses.iuser=ug.users
-			where ses.sys_guid=@sid and si.itemid=@privid and ifnull(ses.sys_deleted,0)=0 limit 1;"
+		sql="
+		select
+			ifnull(ug.sys_pk,0) 
+		from sitem si
+			inner join profile p on p.item=si.sys_pk
+			inner join user_usergroup_ ug on ug.groups=p.usergroup
+			inner join tuser u on u.sys_pk=ug.users
+			inner join usergroup g on g.sys_pk=ug.groups
+			inner join sys_session ses on ses.iuser=ug.users
+		where
+			ses.sys_guid=@sid
+			and si.itemid=@privid
+			and ifnull(ses.sys_deleted,0)=0
+			and ifnull(u.sys_deleted,0)=0
+			and ifnull(g.sys_deleted,0)=0
+		limit 1;
+		"
 		
 		det=""
 		det_id=0
@@ -56,10 +70,10 @@ module "Extensiones DBR para gestión de permisos:dbr.security"
 		}
 
 		new params { @"groupid":admins_groupid }
-		ref usergroup = dbr.rec(db,"SELECT * FROM usergroup WHERE groupid = @groupid",params)
+		ref usergroup = dbr.rec(db,"SELECT * FROM usergroup WHERE groupid = @groupid and ifnull(sys_deleted,0)=0",params)
 
 		if admins_groupid == "" || isnull(usergroup) {
-			sql_admins_groupid = "SELECT groupid FROM usergroup WHERE groupid LIKE 'admin%' LIMIT 1;"
+			sql_admins_groupid = "SELECT groupid FROM usergroup WHERE groupid LIKE 'admin%' AND IFNULL(sys_deleted,0)=0 LIMIT 1;"
 			admins_groupid = dbr.str(db,sql_admins_groupid,@null)
 		}
 
