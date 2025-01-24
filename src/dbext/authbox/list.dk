@@ -84,7 +84,7 @@ module "list"
                             @"template":ftext('
                                 <div class="d-flex gap-2 justify-content-center">
                                     <a href="#<@AUTH_BOX>${DataRow.sys_pk}/" class="btn btn-sm btn-light">Ver</a>
-                                    ${DataRow.pendiente?"edityar":""}
+                                    ${DataRow.pendiente?"editar":""}
                                     '+ifstr(filter=="p1" || filter=="",'<button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(2,\'${DataRow.sys_guid}\')">Rechazar</button>
                                  <button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(3,\'${DataRow.sys_guid}\')">Cancelar</button>
 								<button type="button" class="btn btn-sm btn-light induxsoft-corners btn-main-action m-1" onclick="auth.action(1,\'${DataRow.sys_guid}\')">Autorizar</button>',"")+'

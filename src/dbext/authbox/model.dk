@@ -49,7 +49,7 @@ module "model"
     {
         // if not(dbr.security.isauth(db,@AUT_ACCESS_AUTORIZACIONES)) { do rise_error(500,"No autorizado") }
         do dbr.apps.action.grant(@AUT_ACCESS_AUTORIZACIONES)
-
+        
         ref user=dbr.auths.getUser(db)
         params<"user">:@@(user,"#sys_pk")
 
