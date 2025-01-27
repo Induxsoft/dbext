@@ -263,6 +263,8 @@ model "Variables globales"
         @"qry" mmemo
         @"design" memo
         @"cat" ref:"dba_query_cat" required
+        @"app" ref:"sys_app_catalog"
+        @"det" ref:"sys_app_item_type"
     }
 
     //#region sys_*

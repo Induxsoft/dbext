@@ -289,6 +289,8 @@ module ":dbr.apps"
 
     action.log::
     {
+        if not(isset("@@_action_context")){return}
+        
         ref db = @@(@@_action_context,"&context/database")
         //Cuando ocurre un error
         new log
