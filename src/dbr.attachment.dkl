@@ -1,0 +1,192 @@
+#include "dkli.dkh"
+#!
+module ":dbr.attachment"
+{
+    if not(isset("@http_context")) && isset("@crud_context") { ref @http_context = ifnull(@@(@crud_context,"&http"),record.create()) }
+    
+    @dbr.attachment.custom_path = ""
+    @dbr.attachment.custom_mini = ""
+    @dbr.attachment.custom_url = ""
+
+    function replace_path_macros(path,&params)
+    {
+        ref _params = record.copyexin(ifnull(params,record.create()),ifnull(@@(@http_context,"&request/get"),record.create()),"*",",","",":")
+
+        prot = ifstr(parse.bool(@@(@http_context,"$request/headers/HTTPS")),"https","http")
+        host = @@(@http_context, "$request/headers/HTTP_HOST")
+        port = @@(@http_context, "$request/headers/SERVER_PORT")
+        qname = @@(@http_context,"$session/idp/qname")
+
+        path = replace(path, "@prot", prot)
+        path = replace(path, "@host", host)
+        path = replace(path, "@port", port)
+        path = replace(path, "@qname", qname)
+        go foreach.fstr(key:key, value:val) with(_params) {
+            path = replace(path,"@"+key,val)
+        }
+
+        return path
+    }
+
+    function clean_filename(filename)
+	{
+        // Remover caracteres inválidos para nombres de archivos.
+		// return tolower(trim(replace(ranychars(filename,'\\/:*?"<>|'," ")," ","_")))
+        return tolower(trim(replace(ranychars(filename,'\\/:*?"<>|+()[]#$%&=,'," ")," ","_")))
+	}
+
+    function clean_path(path)
+    {
+        return path
+        // Remover exceso de separadores de ruta '/'.
+        ref frags = split(replace(trim(str(path)),"\\","/"), "/")
+        res = ""
+        sep = ""
+        
+        for i = 0; i < list.count(frags)
+        {
+            frag = trim(list.str(frags,i))
+            if frag == "" { frag = "/" }
+            if sep != frag {
+                res = res + frag
+                sep = frag
+            }
+        }
+
+        return res
+    }
+
+    function path(&params)
+    {
+        path = @dbr.attachment.custom_path
+        if path == "" { path = "data/@qname/@det/@detid/" }
+        
+        path = dbr.attachment.replace_path_macros(path,params)
+        return dbr.attachment.clean_path(path)
+    }
+
+    function mini(&params)
+    {
+        mini = @dbr.attachment.custom_mini
+        if mini == "" { mini = "/$/@_pack/img/minis/" }
+
+        mini = dbr.attachment.replace_path_macros(mini,params)
+        return dbr.attachment.clean_path(mini)
+    }
+
+    function url(&params)
+    {
+        url = @dbr.attachment.custom_url
+        if url == "" { url = "/$/data/@qname/@det/@detid/" }
+
+        url = dbr.attachment.replace_path_macros(url,params)
+        return dbr.attachment.clean_path(url)
+    }
+
+    function properties(filename,&params,&item)
+    {
+        if isnull(item) { ref item:record.create() }
+        attachment_path = dbr.attachment.path(params)
+        attachment_mini = dbr.attachment.mini(params)
+        attachment_url = dbr.attachment.url(params)
+        
+        ext = file.extension(filename)
+        mini = "file.png"
+
+        if ext == ".pdf" { mini = "pdf.png" }
+        else if ext == ".xml" { mini = "xml.png" }
+        else if ext == ".csv" { mini = "csv.png" }
+        else if isanyword(ext,"zip,rar") { mini = "zip.png" }
+        else if isanyword(ext,"jpg,jpeg,png") { mini = "img.png" }
+        else if isanyword(ext,"docx,docm,dotx,dotm,doc,dot,wbk,wll,wwl") { mini = "word.png" }
+        else if isanyword(ext,"xlsx,xlsm,xltx,xltm,xls,xlt,xlm,xlsb,xla,xlam,xll,xlw,xll_,xla_,xla5,xla8") { mini = "excel.png" }
+
+        using item
+        {
+            @"path": path.concat(attachment_path,filename)
+            @"mini": path.concat(attachment_mini,mini)
+            @"url": path.concat(attachment_url,filename)
+            @"fullname": filename
+            @"name": file.justname(filename)
+            @"ext": ext
+        }
+        return item
+    }
+
+    function list(&params)
+    {
+        ref files = list.files(dbr.attachment.path(params),"*")
+        ref attachments = list.create()
+
+        for i = 0; i < list.count(files)
+        {
+            filepath = list.str(files,i)
+            filename = file.name(filepath)
+
+            new item
+            {
+                @"field": ""
+            }
+            do dbr.attachment.properties(filename,params,item)
+            do list.add(attachments,item)
+        }
+
+        return attachments
+    }
+
+    function upload(&params)
+    {
+        attachment_path = dbr.attachment.path(params)
+        
+        ref files = ifnull(@@(@http_context,"&request/files"),list.create())
+        ref uploaded = list.create()
+
+        do dir.ensure(attachment_path)
+        for i = 0; i < list.count(files)
+        {
+            ref file = list.obj(files,i)
+            if file.exists(@@(file,"$temp_file")) && @@(file,"$filename") != "" && @@(file,"#size") > 0
+            {
+                filename = dbr.attachment.clean_filename(@@(file,"$filename"))
+                filepath = path.concat(attachment_path,filename)
+                
+                do file.copy(@@(file,"$temp_file"),filepath)
+                new item
+                {
+                    @"field": @@(file,"$field")
+                }
+                do dbr.attachment.properties(filename,params,item)
+                do list.add(uploaded,item)
+            }
+        }
+
+        return uploaded
+    }
+
+    function download(&params)
+    {
+        attachment_path = dbr.attachment.path(params)
+        filename = @@(params,"$filename")
+        filepath = path.concat(attachment_path,filename)
+        
+        if not(file.exists(filepath)) { do rise_error(404,"No fue posible encontrar el archivo adjunto solicitado o no existe.") }
+        
+        // Establecer encabezado de respuesta http
+        @http_context<"response/headers/content-type"> : "application/octet-stream;"
+        // Indicar que se trata de un archivo adjunto y su nombre
+        // Más información en: https://developer.mozilla.org/es/docs/Web/HTTP/Headers/Content-Disposition
+        @http_context<"response/headers/content-disposition"> : "attachment; filename="+filename
+        // Indicar tipo de respuesta
+        @http_context<"response/output"> : "binary"
+        // Asignar la respuesa de salida
+        @http_context<"response/binary*"> : file.rbytes(filepath)
+    }
+
+    function delete(&params)
+    {
+        attachment_path = dbr.attachment.path(params)
+        filepath = path.concat(attachment_path,@@(params,"$filename"))
+
+        if file.exists(filepath) { do file.delete(filepath) }
+    }
+}
