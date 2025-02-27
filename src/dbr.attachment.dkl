@@ -90,12 +90,12 @@ module ":dbr.attachment"
         attachment_mini = dbr.attachment.mini(params)
         attachment_url = dbr.attachment.url(params)
         
-        ext = file.extension(filename)
+        ext = replace(file.extension(filename),".","")
         mini = "file.png"
 
-        if ext == ".pdf" { mini = "pdf.png" }
-        else if ext == ".xml" { mini = "xml.png" }
-        else if ext == ".csv" { mini = "csv.png" }
+        if ext == "pdf" { mini = "pdf.png" }
+        else if ext == "xml" { mini = "xml.png" }
+        else if ext == "csv" { mini = "csv.png" }
         else if isanyword(ext,"zip,rar") { mini = "zip.png" }
         else if isanyword(ext,"jpg,jpeg,png") { mini = "img.png" }
         else if isanyword(ext,"docx,docm,dotx,dotm,doc,dot,wbk,wll,wwl") { mini = "word.png" }
