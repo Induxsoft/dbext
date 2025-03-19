@@ -180,8 +180,23 @@ module "Variables alojadas en la base de datos :dbr.vars"
         inserts=0
         for i=0;i<table.rows(t)
         {
-            ref rw=row.get(t,i)
-            do dbr.insert(db,tname,rw)
+            ref record=row.get(t,i)
+           
+            ref fields = list.create_from_fields(record)    
+            for n = 0; n < list.count(fields)
+            {
+                field = list.str(fields,n)
+                value = @@(record,"$"+field)                
+                if value=="\\N" || value=="\\0" || value=="NULL" || value=="\0" { record<field+"*">:@null }
+                if tname=="rh_concepto_nomina" && field=="manual"
+                {
+                    do field.remove(record,field)
+                }
+            }
+            record<"sys_timestamp*">:now()
+            record<"sys_dtcreated*">:now()
+            
+            do dbr.insert(db,tname,record)
             inserts = (inserts + 1)
             
             exception{ if not(contains(last_error(), "Duplicate entry")){ do print(last_error()) } }
