@@ -106,13 +106,15 @@ module "model"
         // Agregamos todos los grupos al usuario indicado
         for i = 0; i < list.count(groups)
         {
-            new ugroup {
-                @"sys_timestamp*": dbr.sql("NOW()")
+            new ugroup 
+            {
+                // @"sys_timestamp*": dbr.sql("NOW()")
                 @"groups": list.num(groups, i)
                 @"users": @@(prm, "#user")
             }
             if require_sys_guid { ugroup<"sys_guid">: toupper(uuid()) }
-            do dbr.insert(db, "user_usergroup_", ugroup)
+            // do dbr.insert(db, "user_usergroup_", ugroup)
+            do dbr.execute(db,"insert into user_usergroup_(sys_timestamp,sys_guid,`groups`,users) values(now(),@sys_guid,@groups,@users)",ugroup)
         }
     }
 
@@ -157,7 +159,7 @@ module "model"
     {
         new prm { @"user": user_pk }
         ref groups=dbr.list(db,"SELECT sys_pk grupo_pk, groupid, description groupdescription FROM usergroup;",@null)
-        ref uugs=dbr.list(db,"SELECT groups FROM user_usergroup_ WHERE users=@user",prm)
+        ref uugs=dbr.list(db,"SELECT `groups` FROM user_usergroup_ WHERE users=@user",prm)
 
         for i=0;i<list.count(groups) 
         {
@@ -171,6 +173,7 @@ module "model"
             }
             group<"added">: added
         }
+        
         return groups
     }
 
