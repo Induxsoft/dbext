@@ -107,6 +107,30 @@
                         "keyfield":"val"
                     }
                 }
+            },
+            {
+                "varname": "dbext_public_content_storage",
+                "vardefault": "@host/public",
+                "varvalue": "@host/public",
+                "varcaption": "Ruta física definida para contenidos",
+                "varhelp": "Ruta física definida de contenidos públicos.",
+                "vartype": "string",
+                "varinput": 
+                {
+                    "control": "text"
+                }
+            },
+            {
+                "varname": "dbext_public_content",
+                "vardefault": "https://@host/public/",
+                "varvalue": "https://@host/public/",
+                "varcaption": "Url definida para contenidos",
+                "varhelp": "Url definida para contenidos públicos.",
+                "vartype": "string",
+                "varinput": 
+                {
+                    "control": "text"
+                }
             }
         ]
     },
@@ -148,6 +172,42 @@
                 "varcaption": "Pie de página para las impresiones",
                 "vartype": "string",
                 "varinput": { "control": "text" }
+            },
+            {
+                "varname": "prn_logo1",
+                "vardefault": "",
+                "varvalue": "",
+                "varcaption": "Logotipo 1",
+                "varhelp": "Logotipo 1.",
+                "vartype": "string",
+                "varinput": 
+                {
+                    "control": "file"
+                }
+            },
+            {
+                "varname": "prn_logo2",
+                "vardefault": "",
+                "varvalue": "",
+                "varcaption": "Logotipo 2",
+                "varhelp": "Logotipo 2.",
+                "vartype": "string",
+                "varinput": 
+                {
+                    "control": "file"
+                }
+            },
+            {
+                "varname": "prn_logo3",
+                "vardefault": "",
+                "varvalue": "",
+                "varcaption": "Logotipo 3",
+                "varhelp": "Logotipo 3.",
+                "vartype": "string",
+                "varinput": 
+                {
+                    "control": "file"
+                }
             }
         ]
     },

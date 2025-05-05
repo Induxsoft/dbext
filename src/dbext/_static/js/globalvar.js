@@ -157,7 +157,6 @@ var globalvar =
             varsEmpty.classList.add('d-none');
 
             let tmpl = ``;
-
             vars.forEach(v => {
                 if (v) tmpl += globalvar.getBlockControl(v);
             });
@@ -350,6 +349,33 @@ var globalvar =
                 scontrol.setAttribute("onchange","globalvar.ChangeAudio(event);")
                 break;
             }
+            case "file":
+            {
+                let filecontrol = main.createFullElement('input', 
+                { 
+                    type:'file', 
+                    class:'induxsoft-form-control',
+                    id:varData.sys_pk,
+                    pk:varData.sys_pk, 
+                    value:varValue,
+                    onchange:"globalvar.ChangeContent(this,'"+(varData.url??"")+"')",
+                    name:varData.varname
+                }, varValue);
+                // if (varValue) control.value = varValue;
+                idElement="div-file-"+varData.sys_pk;
+                idElementlbl="lbl-file-"+varData.sys_pk;
+                control=main.createFullElement("div",{id:idElement});
+                let  label_control=main.createFullElement("label",{id:idElementlbl});
+                control.appendChild(label_control);
+                control.appendChild(filecontrol);
+
+                if (varValue) 
+                {
+                    label_control.textContent = varValue;
+                    label_control.style.cssText="color:green";
+                }
+                break;
+            }
             default:
             {
                 control = main.createFullElement('input', { 
@@ -366,6 +392,39 @@ var globalvar =
 
         control.classList.add('show-hint', 'var-control');
         return control.outerHTML;
+    },
+    ChangeContent(element,url)
+    {
+        if(!element || element.value.trim()=="")return;
+
+        if(element.files.length<1)
+        {
+            alert("Debe seleccionar un elemento");
+            return;
+        }
+
+        var data=new FormData();
+        for (let i = 0; i < element.files.length; i++) 
+        {
+            const e = element.files[i];
+            data.append(e.name,e);
+        }
+        data.append("file_name",element.name);
+
+        let endpoint = url;
+       
+        InduxsoftCrudlModel.InvokeService(endpoint, data,
+            success => 
+            {
+                element.value="";
+            },
+            failure => { 
+                element.value="";
+                console.log(failure);
+                alert('No fue posible guardar la configuración.\n'+JSON.stringify(failure));
+            },
+            "POST", false,true,"",true
+        );
     },
     ChangeAudio(e)
     {

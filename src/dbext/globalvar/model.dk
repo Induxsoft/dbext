@@ -3,6 +3,8 @@
 module "model"
 {
     #include "../config.dk"
+    #include "dbr.attachment.dkl"
+
     @table_name = "globalvar"
 
     function load_query_values(&db,&params)
@@ -100,6 +102,8 @@ module "model"
         do dbr.apps.action.pre("XB41")
         do dbr.begin(db)
         
+        do SaveFiles(db,params,data)
+
         ref result = globalvar_create(db,params,data)
 
         do dbr.apps.action.pos(result)
@@ -124,6 +128,7 @@ module "model"
         do dbr.apps.action.pre("XB42")
         do dbr.begin(db)
         
+        do SaveFiles(db,params,data)
         ref result = globalvar_create(db,params,data)
 
         do dbr.apps.action.pos(result)
@@ -146,6 +151,39 @@ module "model"
         do rise_error(500,"Acción no implementada")
     }
 
+    function SaveFiles(&db,&params,&data)
+    {
+        pathfile=dbr.vars.get(db,"dbext_public_content_storage")
+        urlfile=dbr.vars.get(db,"dbext_public_content")
+
+        pathfile=path.concat("web/",pathfile)
+        @dbr.attachment.custom_path = pathfile
+        @dbr.attachment.custom_url = urlfile
+
+        ref files = ifnull(@@(@http_context,"&request/files"),list.create())
+
+        filename=""
+        if trim(@@(data,"$file_name"))!=""
+        {
+            for i = 0; i < list.count(files)
+            {
+                ref file = list.obj(files,i)
+                if file.exists(@@(file,"$temp_file")) && @@(file,"$filename") != "" && @@(file,"#size") > 0
+                {
+                    filename=@@(file,"$filename")
+                    file<"filename">:trim(@@(data,"$file_name"))+file.extension(@@(file,"$filename"))
+                }
+            }
+        }
+        
+        do dbr.attachment.upload(params)
+        new var
+        {
+            @"varname":trim(@@(data,"$file_name"))
+            @"varvalue":filename
+        }
+        do dbr.update(db,"globalvar",var,"varname=@varname",var)
+    }
     point @read to globalvar_read
     point @list to globalvar_list
     point @create to create
