@@ -158,8 +158,8 @@ module ":dbr.control"
                     #$
                     div("#<wrap_attr>"="")
                     {
-                        input(class="form-check-input" type="checkbox" name="#<name>" id="#<id>" "#<checked>"="")
-                        label(class="form-check-label" "for"="#<id>"){$"#<caption>"}
+                        input(class="form-check-input" type="checkbox" name="#<name>" id="#<id>" "#<checked>"="" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
+                        label(class="form-check-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
                     }
                     #!
                     break
