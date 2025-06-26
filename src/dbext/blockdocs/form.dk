@@ -118,7 +118,7 @@ module "form.dk"
                                         "data-key"="sys_pk" 
                                         "data-search"="codigo" 
                                         "data-text"="descripcion" 
-                                        "data-source"="#<@UBICACIONES>" 
+                                        "data-source"="#<@UBICACIONES>?s=@search" 
                                         "data-value"="#<to.json(@('&./ubicacion'))>" 
                                         columns="codigo,descripcion" 
                                         colcaptions="Código,Descripción"){$""}
