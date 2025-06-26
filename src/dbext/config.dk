@@ -8,7 +8,8 @@ module "config"
 	@path_common="dbext/_common/list.dk"
 
     @default_max_rows=250
-
+    
+    @UBICACIONES="/!/catbas/ubicacion/"
     // _STATIC
     @jQuery = "/$/dbext/js/jquery-3.6.0.min.js"
     @js_definitive_api = "/$/dbext/js/definitive.api.js"

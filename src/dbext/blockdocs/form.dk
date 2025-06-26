@@ -105,11 +105,35 @@ module "form.dk"
                                 input(type="Number" class="induxsoft-form-control mb-2" name="fultimo" value="#<@@(data, '#fultimo')>" readonly="true" maxlength="11")
                             }
                         }
-                        div(class="d-flex")
+                        div(class="row")
                         {
-                            label(class="m-1"){input(type="checkbox" name="activo" "#<ifstr(@('#./activo'),'checked','')>"="true" ) " Activo"}
-                            label(class="m-1"){input(type="checkbox" name="fiscal" "#<ifstr(@('#./fiscal'),'checked','')>"="true" ) " Fiscal"}
+                            div(class="col-md-6")
+                            {
+                                div(class="col-md-12")
+                                {
+                                    small{"Ubicación:"}
+                                    "input-key"(
+                                        name="ubicacion" 
+                                        id="ubicacion" 
+                                        "data-key"="sys_pk" 
+                                        "data-search"="codigo" 
+                                        "data-text"="descripcion" 
+                                        "data-source"="#<@UBICACIONES>" 
+                                        "data-value"="#<to.json(@('&./ubicacion'))>" 
+                                        columns="codigo,descripcion" 
+                                        colcaptions="Código,Descripción"){$""}
+                                }
+                            }
+                            div(class="col-md-6")
+                            {
+                                div(class="d-flex mt-4")
+                                {
+                                    label(class="m-1"){input(type="checkbox" name="activo" "#<ifstr(@('#./activo'),'checked','')>"="true" ) " Activo"}
+                                    label(class="m-1"){input(type="checkbox" name="fiscal" "#<ifstr(@('#./fiscal'),'checked','')>"="true" ) " Fiscal"}
+                                }
+                            }
                         }
+                        
                     }
                     div(class="tab-pane fade" id="groups" role="tabpanel" "aria-labelledby"="goups-tab")
                     {

@@ -69,7 +69,8 @@ module ""
 
         do dbr.apps.action.pre("XB31")
         do dbr.begin(db)
-
+        if field.exist(data,"ubicacion") && trim(@@(data,"$ubicacion"))==""{data<"ubicacion*">:@null}
+        
         ref result = save(db,params,data)
 
         do dbr.apps.action.pos(result)
@@ -95,6 +96,7 @@ module ""
 
         do dbr.apps.action.pre("XB32")
         do dbr.begin(db)
+        if field.exist(data,"ubicacion") && trim(@@(data,"$ubicacion"))==""{data<"ubicacion*">:@null}
 
         ref result = save(db,params,data)
 
@@ -145,6 +147,7 @@ module ""
         do dbr.apps.action.grant("XB30")
 
         ref entity=entity.read(db,params)
+        if @@(entity,"$ubicacion")!=""{entity<"ubicacion*">:dbr.rec(db,"select * from ubicacion where sys_pk=@ubicacion",entity)}
         do Prepare.View(db,params,entity)
         return entity
 

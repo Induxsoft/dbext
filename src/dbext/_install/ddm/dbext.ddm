@@ -114,6 +114,12 @@ model "Variables globales"
             field "userid"
         }
     }
+    entity "ubicacion" : "TableModel"
+    {
+        // @"codigo" string(10) unique required
+        // @"descripcion" string(50) required
+        // @"notas" memo
+    }
     // Administración de series de documentos
     entity "blockdocumentos" : "TableModel"
     {
@@ -128,6 +134,7 @@ model "Variables globales"
         @"serie" string(10)
         @"uf_cfdfolio" int
         @"uf_cfdi_info" int
+        @"ubicacion" ref:"ubicacion"
     }
     // Control de folios de documentos
     entity "foliosdocumentos" : "TableModel"
