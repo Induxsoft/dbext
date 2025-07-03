@@ -116,9 +116,8 @@ model "Variables globales"
     }
     entity "ubicacion" : "TableModel"
     {
-        // @"codigo" string(10) unique required
-        // @"descripcion" string(50) required
-        // @"notas" memo
+        @"codigo" string(10) unique required
+        @"descripcion" string(50) required
     }
     // Administración de series de documentos
     entity "blockdocumentos" : "TableModel"
