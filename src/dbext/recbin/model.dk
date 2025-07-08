@@ -1,0 +1,145 @@
+#include "dkli.dkh"
+#!
+module "Papelera de reciclaje:recbin"
+{
+    @table_name = "recycle_bin"
+    @keyfield = "det"
+
+    function buscarDET(&db,&params)
+    {
+        return dbr.list(db,"
+            SELECT id, title
+            FROM sys_app_item_type
+            WHERE (@search = '' OR @search = '*' OR CONVERT(@search,DECIMAL) = -1)
+                OR id = @search OR id LIKE CONCAT('%',@search,'%')
+        ",params)
+    }
+
+    function list(&db,&params)
+    {
+        //#region list()
+        do dbr.apps.action.grant("XB150")
+        
+        if not(field.exist(params,"det")) { params<"det"> : dbr.str(db,"select det from recycle_bin limit 1",@null) }
+        if @@(params,"det") == ""
+        {
+            ref itemtype = record.create()
+            ref records = list.create()
+        }
+        else
+        {
+            ref itemtype = dbr.rec(db,"select * from sys_app_item_type where id = @det",params)
+            
+            @list_query = dbr.str(db,"select qbrowser from recycle_bin where det = @det",params)
+            if @list_query == "" { ref records = list.create() }
+            else { ref records = entity.list(db,params) }
+        }
+
+        new data
+        {
+            @"itemtype*": itemtype
+            @"data*": records
+            @"itemactions*": dbr.apps.itemactions(db,"DET097","action","",0)
+            @"itemreports*": dbr.apps.itemactions(db,"DET097","report","",0)
+        }
+        
+        return data
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    function restoreItem(&db,&params,&data)
+    {
+        //#region restoreItem
+        do dbr.apps.action.grant("XB151")
+
+        ref def = dbr.rec(db,"select qrestore, qforze from recycle_bin where det = @det",params)
+
+        codeblock "Restaurar elemento borrado"
+        {
+            restored = (dbr.execute(db,@@(def,"$qrestore"),data) > 0)
+            forced = @false
+
+            if not(restored) {
+                if @@(def,"$qforze")!="" {
+                    restored = (dbr.execute(db,@@(def,"$qforze"),data) > 0)
+                    forced = @true
+                }
+            }
+
+            exception
+            {
+                if not(forced) && @@(def,"$qforze")!=""
+                {
+                    restored = (dbr.execute(db,@@(def,"$qforze"),data) > 0)
+                    forced = @true
+                }
+            }
+        }
+
+        new response
+        {
+            @"element": @@(params,"$det")
+            @"element_id": @@(params,"$_entity_id")
+            @"restored": restored
+            @"forced": forced
+        }
+        return response
+
+        exception{ do catch(db,params,data) }
+    }
+
+    function deleteItem(&db,&params,&data)
+    {
+        //#region deleteItem
+        do dbr.apps.action.grant("XB152")
+
+        qdelete = dbr.str(db,"select qdelete from recycle_bin where det = @det",params)
+        do dbr.execute(db,qdelete,data)
+        return @null
+
+        exception{ do catch(db,params,data) }
+    }
+
+    NotImplemented1::&db,&params
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+    NotImplemented2::&db,&params,&data
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+
+    catch::&db,&params,&data
+    {
+        //#region catch
+        do errordet(@false)
+        code = last_error_code()
+        error = last_error()
+
+        if dbr.in_transaction(db) { do dbr.rollback(db) }
+        if isset("@@_action_context") { do dbr.apps.action.log() }
+
+        if isanyword(@@(params,"$_operation"),"create,update")
+        {
+            if contains(error,"Duplicate entry") { error = "Entrada duplicada, ya existe un registro con los mismos valores." }
+            // if not(isnull(data))
+            // {
+            //     ref FormData = record.copy(data,"*")
+            //     do record.clear(data)
+            //     data<"form*"> : FormData
+                
+            //     do prepareView(db,params,data)
+            // }
+        }
+        else if @@(params,"$_operation") == "delete"
+        {
+            if contains(error,"Cannot delete or update a parent row") || contains(error,"DELETE Error") {
+                error = "No es posible eliminar, otros registros dependen del elemento proporcionado."
+            }
+        }
+        
+        do clear_exceptions()
+        do rise_error(code,error)
+    }
+}

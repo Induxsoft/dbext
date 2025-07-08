@@ -1,0 +1,227 @@
+#include "dkli.dkh"
+#!
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "dbext/_lib/lib.dk"
+
+    do @context.begin(@crud_context)
+
+    ref itemtype = @("&./itemtype")
+    ref data = @("&./data")
+
+	@_entities_type = @("$parameters/_entities_type")
+
+    table_id = "tbl_"+@_entities_type
+    tbtn_style = "cursor:pointer; text-decoration:none; border:none; outline:none; padding: 0px 8px; background-color:#F5F5F5; color:#000000;"
+    
+    new table_definition
+    {
+        @"datatable*": data
+        member @"columns" {}
+        @"table_footer": "Mostrando los primeros # registros"
+        @"control_styles": '
+            thead { text-transform: capitalize; }
+        '
+    }
+
+    if list.count(data) > 0
+    {
+        ref columnsdef = record.create()
+        ref firstrow = list.obj(data,0)
+        ref fields = list.create_from_fields(firstrow)
+
+        for i = 0; i < list.count(firstrow)
+        {
+            field = list.str(fields,i)
+            if not(StartsWith(field,"sys_"))
+            {
+                new coldef
+                {
+                    @"caption": ranychars(field,"-_", " ")
+                }
+                columnsdef<field+"*"> : coldef
+            }
+        }
+
+        new _actions
+        {
+            @"caption":"Acciones"
+            @"no-print":@true
+            @"template":ftext('
+                <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
+                    <button onclick="recbinRestore(${DataRow.sys_pk})" style="#<tbtn_style>">Restaurar</button>
+                    <button onclick="recbinDelete(${DataRow.sys_pk})" style="#<tbtn_style>">Eliminar</button>
+                </div>
+            ')
+        }
+
+        table_definition<"columns*"> : columnsdef
+    }
+
+    new nav_config
+    {
+        @"title": "Papelera de reciclaje"
+        @"urlexit": "/"
+        @"actions*": ifnull(@("&./itemactions"),list.create())
+        @"reports*": ifnull(@("&./itemreports"),list.create())
+        @"jscurrentcontext": "getCurrentContext"
+
+        member "hidden"
+        {
+            @"print": @true
+            @"send": @true
+            @"copy": @true
+            @"csv": @true
+        }
+    }
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container-fluid" id="view")
+    {
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+
+            form(class="row mb-1 gx-1" action="./" method="GET" id="form-filter")
+            {
+                div(class="col-lg-6" title="Filtrar por tipo de elemento de dato")
+                {
+                    "input-key"(
+                        id="itemtype"
+                        name="det"
+                        "data-key"="id"
+                        "data-search"="id"
+                        "data-text"="title"
+                        "data-source"="/!/dbext/recbin/?_action=buscar-det&search=@search"
+                        "data-value"='#<to.json(itemtype)>'
+                        columns="id,title"
+                        colcaptions="ID,Título"
+                    ){""}
+                }
+                div(class="col-lg-6")
+                {
+                    "filter-text"(class="w-100" "text-field"="search" value="#<@('$parameters/search')>" placeholder="Buscar ..." "form"="#form-filter" "auto-submit"="true"){""}
+                }
+            }
+        }
+        // Contenido principal
+        section(id="work_area")
+        {
+            #!
+            do uie.dbeditable(table_definition,table_id)
+            #$
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                // script(src=""){$""}
+                script(type="text/javascript")
+                {$'
+                    var recbin = {
+                        table: null,
+                        form: null,
+
+                        init()
+                        {
+                            this.table = document.getElementById("#<table_id>");
+                            this.form = document.getElementById("form-filter");
+                            
+                            const ik_itemtype = document.getElementById("itemtype");
+                            ik_itemtype.change_event = (data) => {
+                                if (data) this.form.submit();
+                            }
+                        },
+                        recbinRestore()
+                        {
+                            if (!this.table || this.req_restore_item) return;
+
+                            let index = this.table.CurrentRowIndex();
+                            if (index < 0) {
+                                alert("Debe seleccionar un elemento de la lista para continuar");
+                                return
+                            }
+                            if (!confirm("¿Desea restaurar el elemento seleccionado?")) return;
+
+                            this.req_restore_item = true;
+                            let endpoint = "/!/dbext/recbin/?_action=restaurar&det="+this.params.det;
+                            const row = this.table.DataArray[index];
+
+                            const onSuccess = (data) => {
+                                if (data.message) {
+                                    alert(data.message);
+                                    this.req_restore_item = false;
+                                    return
+                                }
+                                this.table.DeleteRow(index);
+                                this.req_restore_item = false;
+                            };
+                            const onFailure = (error) => {
+                                alert(error.message);
+                                this.req_restore_item = false;
+                            };
+                            InduxsoftCrudlModel.InvokeService(endpoint, row, onSuccess, onFailure, "PATCH", false);
+                        },
+                        recbinDelete()
+                        {
+                            if (!this.table || this.req_delete_item) return;
+                            
+                            let index = this.table.CurrentRowIndex();
+                            if (index < 0) {
+                                alert("Debe seleccionar un elemento de la lista para continuar");
+                                return
+                            }
+                            if (!confirm("¿Esta seguro que desea eliminar definitivamente el elemento seleccionado?")) return;
+                            
+                            this.req_delete_item = true;
+                            let endpoint = "/!/dbext/recbin/?_action=eliminar&det="+this.params.det;
+                            const row = this.table.DataArray[index];
+
+                            const onSuccess = (data) => {
+                                if (data.message) {
+                                    alert(data.message);
+                                    this.req_delete_item = false;
+                                    return
+                                }
+                                this.table.DeleteRow(index);
+                                this.req_delete_item = false;
+                            };
+                            const onFailure = (error) => {
+                                alert(error.message);
+                                this.req_delete_item = false;
+                            };
+                            InduxsoftCrudlModel.InvokeService(endpoint, row, onSuccess, onFailure, "PATCH", false);
+                        }
+                    }
+
+                    function getCurrentContext() {
+                        const table = document.getElementById("#<table_id>");
+                        const row = table?.DataArray[table.CurrentRowIndex()] ?? {};
+                        const id = row?.sys_pk ?? row?.sys_guid;
+                        
+                        return { item_id:id, context: {} }
+                    }
+                    
+                    document.addEventListener("DOMContentLoaded", () => {
+                        recbin.params = #<to.json(@("&parameters"))>;
+                        recbin.init();
+
+                        // Script injection
+                        #<@@(@crud_context,"script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+
+    do @context.end()
+}

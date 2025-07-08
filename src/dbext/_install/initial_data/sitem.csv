@@ -65,3 +65,7 @@ dbext.run,Run,dbext
 XBF0,"Ejecutar consultas a través del método POST",dbext.run
 dbext.query,Query,dbext
 XB140,Galería de consultas,dbext.query
+dbext.recbin,Papelera de reciclaje,dbext
+XB150,Lista de elementos borrados,dbext.recbin
+XB151,Restaurar elemento borrado,dbext.recbin
+XB152,Eliminar definitivamente,dbext.recbin

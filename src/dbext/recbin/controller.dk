@@ -1,0 +1,30 @@
+#include "dkli.dkh"
+#!
+module "RecbinController"
+{
+    point @list to recbin.list
+    point @read to recbin.NotImplemented1
+    point @blank to recbin.NotImplemented1
+    point @create to recbin.NotImplemented2
+    point @update to recbin.NotImplemented2
+    point @delete to recbin.NotImplemented1
+
+    switch @@(params,"$_action")
+    {
+        case "buscar-det"
+        {
+            point @list to recbin.buscarDET
+            break
+        }
+        case "restaurar"
+        {
+            point @update to recbin.restoreItem
+            break
+        }
+        case "eliminar"
+        {
+            point @update to recbin.deleteItem
+            break
+        }
+    }
+}

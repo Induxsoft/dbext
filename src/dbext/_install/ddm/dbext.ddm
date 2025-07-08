@@ -273,6 +273,15 @@ model "Variables globales"
         @"det" ref:"sys_app_item_type"
     }
 
+    entity "recycle_bin"
+    {
+        @"det" string(10) unique required
+        @"qbrowser" memo required //Consulta para visualización: select sys_pk, sys_info codigo, descripcion, unidad from producto where sys_deleted=1 and (descripcion like concat('%',@text,'%')) order by sys_timestamp desc;
+        @"qrestore" memo required //Consulta para restaurar: update producto set sys_deleted=null, codigo=sys_info where sys_pk=@sys_pk;
+        @"qforze" memo //Consulta para forzar restauración: update producto set sys_deleted=null, codigo=concat('R',sys_pk) where sys_pk=@sys_pk;
+        @"qdelete" memo //Consulta para eliminar definitivamente: delete from producto where sys_pk=@sys_pk;
+    }
+
     //#region sys_*
     // Catálogo de aplicaciones de paquetes (información de la aplicación)
     entity "sys_app_catalog"

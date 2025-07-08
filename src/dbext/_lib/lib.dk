@@ -69,4 +69,13 @@ module
     {
         return trim(str(s)) == ""
     }
+
+    function StartsWith(string,keyword)
+    {
+        string_length = length(string)
+        keyword_length = length(keyword)
+
+        if string_length < keyword_length { return @false }
+        return lremove(string,keyword_length) == keyword
+    }
 }

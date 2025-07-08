@@ -24,3 +24,7 @@ XB93,Eliminar relación y privilegios de usuario por DET,Eliminar,,javascript:In
 "XB111","Agregar país","Agregar","","/!/dbext/pais/_new/","0","dbext.pais","DET034","0","action"
 "XB112","Editar país","Editar","","/!/dbext/pais/@_src_context_item_id/","0","dbext.pais","DET034","1","action"
 "XB113","Eliminar país","Eliminar","","javascript:InduxsoftCrudlModel.Delete(@_src_context_item_id);","0","dbext.pais","DET034","1","action"
+
+XB150,Papelera de reciclaje,Recbin,,/!/dbext/recbin/,0,dbext.recbin,DET097,0,shortcut
+XB151,Restaurar elemento borrado,Restaurar,,javascript:recbin.restore(),0,dbext.recbin,DET097,1,action
+XB152,Eliminar elemento borrado,Eliminar,,javascript:recbin.delete(),0,dbext.recbin,DET097,1,action

@@ -49,6 +49,7 @@ module "Controller configs"
 	do crudl.routes.entity("/det/","det")
 	do crudl.routes.entity("/run/","run")
 	do crudl.routes.entity("/query/","query")
+	do crudl.routes.entity("/recbin/","recbin")
 	do crudl.routes.entity("/cat_query/","cat_query")
 
 	@dbmvc_path="crudl/"
