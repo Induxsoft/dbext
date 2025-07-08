@@ -373,6 +373,25 @@ module ":dbr.apps"
         return dbr.apps.save(db, "sys_app_item_type", data)
     }
 
+    /**
+    * Agrega o actualiza la definición de recuperación de elementos eliminados lógicamente.
+    * ```dkl
+        new data
+        {
+            @"det": //ID del tipo de elemento de dato. Requerido
+            @"qbrowser": //Consulta para visualización. Requerido
+            @"qrestore": //Consulta para restaurar. Requerido
+            @"qforze": //Consulta para forzar restauración. Opcional
+            @"qdelete": //Consulta para eliminar definitivamente. Opcional
+        }
+    * ```
+    */
+    itemtype.recbindef::&db,&data
+    {
+        if @@(data,"$det")=="" || @@(data,"$qbrowser")=="" || @@(data,"$qrestore")=="" { return 0 }
+        return dbr.apps.save(db,"recycle_bin",data)
+    }
+
     //Establece la URL de consulta del DTE según criterio de prioridad: 0-Solo si no está establecida,1-Sobre-escribir
     itemtype.view_url::&db,dte_id,url, override 
     {

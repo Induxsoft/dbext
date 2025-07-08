@@ -194,9 +194,9 @@ module "model"
         ref entity = @null
         deleted = @false
 
-        do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@_entity_id;", params)
         codeblock "Intentar eliminacón física"
         {
+            do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@_entity_id;", params)
             do dbr.execute(db, "DELETE FROM uservar WHERE fuser=@_entity_id;", params)
             do entity.delete(db,params)
 
@@ -205,8 +205,11 @@ module "model"
         }
         if not(deleted)
         {
+            params<"lastuser"> : @@(@http_context,"$session/user/uid")
             sql = "
             UPDATE tuser SET
+                sys_timestamp = now(),
+                sys_lastuser = @lastuser,
                 sys_deleted = 1,
                 sys_info = userid,
                 userid = CONCAT('~',sys_pk)

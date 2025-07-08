@@ -11,7 +11,7 @@ module "Papelera de reciclaje:recbin"
             SELECT id, title
             FROM sys_app_item_type
             WHERE (@search = '' OR @search = '*' OR CONVERT(@search,DECIMAL) = -1)
-                OR id = @search OR id LIKE CONCAT('%',@search,'%')
+                OR id = @search OR title LIKE CONCAT('%',@search,'%')
         ",params)
     }
 
@@ -25,12 +25,17 @@ module "Papelera de reciclaje:recbin"
         {
             ref itemtype = record.create()
             ref records = list.create()
+            show_restore_btn = @false
+            show_delete_btn = @false
         }
         else
         {
             ref itemtype = dbr.rec(db,"select * from sys_app_item_type where id = @det",params)
+            ref def = dbr.rec(db,"select qbrowser, qdelete from recycle_bin where det = @det",params)
+            show_restore_btn = @true
+            show_delete_btn = (@@(def,"$qdelete") != "")
             
-            @list_query = dbr.str(db,"select qbrowser from recycle_bin where det = @det",params)
+            @list_query = @@(def,"$qbrowser")
             if @list_query == "" { ref records = list.create() }
             else { ref records = entity.list(db,params) }
         }
@@ -39,10 +44,11 @@ module "Papelera de reciclaje:recbin"
         {
             @"itemtype*": itemtype
             @"data*": records
+            @"show_restore_btn": show_restore_btn
+            @"show_delete_btn": show_delete_btn
             @"itemactions*": dbr.apps.itemactions(db,"DET097","action","",0)
-            @"itemreports*": dbr.apps.itemactions(db,"DET097","report","",0)
+            // @"itemreports*": dbr.apps.itemactions(db,"DET097","report","",0)
         }
-        
         return data
 
         exception{ do catch(db,params,@null) }
@@ -95,8 +101,16 @@ module "Papelera de reciclaje:recbin"
         do dbr.apps.action.grant("XB152")
 
         qdelete = dbr.str(db,"select qdelete from recycle_bin where det = @det",params)
-        do dbr.execute(db,qdelete,data)
-        return @null
+        deleted = @false
+        if qdelete != "" { deleted = (dbr.execute(db,qdelete,data) > 0) }
+
+        new response
+        {
+            @"element": @@(params,"$det")
+            @"element_id": @@(params,"$_entity_id")
+            @"deleted": deleted
+        }
+        return response
 
         exception{ do catch(db,params,data) }
     }

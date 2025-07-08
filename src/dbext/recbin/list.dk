@@ -33,7 +33,7 @@ module "list.dk"
         ref firstrow = list.obj(data,0)
         ref fields = list.create_from_fields(firstrow)
 
-        for i = 0; i < list.count(firstrow)
+        for i = 0; i < list.count(fields)
         {
             field = list.str(fields,i)
             if not(StartsWith(field,"sys_"))
@@ -46,28 +46,45 @@ module "list.dk"
             }
         }
 
-        new _actions
-        {
-            @"caption":"Acciones"
-            @"no-print":@true
-            @"template":ftext('
-                <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
-                    <button onclick="recbinRestore(${DataRow.sys_pk})" style="#<tbtn_style>">Restaurar</button>
-                    <button onclick="recbinDelete(${DataRow.sys_pk})" style="#<tbtn_style>">Eliminar</button>
-                </div>
-            ')
-        }
-
+        // new _actions
+        // {
+        //     @"caption":"Acciones"
+        //     @"no-print":@true
+        //     @"template":ftext('
+        //         <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
+        //             <button onclick="recbin.restore(${DataRow.sys_pk})" style="#<tbtn_style>">Restaurar</button>
+        //             <button onclick="recbin.delete(${DataRow.sys_pk})" style="#<tbtn_style>">Eliminar</button>
+        //         </div>
+        //     ')
+        // }
+        // columnsdef<"_actions*"> : _actions
         table_definition<"columns*"> : columnsdef
     }
 
+    function print_buttons()
+    {
+        cls = "btn btn-sm border-secondary induxsoft-corners btn-main-action"
+
+        if @("#./show_restore_btn") {
+            #$
+            button(class="#<cls>" type="button" onclick="recbin.restore()" title="Restaurar elemento seleccionado"){"Restaurar"}
+            #!
+        }
+        if @("#./show_delete_btn") {
+            #$
+            button(class="#<cls>" type="button" onclick="recbin.delete()" title="Eliminar elemento definitivamente"){"Eliminar"}
+            #!
+        }
+    }
+    point buttons to print_buttons
     new nav_config
     {
         @"title": "Papelera de reciclaje"
         @"urlexit": "/"
-        @"actions*": ifnull(@("&./itemactions"),list.create())
-        @"reports*": ifnull(@("&./itemreports"),list.create())
-        @"jscurrentcontext": "getCurrentContext"
+        @"buttons*": buttons
+        // @"actions*": ifnull(@("&./itemactions"),list.create())
+        // @"reports*": ifnull(@("&./itemreports"),list.create())
+        // @"jscurrentcontext": "getCurrentContext"
 
         member "hidden"
         {
@@ -137,10 +154,10 @@ module "list.dk"
                             
                             const ik_itemtype = document.getElementById("itemtype");
                             ik_itemtype.change_event = (data) => {
-                                if (data) this.form.submit();
+                                if (data?.id != this.params?.det) this.form.submit();
                             }
                         },
-                        recbinRestore()
+                        restore()
                         {
                             if (!this.table || this.req_restore_item) return;
 
@@ -156,12 +173,13 @@ module "list.dk"
                             const row = this.table.DataArray[index];
 
                             const onSuccess = (data) => {
-                                if (data.message) {
-                                    alert(data.message);
-                                    this.req_restore_item = false;
-                                    return
+                                if (data.message) alert(data.message);
+                                else if (!data.restored) alert("No fue posible restaurar el elemento seleccionado.");
+                                else
+                                {
+                                    alert("El elemento se ha restaurado.");
+                                    this.table.DeleteRow(index);
                                 }
-                                this.table.DeleteRow(index);
                                 this.req_restore_item = false;
                             };
                             const onFailure = (error) => {
@@ -170,7 +188,7 @@ module "list.dk"
                             };
                             InduxsoftCrudlModel.InvokeService(endpoint, row, onSuccess, onFailure, "PATCH", false);
                         },
-                        recbinDelete()
+                        delete()
                         {
                             if (!this.table || this.req_delete_item) return;
                             
@@ -186,12 +204,13 @@ module "list.dk"
                             const row = this.table.DataArray[index];
 
                             const onSuccess = (data) => {
-                                if (data.message) {
-                                    alert(data.message);
-                                    this.req_delete_item = false;
-                                    return
+                                if (data.message) alert(data.message);
+                                else if (!data.deleted) alert("No fue posible eliminar el elemento seleccionado.");
+                                else
+                                {
+                                    alert("El elemento se ha eliminado definitivamente");
+                                    this.table.DeleteRow(index);
                                 }
-                                this.table.DeleteRow(index);
                                 this.req_delete_item = false;
                             };
                             const onFailure = (error) => {
