@@ -102,7 +102,13 @@ module "Papelera de reciclaje:recbin"
 
         qdelete = dbr.str(db,"select qdelete from recycle_bin where det = @det",params)
         deleted = @false
-        if qdelete != "" { deleted = (dbr.execute(db,qdelete,data) > 0) }
+        
+        if qdelete != ""
+        {
+            do dbr.begin(db)
+            deleted = (dbr.execute(db,qdelete,data) > 0)
+            do dbr.commit(db)
+        }
 
         new response
         {
@@ -137,6 +143,9 @@ module "Papelera de reciclaje:recbin"
         if isanyword(@@(params,"$_operation"),"create,update")
         {
             if contains(error,"Duplicate entry") { error = "Entrada duplicada, ya existe un registro con los mismos valores." }
+            else if contains(error,"Cannot delete or update a parent row") || contains(error,"DELETE Error") {
+                error = "No es posible eliminar, otros registros dependen del elemento proporcionado."
+            }
             // if not(isnull(data))
             // {
             //     ref FormData = record.copy(data,"*")

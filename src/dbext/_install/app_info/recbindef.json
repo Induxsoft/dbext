@@ -4,6 +4,6 @@
         "qbrowser":"select sys_pk, userid, username, notes from tuser where ifnull(sys_deleted,0)=1",
         "qrestore":"update tuser set sys_deleted=0, userid=sys_info, sys_info='restored' where sys_pk=@sys_pk",
         "qforze":"update tuser set sys_deleted=0, userid=concat('R',sys_pk) where sys_pk=@sys_pk",
-        "qdelete":""
+        "qdelete":"delete from user_usergroup_ where users=@sys_pk; delete from uservar where fuser=@sys_pk; delete b from det_usr a left join sitem_det_usr b on b.ref_det_usr=a.sys_pk where a.ref_user=@sys_pk; delete from det_usr where ref_user=@sys_pk; delete from tuser where sys_pk=@sys_pk;"
     }
 ]
