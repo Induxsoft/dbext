@@ -92,7 +92,11 @@ module "model"
                     {
                         do rise_error(500,"No es posible conceder o retirar el privilegio: "+@@(sitem_sec,"$itemid")+" privilegio con mayor seguridad.")
                     }
-                    sql_delete=sql_delete + ftext("DELETE FROM profile where item=#<@@(_params,'$sys_pk')> and usergroup=#<@@(params,'$_entity_id')>;")
+
+                    if not(parse.bool(@@(profile,"$active")))
+                    {
+                        sql_delete=sql_delete + ftext("DELETE FROM profile where item=#<@@(_params,'$sys_pk')> and usergroup=#<@@(params,'$_entity_id')>;")
+                    }
                 }
                 else 
                 {
