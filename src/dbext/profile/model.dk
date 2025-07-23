@@ -62,20 +62,53 @@ module "model"
 
         ref profiles = @@(data, "&profile")
         sql_p = ""
-
+        sql_delete=""
+        rows=0
         if not(isnull(profiles)) && list.count(profiles) > 0
         {
             sql_p = "INSERT INTO profile (sys_timestamp, sys_guid, sys_dtcreated, item, usergroup) VALUES "
             
             for i = 0; i < list.count(profiles)
             {
-                ref profile = list.obj(profiles, i)
+                ref profile =record.caseinsensitive(list.obj(profiles, i))
                 
-                guid = ifstr(trim(@@(profile,"$guid")) == "", toupper(uuid()), @@(profile,"$guid"))
-                item = @@(profile, "#item")
-                usergroup = @@(params, "#_entity_id")
+                new _params
+                {   
+                    @"group":@@(params, "#_entity_id")
+                    @"item":@@(profile, "$itemid")
+                }
+
+                _params<"sys_pk">:dbr.num(db,"select sys_pk from sitem where itemid=@item",_params)
+                //verificar si el privilegio ya esta agrgado el profile
+                exist_profile=dbr.num(db,"SELECT COUNT(*) FROM profile p INNER JOIN usergroup u ON p.usergroup=u.sys_pk WHERE p.usergroup=@group AND p.item=@sys_pk",_params) > 0
                 
-                sql_p = sql_p + ftext("(NOW(), '#<guid>', NOW(), #<item>, #<usergroup>),")
+                ref sitem_sec=dbr.rec(db,"SELECT COUNT(*)_rows,IFNULL(s.itemid,'')itemid FROM sitem_sec ss 
+                                    INNER JOIN sitem s ON ss.item_id=s.itemid
+                                    WHERE s.sys_pk=@sys_pk;",_params)
+
+                if exist_profile 
+                {
+                    if @@(sitem_sec,"#_rows") > 0 && not(parse.bool(@@(profile,"$active")))
+                    {
+                        do rise_error(500,"No es posible conceder o retirar el privilegio: "+@@(sitem_sec,"$itemid")+" privilegio con mayor seguridad.")
+                    }
+                    sql_delete=sql_delete + ftext("DELETE FROM profile where item=#<@@(_params,'$sys_pk')> and usergroup=#<@@(params,'$_entity_id')>;")
+                }
+                else 
+                {
+                    if @@(sitem_sec,"#_rows") > 0
+                    {
+                        do rise_error(500,"No es posible conceder o retirar el privilegio: "+@@(sitem_sec,"$itemid")+" privilegio con mayor seguridad.")
+                    }
+
+                    guid = ifstr(trim(@@(profile,"$guid")) == "", toupper(uuid()), @@(profile,"$guid"))
+                    item = @@(_params, "#sys_pk")
+                    usergroup = @@(params, "#_entity_id")
+                    
+                    sql_p = sql_p + ftext("(NOW(), '#<guid>', NOW(), #<item>, #<usergroup>),")
+                    rows=rows + 1
+                    // sql_delete=sql_delete + ftext("DELETE FROM profile where item=#<@@(_params,'$sys_pk')> and usergroup=#<@@(params,'$_entity_id')>;")
+                }
             }
 
             sql_p = rremove(sql_p,1) + ";"
@@ -85,9 +118,12 @@ module "model"
 
         // do dbr.begin(db)
         // eliminamos los registros de la configuración actual
-        do dbr.execute(db, "DELETE FROM profile WHERE usergroup=@_entity_id", params)
+        
+        if trim(sql_delete)!=""{do dbr.execute(db,sql_delete,params)}
+        // do dbr.execute(db, "DELETE FROM profile WHERE usergroup=@_entity_id", params)
         // Insertamos la nueva configuración si se recibió
-        if trim(sql_p) != "" { do dbr.execute(db, sql_p, @null) }
+        
+        if rows > 0 { do dbr.execute(db, sql_p, @null) }
         // do dbr.commit(db)
 
         /* exception

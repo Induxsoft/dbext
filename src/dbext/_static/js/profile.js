@@ -29,6 +29,7 @@ var profile =
             this.tableProfile.EverMove = false;
         }
     },
+    array_change:[],
     setTableEvents()
     {
         if (this.tableGroups)
@@ -54,6 +55,17 @@ var profile =
             this.tableProfile.Events[this.tableProfile.EdiTable.Const.Events.FieldUpdated] = (e) =>
             {
                 this.showDirtyControls();
+            }
+
+            this.tableProfile.Events[this.tableProfile.EdiTable.Const.Events.ConfirmEdition] = (e) =>
+            {
+                var index=this.tableProfile.RowIndexOfTd(e.td)
+                var row=this.tableProfile.DataArray[index];
+                if(!row)return;
+
+                // row["guid"]=row.sys_guid??"";
+                var exist_pk=profile.array_change.find(d=> d.sys_pk==row.sys_pk);
+                if(!exist_pk)profile.array_change.push(row);
             }
         }
     },
@@ -165,6 +177,7 @@ var profile =
     showDirtyControls()
     {
         const isDirty = this.isDirtyProfile();
+        if(!isDirty)this.array_change=[];
 
         document.querySelectorAll('#perfil_control button').forEach(b => {
             b.classList.toggle('d-none', !isDirty);
@@ -174,7 +187,7 @@ var profile =
     {
         let data = 
         {
-            profile: (this.tableProfile?.DataArray?.filter(d => d.active==='Sí')?.map(d => ({item:d.sys_pk, guid:d.sys_guid}))??[])
+            profile:this.array_change //(this.tableProfile?.DataArray?.filter(d => d.active==='Sí')?.map(d => ({item:d.sys_pk, guid:d.sys_guid}))??[])
         }
 
         /* console.log(this.tableProfile.DataArray);
@@ -184,8 +197,10 @@ var profile =
         let endpoint = this.url.replace('@id',this.groupSelected.sys_pk);
 
         InduxsoftCrudlModel.InvokeService(endpoint, data,
-            success => { 
-                console.log(success);
+            success => 
+            { 
+                // console.log(success);
+                this.array_change=[];
                 this.tableProfile.DataArray.forEach((v,i) => this.tableProfile.setIsDirty(i,false));
                 this.saveProfileBackup(this.tableProfile.DataArray);
                 this.showDirtyControls();
@@ -199,6 +214,7 @@ var profile =
     discardSecureSchema()
     {
         // this.tableProfile.DataArray = JSON.parse(JSON.stringify(this.profileDataBackup));
+        this.array_change=[];
         this.tableProfile.restore();
         this.tableProfile._printTreeData();
         // this.tableProfile._printRows();

@@ -58,8 +58,9 @@ module "model"
 
         exception
         {
-            do errordet(@true)
+            do errordet(@false)
             if dbr.in_transaction(db){ do dbr.rollback(db) }
+            data<"groups*">: get_user_groups(db, @@(data, "#sys_pk"))
             do dbr.apps.action.log()
             do rise_error(last_error_code(),last_error())
         }
@@ -84,25 +85,51 @@ module "model"
         {
             do errordet(@false)
             if dbr.in_transaction(db){ do dbr.rollback(db) }
+            data<"groups*">: get_user_groups(db, @@(data, "#sys_pk"))
             do dbr.apps.action.log()
             do rise_error(last_error_code(),last_error())
         }
     }
+    ColumnExist::&db,table,column
+    {
+        ref columns=dbr.rec(db,"SHOW COLUMNS FROM "+table+" LIKE '"+column+"';",@null)
 
+        return not(isnull(columns))
+    }
     function tuser_add_to_groups(&db, &groups, user_pk)
     {
         new prm { @"user": user_pk }
+        //validar mayor seguridad del grupo de usuario
+        //esto se valida antes de eliminar todos los grupos del usuario
+        
+        for i = 0; i < list.count(groups)
+        {
+            new ugroup 
+            {
+                @"groups": list.num(groups, i)
+                @"users": @@(prm, "#user")
+            }
+            
+            //verificar si el usuario aun no esta en el grupo
+            if dbr.num(db,"select count(*) from user_usergroup_ where `groups`=@groups and users=@users",ugroup) < 1
+            {
+                //validar si el grupo tiene mayor seguridad
+                ref usergroup_sec=dbr.rec(db,"SELECT COUNT(*) _rows,IFNULL(us.group_id,'')group_id,IFNULL(ug.groupid,'')groupid 
+                FROM usergroup_sec us 
+                INNER JOIN usergroup ug ON us.group_id=ug.groupid 
+                WHERE ug.sys_pk=@groups",ugroup)
+
+                if @@(usergroup_sec,"#_rows") > 0
+                {
+                    do rise_error(500,"No es posible agregar o quitar usuarios al grupo: "+@@(usergroup_sec,"$groupid")+" grupo con mayor seguridad.")
+                }
+            }
+        }
+        
         // Eliminamos todos los registros del usuario indicado
         do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@user", prm)
         // Verificamos si la tabla requiere un sys_guid (tablas creadas con dba)
-        require_sys_guid = @false
-        ref desc = dbr.list(db, "DESCRIBE user_usergroup_;", @null)
-        if not(isnull(desc)) && list.count(desc) {
-            for i = 0; i < list.count(desc) {
-                ref d = list.obj(desc, i)
-                if @@(d, "$Field") == "sys_guid" { require_sys_guid = @true }
-            }
-        }
+        require_sys_guid =ColumnExist(db,"usergroup","sys_guid")
         // Agregamos todos los grupos al usuario indicado
         for i = 0; i < list.count(groups)
         {
@@ -282,8 +309,8 @@ module "model"
         do valide_duplicate(fields, table, last_error(), last_error_code())
     }
 
-    point @create to create //tuser_create
-    point @update to update //tuser_create
+    point @create to create 
+    point @update to update 
     point @read to tuser_read
     point @list to list
     point @blank to tuser_blank

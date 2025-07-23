@@ -282,6 +282,15 @@ model "Variables globales"
         @"qdelete" memo //Consulta para eliminar definitivamente: delete from producto where sys_pk=@sys_pk;
     }
 
+    entity "sitem_sec"
+    {
+        @"item_id" string (32) unique required
+    }
+
+    entity "usergroup_sec"
+    {
+        @"group_id" string(32) unique required
+    }
     //#region sys_*
     // Catálogo de aplicaciones de paquetes (información de la aplicación)
     entity "sys_app_catalog"
