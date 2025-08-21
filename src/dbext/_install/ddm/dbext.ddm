@@ -312,6 +312,7 @@ model "Variables globales"
     {
         @"id" string(32) key
         @"title" string(255) required
+        @"main_entity" string(64) // Nombre de la entidad principal
         @"view_url" string(1024) //URL de consulta, en donde @_entity_id representa el id del elemento
     }
     // Buscadores por Tipo de Elemento de Datos
