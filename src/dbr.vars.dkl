@@ -125,7 +125,30 @@ module "Variables alojadas en la base de datos :dbr.vars"
         return value
 
     }
+    save::&db,tablename,&data
+    {
+        ref fields=list.create_from_fields(data)
+        str_fields=replace(ranychars(to.json(fields),'[]{}"', " ")," ","")
+        str_fields="`"+replace(str_fields,",","`,`")+"`"
+        
+        sql="INSERT INTO "+tablename+" ("+str_fields+") VALUES ("
 
+        for i=0; i<list.count(fields) {
+            if i>0 { sql=sql+"," }
+            sql=sql+"@"+list.str(fields,i)
+        }
+
+        sql=sql+") ON DUPLICATE KEY UPDATE "
+
+        for i=0; i<list.count(fields) {
+            field=list.str(fields,i)
+            if i>0 { sql=sql+"," }
+            sql=sql+"`"+field+"`=@"+field
+        }
+
+        sql=sql+";"
+        return dbr.execute(db, sql, data)
+    }
     ImportList::&db,&list,tname
     {
         inserts = 0
@@ -140,10 +163,9 @@ module "Variables alojadas en la base de datos :dbr.vars"
                 field = list.str(fields,n)
                 value = @@(record,field)
 
-                if value=="\\N" || value=="\\0" || value=="NULL" { record<field+"*"> : @null }
+                if value=="\\N" || value=="\\0" || value=="NULL" { do field.remove(record,field) }
             }
-            
-            do dbr.insert(db,tname,record)
+            do save(db,tname,record)
             inserts = (inserts + 1)
 
             exception{ if not(contains(last_error(),"Duplicate entry")){ do print(last_error()) } }
