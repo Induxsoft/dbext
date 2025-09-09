@@ -129,7 +129,7 @@ module "model"
         // Eliminamos todos los registros del usuario indicado
         do dbr.execute(db, "DELETE FROM user_usergroup_ WHERE users=@user", prm)
         // Verificamos si la tabla requiere un sys_guid (tablas creadas con dba)
-        require_sys_guid =ColumnExist(db,"usergroup","sys_guid")
+        require_sys_guid =ColumnExist(db,"user_usergroup_","sys_guid")
         // Agregamos todos los grupos al usuario indicado
         for i = 0; i < list.count(groups)
         {
