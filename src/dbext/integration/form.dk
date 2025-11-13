@@ -1,0 +1,103 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.dkl"
+    #include "../config.dk"
+
+    do @context.begin(@crud_context)
+
+    entity_id = @("$parameters/_entity_id")
+    error = @("$error/message")
+    isNew = (entity_id == "_new")
+    ref integration = record.caseinsensitive(@("&./"))
+
+    new packs
+    {
+        @"id": "pack_id"
+        @"value_field": "pack"
+        @"text_field": "pack"
+        @"datatable*": @("&./packs")
+        @"selected": @@(integration,"$pack_id")
+        member "attributes"
+        {
+            @"class": "induxsoft-form-select"
+            @"name": "pack_id"
+            @"required":""
+        }
+    }
+
+    #$
+    div(class="container")
+    {   
+        form(method="POST" action="." id="form")
+        {
+            div(id="main_bar" class="row container-section my-2 px-0 py-2 border-bottom")
+            {
+                div(class="col-4 d-flex align-items-center p-0")
+                {
+                    h5(class="tex-no-break m-0"){$"#<ifstr(isNew,'Agregar','Editar')> integración"}
+                }
+                div(class="col-8 d-flex align-items-center justify-content-end p-0 gap-2")
+                {
+                    a(href="./" class="btn btn-sm border-secondary induxsoft-corners btn-main-action" title="Refrescar"){$"#<@@(@icons,'ARROW_CLOCKWISE')>"}
+                    button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action")
+                    {
+                        $'#<@@(@icons,"save2")>'
+                    }
+                    a(class="btn btn-sm border-secondary induxsoft-corners btn-main-action" href="..") 
+                    {
+                        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16") {
+                            path(d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z")
+                        }
+                    }
+                }
+            }
+            div(id="work_area" class="container-section")
+            {
+                div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+
+                input(type="hidden" name="sys_pk" value="#<@@(integration, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(integration, '#sys_recver')>")
+
+                div(class="row")
+                {
+                    div(class="col-md-3")
+                    {
+                        label(class="fw-bold" "for"=""){"ID:"}
+                        input(class="induxsoft-form-control" type="" name="id" value="#<@@(integration,'$id')>" id="id" required="" maxlength="32")
+                    }
+                    div(class="col-md-9")
+                    {
+                        label(class="" "for"=""){"Token:"}
+                        input(class="induxsoft-form-control" type="" name="token" value="#<@@(integration,'$token')>" id="token" maxlength="255")
+                    }
+                    div(class="col-md-12")
+                    {
+                        label(class="fw-bold" "for"=""){"Descripción:"}
+                        input(class="induxsoft-form-control" type="" name="description" value="#<@@(integration,'$description')>" id="description" required="" maxlength="255")
+                    }
+                    div(class="col-md-3")
+                    {
+                        label(class="fw-bold" "for"=""){"Paquete:"}
+                        #!
+                        do uie.dbSelect(packs)
+                        #$
+                    }
+                    div(class="col-md-3 mt-4 gap-2")
+                    {
+                        input(class="form-check-input" type="checkbox" name="disabled" "#<ifstr(@@(integration,'#disabled'),'checked','')>"="" id="disabled")
+                        label(class="fw-bold" "for"="disabled"){"Deshabilitado"}
+                    }
+                    div(class="col-md-12")
+                    {
+                        label(class="fw-bold" "for"=""){"Source:"}
+                        textarea(class="induxsoft-form-control" type="" name="source"  id="source" required="" maxlength="1024"){"#<@@(integration,'$source')>"}
+                    }
+                }
+            }
+        }
+    }
+}

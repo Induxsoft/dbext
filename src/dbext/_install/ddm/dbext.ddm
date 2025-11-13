@@ -11,7 +11,16 @@ model "Variables globales"
         @"sys_deleted" bool
         @"sys_lock" int
     }
-
+    //puntos finales
+    entity "sys_rest_integration" : "TableModel"
+    {
+        @"id" string(32) unique required
+        @"description" string(255) required
+        @"token" string(255) 
+        @"source" string(1024) required
+        @"pack_id" string(32) required
+        @"disabled" bool
+    }
     // Tipos de documentos comerciales
     entity "cdocumentos" : "EnumModel" {}
 
@@ -44,6 +53,24 @@ model "Variables globales"
         @"groupid" string(32) unique required
         @"notes" memo 
         @"uf_hidetoolbar" string(1) 
+    }
+    entity "recycle_bin"
+    {
+        @"det" string(10) unique required
+        @"qbrowser" memo required //Consulta para visualización: select sys_pk, sys_info codigo, descripcion, unidad from producto where sys_deleted=1 and (descripcion like concat('%',@text,'%')) order by sys_timestamp desc;
+        @"qrestore" memo required //Consulta para restaurar: update producto set sys_deleted=null, codigo=sys_info where sys_pk=@sys_pk;
+        @"qforze" memo //Consulta para forzar restauración: update producto set sys_deleted=null, codigo=concat('R',sys_pk) where sys_pk=@sys_pk;
+        @"qdelete" memo //Consulta para eliminar definitivamente: delete from producto where sys_pk=@sys_pk;
+    }
+
+    entity "sitem_sec"
+    {
+        @"item_id" string (32) unique required
+    }
+
+    entity "usergroup_sec"
+    {
+        @"group_id" string(32) unique required
     }
     // Relacion entre usuarios y los grupos a los que pertenece
     entity "user_usergroup_" : "NmModel"
@@ -273,24 +300,6 @@ model "Variables globales"
         @"det" ref:"sys_app_item_type"
     }
 
-    entity "recycle_bin"
-    {
-        @"det" string(10) unique required
-        @"qbrowser" memo required //Consulta para visualización: select sys_pk, sys_info codigo, descripcion, unidad from producto where sys_deleted=1 and (descripcion like concat('%',@text,'%')) order by sys_timestamp desc;
-        @"qrestore" memo required //Consulta para restaurar: update producto set sys_deleted=null, codigo=sys_info where sys_pk=@sys_pk;
-        @"qforze" memo //Consulta para forzar restauración: update producto set sys_deleted=null, codigo=concat('R',sys_pk) where sys_pk=@sys_pk;
-        @"qdelete" memo //Consulta para eliminar definitivamente: delete from producto where sys_pk=@sys_pk;
-    }
-
-    entity "sitem_sec"
-    {
-        @"item_id" string (32) unique required
-    }
-
-    entity "usergroup_sec"
-    {
-        @"group_id" string(32) unique required
-    }
     //#region sys_*
     // Catálogo de aplicaciones de paquetes (información de la aplicación)
     entity "sys_app_catalog"

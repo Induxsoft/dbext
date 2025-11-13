@@ -69,3 +69,8 @@ dbext.recbin,Papelera de reciclaje,dbext
 XB150,Lista de elementos borrados,dbext.recbin
 XB151,Restaurar elemento borrado,dbext.recbin
 XB152,Eliminar definitivamente,dbext.recbin
+dbext.rest_integration,"Integración, puntos finales",dbext
+XB160,"Integración",dbext.rest_integration
+XB161,"Agregar Integración",dbext.rest_integration
+XB162,"Editar Integración",dbext.rest_integration
+XB163,"Eliminar Integración",dbext.rest_integration

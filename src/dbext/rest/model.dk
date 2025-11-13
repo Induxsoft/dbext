@@ -1,0 +1,49 @@
+#include "dkli.dkh"
+#!
+module ":rest"
+{
+    Execute::&db,&params
+    {
+        if trim(@@(params,"$_entity_id"))==""{do rise_error(500,"No ha indicado un 'id_integracion'")}
+
+        ref integration=dbr.rec(db,"select sys_pk,sys_guid,id,description,token,source,pack_id from sys_rest_integration where id=@_entity_id",params)
+        if isnull(integration){do rise_error(500,"No se encontró datos del integrador indicado")}
+
+        if @@(params,"#get-data"){return integration}
+        if parse.bool(@@(integration,"disabled")){do rise_error(500,"El punto final esta dasabilitado.")}
+
+        token=trim(@@(integration,"$token"))
+        if token==""{do rise_error(500,"El punto final no contiene un 'token'.")}
+        
+        authorization=trim(@@(@http_context,"$request/headers/http_Authorization"))
+
+        if token != authorization{do rise_error(500,"El token de autorización indicado no es válido")}
+
+        source=trim(@@(integration,"$source"))
+
+        if not(file.exists(source)){do rise_error(403,"El recurso solicitado no existe")}
+
+        result=runscript(source,"http_context",@http_context)
+
+        integration<"result">:result
+
+        return integration
+    }
+   get::&db,&params
+   {
+        return Execute(db,params)
+   }
+   post::&db,&params,&data
+   {
+        return Execute(db,params)
+   }
+
+    NoImplementation::&db,&params{do rise_error(500,"No implementado 'list,read,blank,delete'")}
+    NoImplementationDt::&db,&params,&data{do rise_error(500,"No implementado 'create,update' ")}
+
+    point @list to rest.NoImplementation
+    point @blank to rest.NoImplementation
+    point @create to rest.post
+    point @read to rest.get
+    point @update to rest.post
+}

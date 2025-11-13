@@ -1,0 +1,145 @@
+#include "dkli.dkh"
+#!
+module "model"
+{
+    @table_name = "sys_rest_integration"
+
+    @read_query = "SELECT * FROM #<@table_name> where sys_pk=@_entity_id;"
+    @list_query = "SELECT *,if(ifnull(disabled,0)=1,'Sí','No') deshabilitado FROM #<@table_name>;"
+
+    function create(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB161")
+        do dbr.begin(db)
+
+        data<"disabled">:if(parse.bool(@@(data,"$disabled")),1,0)
+        ref result = entity.create(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do prepareView(db,params,data)
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function update(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB162")
+        do dbr.begin(db)
+
+        data<"disabled">:if(parse.bool(@@(data,"$disabled")),1,0)
+        ref result = entity.update(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do prepareView(db,params,data)
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+
+    function read(&db, &params)
+    {
+        do dbr.apps.action.grant("XB160")
+
+        ref res = entity.read(db, params)
+
+        do prepareView(db,params,res)
+
+        return res
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function blank(&db, &params)
+    {
+        do dbr.apps.action.grant("XB160")
+
+        new res {}
+
+        do prepareView(db,params,res)
+
+        return res
+
+        exception
+        {
+            do errordet(@false)
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+
+    function delete(&db, &params)
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB163")
+
+        do entity.delete(db,params)
+
+        return @true
+        
+        excepcion
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(500, last_error())
+        }
+    }
+
+    function list(&db, &params)
+    {
+        do dbr.apps.action.grant("XB160")
+        
+        return entity.list(db,params)
+
+        exception
+        {
+            do errordet(@false)
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+    function prepareView(&db,&params,&data)
+    {
+        using data
+        {
+            @"packs*":dbr.list(db,"SELECT DISTINCT pack_id AS pack FROM sys_app_catalog",params)
+        }
+    }
+
+    point @create to create 
+    point @update to update 
+    point @read to read
+    point @list to list
+    point @blank to blank
+    point @delete to delete
+}

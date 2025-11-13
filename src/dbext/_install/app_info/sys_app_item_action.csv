@@ -28,3 +28,5 @@ XB93,Eliminar relación y privilegios de usuario por DET,Eliminar,,javascript:In
 XB150,Papelera de reciclaje,Recbin,,/!/dbext/recbin/,0,dbext.recbin,DET097,0,shortcut
 XB151,Restaurar elemento borrado,Restaurar,,javascript:recbin.restore(),0,dbext.recbin,DET097,1,action
 XB152,Eliminar elemento borrado,Eliminar,,javascript:recbin.delete(),0,dbext.recbin,DET097,1,action
+
+XB160,"Integración, puntos finales",Integración,,"/!/dbext/integration/",0,dbext.rest_integration,DET0B2,0,action
