@@ -6,6 +6,7 @@ module "form.dk"
     #include "serialize.dkh"
     #include "uielements.dkl"
     #include "../config.dk"
+    #include "dbext/_lib/lib.dk"
 
     do @context.begin(@crud_context)
 
@@ -28,7 +29,7 @@ module "form.dk"
             @"required":""
         }
     }
-
+    url_post=path.concat(GetHot(@("&http")),replace(@URL_INTEGRATION,"@id",@@(integration,"$id"))) 
     #$
     div(class="container")
     {   
@@ -69,17 +70,7 @@ module "form.dk"
                         label(class="fw-bold" "for"=""){"ID:"}
                         input(class="induxsoft-form-control" type="" name="id" value="#<@@(integration,'$id')>" id="id" required="" maxlength="32")
                     }
-                    div(class="col-md-9")
-                    {
-                        label(class="" "for"=""){"Token:"}
-                        input(class="induxsoft-form-control" type="" name="token" value="#<@@(integration,'$token')>" id="token" maxlength="255")
-                    }
-                    div(class="col-md-12")
-                    {
-                        label(class="fw-bold" "for"=""){"Descripción:"}
-                        input(class="induxsoft-form-control" type="" name="description" value="#<@@(integration,'$description')>" id="description" required="" maxlength="255")
-                    }
-                    div(class="col-md-3")
+                    div(class="col-md-6")
                     {
                         label(class="fw-bold" "for"=""){"Paquete:"}
                         #!
@@ -89,13 +80,35 @@ module "form.dk"
                     div(class="col-md-3 mt-4 gap-2")
                     {
                         input(class="form-check-input" type="checkbox" name="disabled" "#<ifstr(@@(integration,'#disabled'),'checked','')>"="" id="disabled")
-                        label(class="fw-bold" "for"="disabled"){"Deshabilitado"}
+                        label(class="fw-bold" "for"="disabled"){"Inactivo"}
                     }
                     div(class="col-md-12")
                     {
-                        label(class="fw-bold" "for"=""){"Source:"}
-                        textarea(class="induxsoft-form-control" type="" name="source"  id="source" required="" maxlength="1024"){"#<@@(integration,'$source')>"}
+                        label(class="fw-bold" "for"=""){"Descripción:"}
+                        input(class="induxsoft-form-control" type="" name="description" value="#<@@(integration,'$description')>" id="description" required="" maxlength="255")
                     }
+                    
+                    div(class="col-md-12")
+                    {
+                        label(class="fw-bold" "for"=""){"Source:"}
+                        input(class="induxsoft-form-control" type="" name="source"  id="source" required="" maxlength="1024" value="#<@@(integration,'$source')>")
+                    }
+                    div(class="col-md-12")
+                    {
+                        label(class="" "for"=""){"Token:"}
+                        input(class="induxsoft-form-control" type="" name="token" value="#<@@(integration,'$token')>" id="token" maxlength="255")
+                    }
+                    #!
+                    if not(isNew)
+                    {
+                        #$
+                        div(class="col-md-12 mt-4 border")
+                        {
+                            h6{"POST:"}
+                            small(class="fw-bold"){"#<url_post>"}
+                        }
+                    }
+                    
                 }
             }
         }

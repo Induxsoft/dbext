@@ -24,9 +24,9 @@ module "list"
         {
             member @"id" { @"caption": "ID" }
             member @"description"{@"caption": "Descripción"}
-            member @"token" { @"caption": "Token" }
+            member @"pack_id"{@"caption": "Paquete"}
             member @"source"{@"caption": "Source"}
-            member @"deshabilitado"{@"caption":"Deshabilitado"}
+            member @"deshabilitado"{@"caption":"Estado"}
 
             member @"_action"
             {

@@ -5,7 +5,7 @@ module "model"
     @table_name = "sys_rest_integration"
 
     @read_query = "SELECT * FROM #<@table_name> where sys_pk=@_entity_id;"
-    @list_query = "SELECT *,if(ifnull(disabled,0)=1,'Sí','No') deshabilitado FROM #<@table_name>;"
+    @list_query = "SELECT *,if(ifnull(disabled,0)=1,'Inactivo','Activo') deshabilitado FROM #<@table_name>;"
 
     function create(&db,&params,&data)
     {

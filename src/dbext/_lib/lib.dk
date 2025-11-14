@@ -43,6 +43,15 @@ module
 
         return meth+"://"+host+":"+port+prms
     }
+    function GetHot(&context)
+    {
+        meth = ifstr(parse.bool(@@(context,"request/headers/HTTPS")),"https","http")
+        host = @@(context, "request/headers/HTTP_HOST")
+        port = @@(context, "request/headers/SERVER_PORT")
+        // prms = ifstr(with_params,@@(context, "request/headers/REQUEST_URI"),"")
+
+        return meth+"://"+host
+    }
 
     function contains_all_words(sentence,keywords)
     {
