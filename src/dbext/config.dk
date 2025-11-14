@@ -55,7 +55,7 @@ module "config"
     @LIST_PAIS = "/!/dbext/pais/"
 	@LIST_ESTADO = "/!/dbext/edoprov/"
 
-    @URL_INTEGRATION="/!/dbext-webapi/@id/"
+    @URL_INTEGRATION="/!/sise/@id/"
     //* ======================================== [ AUTHORIZATIONS ]
     @AUT_ACCESS_FOLIOS="CFO-00-000-000"
     @AUT_READ_FOLIO="CFO-00-000-001"

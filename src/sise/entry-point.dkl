@@ -1,0 +1,34 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    #include "functions.dkh"
+	#include "serialize.dkh"
+	#include "dbr.dkh"
+    #include "crudl/crudl.dk"
+    #include "lib.dk"
+
+    ref params=_params()
+    ref db=GetDb()
+    
+    if trim(@@(params,"$_program"))==""{do rise_error(500,"No ha indicado un 'id_integracion'")}
+
+    ref integration=dbr.rec(db,"select sys_pk,sys_guid,id,description,token,source,pack_id from sys_rest_integration where id=@_program",params)
+    if isnull(integration){do rise_error(500,"No se encontró datos del integrador indicado")}
+
+    if @@(params,"#get-data"){return integration}
+    if parse.bool(@@(integration,"disabled")){do rise_error(500,"El punto final esta dasabilitado.")}
+
+    token=trim(@@(integration,"$token"))
+    if token==""{do rise_error(500,"El punto final no contiene un 'token'.")}
+    
+    authorization=trim(@@(@http_context,"$request/headers/http_Authorization"))
+
+    if token != authorization{do rise_error(500,"El token de autorización indicado no es válido")}
+
+    source=trim(@@(integration,"$source"))
+
+    if not(file.exists(source)){do rise_error(403,"El recurso solicitado no existe")}
+
+    do runscript(source,"http_context",@http_context)
+}

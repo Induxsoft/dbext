@@ -1,0 +1,81 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    _params::{return @@(@http_context,"&request/get")}
+
+    GetDb::
+    {
+        @open_connection = @false
+        ref user=@@(@http_context,"&session/user")
+
+        qname = trim(@@(@http_context,"$session/idp/qname"))
+        ref db = @@(@http_context,"&session/idp/database")
+        
+        if isnull(db) && trim(@@(user,"$ids"))!=""
+        {
+            ref db=dbr.reconnect(qname,@@(user,"$ids"))
+            exception{}
+        }
+        
+        if isnull(db) || not(dbr.is_open(db)) 
+        {
+            ref db:dbr.open(qname)
+            @open_connection = @true
+        }
+        do dbr.rec(db,"select 1 as success;",@null)
+        
+        exception
+        {
+            do pop_exception()
+            ref db:dbr.open(qname)
+            @open_connection = @true
+        }
+
+        if @open_connection { @http_context<"session/idp/database*"> : db }
+        return db
+    }
+    GetHost::onlyhost
+    {
+        host=@@(@http_context,"request/headers/HTTP_HOST")
+        if trim(host)==""{host=@@(@http_context,"$request/headers/SERVER_NAME")}
+		protocol=ifstr(parse.bool(@@(@http_context,"request/headers/HTTPS")),"https","http")
+		path=replace(field.dstr(@http_context,"request/headers/request_uri","/"),"\\","/")
+
+		path=list.str(split(path,"?"),0)
+		
+        if onlyhost{path=""}
+
+		_h=protocol+"://"+path.concat(host,path)
+        
+        return _h
+    }
+    get_payload::
+	{
+		ref post=@@(@http_context,"&request/post")
+
+		if not(isnull(post))
+		{
+			if list.create_from_fields(post)>0
+			{
+				return post
+			}
+		}
+
+		return from.json(field.dstr(@http_context,"request/post_string","null"))
+
+		exception{}
+
+		return @null
+	}
+
+    SetContentHttp::text
+    {
+        // Establecer encabezado de respuesta http
+        @http_context<"response/headers/Content-Type"> : "text/plain"
+        // Indicar tipo de respuesta
+        @http_context<"response/output"> : "text"
+        // Asignar la respuesa de salida
+        @http_context<"response/text"> : text  
+    }
+}

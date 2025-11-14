@@ -19,7 +19,8 @@ module "Controller configs"
 	@base_path="dbext"
 	@path_root="" // Establezca una ruta de ser necesario
 
-	if @@(@http_context,"$session/user/ids") == "" {
+	if @@(@http_context,"$session/user/ids") == ""
+	{
 		if file.exists("webshell/lost.dk") { include "webshell/lost.dk" }
 		else { @http_context<"response/headers/location"> : "/" }
 		return
