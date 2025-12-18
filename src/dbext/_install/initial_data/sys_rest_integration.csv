@@ -1,0 +1,2 @@
+sys_guid,sys_dtcreated,sys_timestamp,sys_recver,id,description,token,source,pack_id,disabled
+34b09c39dc4c11f08b087ced8d22c890,2025-12-18 14:04:23,2025-12-18 14:04:23,0,user-ses-validation-v12,"Validación de sesión de V12",user-ses-validation-v12,dbext/sise/user-ses-validationv12.dkl,dbext,0

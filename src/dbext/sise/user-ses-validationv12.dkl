@@ -1,0 +1,49 @@
+#include "dkli.dkh"
+#!
+module "nia"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "dbr.dkh"
+    #include "webcl.dkh"
+
+    ref payload=from.json(@@(@http_context,"$request/POST_STRING"))
+    
+    if trim(@@(payload,"$user_sid"))==""{do rise_error(500,"No ha indicado el id del usuario")}
+    ref db =@@(@http_context,"&session/idp/database")
+
+    ref user=dbr.rec(db,"SELECT 
+                t.userid as uid, 
+                t.username as name,
+                'user' as user_type
+                FROM sys_session s
+                INNER JOIN tuser t ON s.iuser=t.sys_pk
+                WHERE s.sys_guid=@user_sid AND IFNULL(s.sys_deleted,0)=0",payload)
+
+    if isnull(user){do rise_error(500,"El id de sesión es inválido o ya está vencido")}
+
+    ref response=record.copyex(user,@null,"uid,name,user_type",",","uid:user,name:user_name",":")
+    using response
+    {
+        @"success":@true
+        @"user_sid":@@(payload,"$user_sid")
+        @"context*":record.create()
+    }
+
+    exception
+    {
+        new response
+        {
+            @"success":@false
+            @"message":last_error()
+        }
+    }
+
+    //Establecer encabezado de respuesta http
+    @http_context<"response/headers/content-type">:"application/json;charset=utf-8"
+    //Indicar tipo de respuesta
+    @http_context<"response/output">:"text"
+    //Asignar la respuesa de salida
+    @http_context<"response/text">: to.json(response)
+
+}

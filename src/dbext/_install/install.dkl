@@ -18,7 +18,8 @@ program "instalador"
         "ciudad.csv",
         "snd_provider_tpy.csv",
         "snd_provider.csv",
-        "snd_channel.csv"
+        "snd_channel.csv",
+        "sys_rest_integration.csv"
     ]')
 
     // Lista de privilegios iniciales (arreglo de id de privilegios)
