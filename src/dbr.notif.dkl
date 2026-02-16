@@ -31,7 +31,7 @@ module "dbr.notif"
             @"sys_dtcreated*": dbr.sql("NOW()")
             @"sys_timestamp*": dbr.sql("NOW()")
             @"sndrid": field.dstr(data, "sender", "unknow")
-            @"title": @@(data, "$title")
+            @"title": cut(@@(data, "$title"),50)
             @"img": @@(data, "$img")
             @"body": @@(data, "$body")
             @"href": @@(data, "$href")
