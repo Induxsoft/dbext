@@ -1,0 +1,81 @@
+#include "dkli.dkh"
+#!
+module ":assoc"
+{
+    #include "webcl.dkh"
+
+    @table_name = "tuser"
+    @keyfield = "sys_pk"
+    @update_exclude_fields = "sys_pk,sys_guid,sys_dtcreated,sys_user"
+    do errordet(@false)
+
+    NotImplemented1::&db,&params
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+    NotImplemented2::&db,&params,&data
+    {
+        do rise_error(500,"Acción no implementada")
+    }
+
+    function getUser(&db,&params)
+    {
+        ref user = @@(@http_context,"&session/user")
+        
+        iuser = dbr.num(db,"select ifnull(iuser,0) from sys_session where sys_guid = @ids and not ifnull(sys_deleted,0)",user)
+        if iuser < 1 { do rise_error(590,"Sesión inválida.") }
+        params<"_entity_id"> : iuser
+
+        return entity.read(db,params)
+    }
+
+    function setInduxsoftProfile(&db,&params,&data)
+    {
+        @use_transaction = @false
+        do dbr.begin(db)
+
+        do validateData(data)
+        ref entity = entity.update(db,params,data)
+        entity<"message"> : "Perfil asociado"
+
+        do dbr.commit(db)
+
+        @url_redir = "/!/dbext/assoc-profile/"
+        return entity
+
+        exception
+        {
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function validateData(&data)
+    {
+        endpoint = @endpoint_induxsoft_auth_fromv12
+        new headers
+        {
+            @"Content-Type": "application/json"
+        }
+        new body
+        {
+            @"uid": @@(data,"$induxsoft_identifier")
+            @"secret": @@(data,"$induxsoft_token")
+        }
+
+        response = http.request(endpoint,"POST",headers,to.json(body))
+        ref resp = from.json(response)
+
+        if not(@@(resp,"#success")) { do rise_error(500,@@(resp,"$message")) }
+        return @@(resp,"&data")
+    }
+
+    point @list to assoc.getUser
+    point @read to assoc.getUser
+    point @blank to assoc.getUser
+    point @create to assoc.setInduxsoftProfile
+    point @update to assoc.setInduxsoftProfile
+    point @delete to assoc.NotImplemented1
+
+    @list_view = "form.dk"
+}

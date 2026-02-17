@@ -1,0 +1,114 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+	@is_new = (@_entity_id == "_new")
+    @form_id = "frm_"+@_entities_type
+    @table_id = "tbl_"+@_entities_type
+
+    new nav_config
+    {
+        @"title": "Asociar perfil Induxsoft"
+        
+        member @"hidden"
+        {
+            @"copy": @true
+            @"csv": @true
+            @"print": @true
+            @"send": @true
+        }
+    }
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container-lg" id="view")
+    {
+        // link(href="/$/{_pack}/css/styles.css" rel="stylesheet"){""}
+        style{$'
+        .btn.btn-xs {
+            padding: .20rem .4rem;
+            font-size: .725rem;
+            border-radius: .1rem;
+        }
+        '}
+
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        // Contenido principal
+        section(id="work_area" style="overflow-y:auto; overflow-x:hidden;")
+        {
+            #!
+            error = @("$error/message")
+            if error != ""
+            {
+                #$
+                div(class="alert alert-danger alert-dismissible fade show mb-2 pb-1" role="alert")
+                {
+                    div(class="w-100 overflow-auto pb-2"){$"#<error>"}
+                    button(type="button" class="btn-close" "data-bs-dismiss"="alert" "aria-label"="Close"){""}
+                }
+            }
+            
+            #$
+            form(class="px-1" action="./" method="POST" id="#<@form_id>")
+            {
+                input(type="hidden" name="sys_pk" value="#<@('#./sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@('#./sys_recver')>")
+                #!
+                do uie.print_from_url_field()
+                #$
+
+                label(class="form-label" "for"="induxsoft_identifier"){"Correo electrónico, número de teléfono o ID del Perfil Induxsoft"}
+                input(class="form-control" type="text" name="induxsoft_identifier" value="#<@('$./induxsoft_identifier')>" id="induxsoft_identifier" maxlength="150" required="")
+
+                div(class="d-flex justify-content-between align-items-center")
+                {
+                    label(class="form-label" "for"="induxsoft_token"){"Token de larga duración"}
+                    button(class="btn btn-xs btn-light border" type="button" onclick="paste('induxsoft_token')"){$"Pegar"}
+                }
+                textarea(class="form-control" name="induxsoft_token" id="induxsoft_token" required=""){"#<@('$./induxsoft_token')>"}
+
+                div(class="mt-2 text-end")
+                {
+                    button(class="btn btn-primary" type="submit"){$"Guardar asociación"}
+                }
+            }
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                // script(src="/$/{_pack}/js/script.js"){$""}
+                script(type="text/javascript")
+                {$'
+                    async function paste(id) {
+                        const input = document.getElementById(id);
+                        const text = await navigator.clipboard.readText();
+                        input.value = text;
+                    }
+                    document.addEventListener("DOMContentLoaded", () => {
+                        // Script injection
+                        #<@@(@crud_context,"$script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+    
+    do @context.end()
+}

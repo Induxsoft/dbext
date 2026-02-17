@@ -6,8 +6,9 @@ module "config"
     @title=""
 	@gender="o"
 	@path_common="dbext/_common/list.dk"
-
     @default_max_rows=250
+
+    @endpoint_induxsoft_auth_fromv12 = "https://api.induxsoft.net/auth/from-v12/"
     
     @UBICACIONES="/!/catbas/ubicacion/"
     // _STATIC
