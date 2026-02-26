@@ -1,0 +1,132 @@
+#include "dkli.dkh"
+#!
+module ":dbext.induxsoft"
+{
+    //#region utilidades
+    @dbext.induxsoft.endpoint="https://api.induxsoft.net/auth/from-v12/"
+    @dbext.induxsoft.idsv12=""
+    @dbext.induxsoft.type_cloud="cloud"
+    @dbext.induxsoft.type_onpremise="onpremise"
+    @dbext.induxsoft.var_cloud_id="induxsoft_cloud_id"
+
+    // **Códigos de error posibles:**
+    new @errores
+    {
+        @"not_configured": "usuario V12 no tiene credenciales Induxsoft configuradas"
+        @"invalid_token": "token revocado o inválido(No autorizado)"
+        @"ip_mismatch":"IP no autorizada (solo on-premise con restricción)"
+        @"profile_not_found":"Perfil no existe o inactivo"
+        @"network_error":"Falló en la comunicación con el endpoint"
+    }
+    
+    getIds::&db
+    {
+        if @dbext.induxsoft.idsv12 !=""{return @dbext.induxsoft.idsv12}
+
+        if isset("@crud_context") && not(isset("@http_context")){ref @http_context=@("&http")}
+
+        if isset("@http_context")
+        {
+            ref user=@@(@http_context,"&session/user")
+            if not(isnull(user)){return @@(user,"$ids")}
+        }
+        return dbr.getSID(db)
+    }
+    invoke_service::&payload
+    {
+        new headers{@"content-type":"application/json"}
+        res=http.request(@dbext.induxsoft.endpoint,"POST",headers,to.json(payload))
+
+        ref response=from.json(res)
+        if not(@@(response,"#success")){do rise_error(0,@@(response,"$message"))}
+
+        return @@(response,"&data")
+    }
+    //#endregion
+    // **Retorno:** cadena
+    // ```
+    // "cloud" | "onpremise"
+    // ```
+
+    getDeploymentType::&db
+    {
+        induxsoft_cloud_id=dbr.vars.get(db,@dbext.induxsoft.var_cloud_id)
+        if induxsoft_cloud_id !="" && length(induxsoft_cloud_id) == 32{return @dbext.induxsoft.type_cloud}
+
+        return @dbext.induxsoft.type_onpremise
+    }
+
+    getAuthData::&db,idsv12
+    {
+        if trim(idsv12) != ""{@dbext.induxsoft.idsv12=trim(idsv12)}
+
+        type=getDeploymentType(db)
+        ids=getIds(db)
+
+        switch type
+        {
+            case @dbext.induxsoft.type_cloud
+            {
+                new auth
+                {
+                    @"svc_id":dbr.vars.get(db,@dbext.induxsoft.var_cloud_id)
+                    @"ids":ids
+                }
+                return auth
+            }
+            case @dbext.induxsoft.type_onpremise
+            {
+                ids >> p
+                ref user=dbr.rec(db,"SELECT t.username,t.induxsoft_identifier,t.induxsoft_token FROM tuser t
+                INNER JOIN sys_session s ON t.sys_pk=s.iuser
+                WHERE s.sys_guid=@ids;",p)
+                
+                induxsoft_identifier=trim(@@(user,"$induxsoft_identifier"))
+                induxsoft_token=trim(@@(user,"$induxsoft_token"))
+
+                if trim(induxsoft_identifier) == ""{do rise_error(0,"not_configured")}
+                
+                new auth
+                {
+                    @"uid":induxsoft_identifier
+                    @"secret":induxsoft_token
+                }
+                if induxsoft_token == ""{auth<"secret*">:@null}
+
+                return auth
+            }
+        }
+
+        return @null
+    }
+
+    getSession::&db,idsv12
+    {
+        ref payload=getAuthData(db,idsv12)
+        ref response=invoke_service(payload)
+
+        using response
+        {
+            @"success":@true
+        }
+
+        exception
+        {
+            do errordet(@false)
+            error=last_error()
+            if error == "No autorizado"{error="invalid_token"}
+
+            _error=@@(@errores,"$"+error)
+            if _error == ""{_error=error}
+
+            new response
+            {
+                @"success":@false
+                @"error":error
+                @"message":_error
+            }
+        }
+
+        return response
+    }
+}
