@@ -1,0 +1,39 @@
+#include "dkli.dkh"
+#!
+module ":lib"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "webcl.dkh"
+
+    function sendMessage(&config, &message, &remplace_template)
+    {
+        go foreach.fstr(index:i, key:k, value:v) with(remplace_template) {
+            message<"message">: replace(@@(message,"message"), "@"+k, v)
+        }
+
+        new payload
+        {
+            @"message": @@(message, "$message")
+        }
+
+        endpoint = "https://agent.induxsoft.net/svc/{agent_id}/send/whatsappqr/?to={to}"
+        endpoint = replace(endpoint, "{agent_id}", @@(config,"$agent_id"))
+        endpoint = replace(endpoint, "{to}", @@(message,"$to"))
+
+        if not(@@(message, "$ids") == "")
+        {
+            endpoint = endpoint + "&ids=" + @@(message, "$ids")
+        }
+
+        new headers
+        {
+            @"Authorization": "Bearer " +  @@(config,"$secret")
+            @"Content-Type": "application/json"
+        }
+
+        response = http.request(endpoint, "POST", headers, to.json(payload))
+        
+        return from.json(response)
+    }
+}

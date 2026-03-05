@@ -246,6 +246,7 @@ model "Variables globales"
         @"tpy" ref:"snd_provider_tpy" required
         @"entry_point" string(256)  // URL relativa de acceso a los controles del proveedor
         @"lib" string(256) required // Ruta hacia la biblioteca que implementa las funciones de la interfaz
+        @"manifest" mmemo 
     }
 
     entity "snd_channel" : "TableModel"

@@ -1,0 +1,113 @@
+#include "dkli.dkh"
+#!
+program "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "dbr.controls.dkl"
+    #include "../config.dk"
+    #include "../_lib/lib.dk"
+
+    do @context.begin(@crud_context)
+
+    ref channel = ifnull(@("&./channel_data"),record.create())
+    ref cconfig = ifnull(@("&./channel_config"),record.create())
+    ref manifst = from.json(ifstr(@@(channel, "manifest")=="","{}",@@(channel, "manifest")))
+
+    current_url = url_encode(current_url(@('&http'),@true))
+
+    header_act::
+    { 
+        #$ button(type="submit" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" title="Guardar"){$"#<@@(@icons,'save2')>"}
+    }
+
+    #! point general_act to header_act
+
+    new nav_config
+    {
+        @"title": ftext("Editar canal")
+        @"buttons*": general_act
+        @"urlexit": get_url_exit(@("&parameters"),"../")
+        member @"hidden" { @"print": @true }
+    }
+
+    #$ div(class="container")
+    {
+        style{$"
+            .control-container {
+                & label {
+                    font-weight: 500 !important;
+                }
+                & input {
+                    width: 100%;
+                    margin: 0 12px;
+                }
+            }
+            .form-control:focus {
+                box-shadow: none !important;
+                border-color: rgb(206, 212, 218);
+            }
+            @media (min-width: 768px) {
+                .control-container > label {
+                    flex: 0 0 auto;
+                    width: 16.66666667%; /* Equivalente a col-md-2 */
+                }
+                .control-container > input {
+                    flex: 0 0 auto;
+                    width: 66.66666667%; /* Equivalente a col-md-8 */
+                }
+            }
+            @media (min-width: 1200px) {
+                .control-container > input {
+                    width: 41.66666667%; /* Equivalente a col-xl-5 */
+                }
+            }
+        "}
+        form(method="POST" action="./?exit_url_encode=#<current_url>" id="form")
+        {
+            #! do uie.printV12FormBar(nav_config)
+
+            #$ div(id="work_area" class="container-section p-2")
+            {
+                div(class="#<ifstr(@('error/message')!='','alert alert-danger','')>"){$"#<@('error/message')>"}
+                
+                // Campos requeridos (no remover)
+                input(type="hidden" name="sys_pk" value="#<@@(channel, '#sys_pk')>")
+                input(type="hidden" name="sys_recver" value="#<@@(channel, '#sys_recver')>")
+
+                // Campos del canal (opcional)
+                div(class="mb-5")
+                {
+                    h4{$"General"}
+                    p(class="text-sm text-muted"){$"Datos generales del canal"}
+
+                    div(class="row align-items-center")
+                    {
+                        div(class="col-md-2"){ label(class="form-label m-0"){ h6{$"Nombre"} }}
+                        div(class="col-md-8 col-xl-5"){ input(class="induxsoft-form-control" name="_name" value="#<@@(channel,'$_name')>" required="" maxlength="32") }
+                    }
+                }
+
+                // Campos de configuración
+                div(class="mb-5")
+                {
+                    h4{$"Configuración"}
+                    p(class="text-sm text-muted"){$"Valores de configuración para la conexión del canal"}
+                    
+                    #!
+                    ref settings = @@(manifst, "&settings")
+                    @control_params = cconfig
+                    if not(isnull(settings))
+                    {
+                        go foreach.fobj(index:i, key:key, value:value) with(settings)
+                        {
+                            value<"wrp_attr*">: from.json('{"class":"row control-container mb-3 align-items-center"}')
+                        }
+                        do dbr.control.GenerateHtml(@null, settings)
+                    }
+                }
+            }
+        }
+    }
+}

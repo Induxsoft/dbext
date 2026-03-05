@@ -130,6 +130,79 @@ module "model"
         return dbr.list(db, sql_provdors, params)
     }
 
+    // ================================================
+
+    function insert_config(&db,&data)
+    {
+        new d 
+        {
+            @"sys_pk": @@(data,"#sys_pk")
+            @"sys_recver": @@(data,"#sys_recver")
+            @"name": @@(data,"$_name")
+        }
+
+        go foreach.fstr(index:i, key:k, value:v) with(d) 
+        {
+            do field.remove(data,k)
+        }
+
+        do v12.channel.config.set(db,data,@@(d,"$name"))
+        return d
+    }
+
+    function create_update(&db,&params,&data)
+    {
+        url_exit = @@(params,"$exit_url_encode")
+        if trim(url_exit) != "" { @url_redir = url_dcode(url_exit) }
+
+        ref res = entity.create(db, params, insert_config(db,data))
+        return res
+    }
+
+    function update_light_channel(&db,&params,&data)
+    {
+        @use_transaction = @false
+
+        //do dbr.apps.action.pre("XB82")
+        do dbr.begin(db)
+
+        ref result = create_update(db,params,data)
+
+        //do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        //do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            //do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+
+    function read_light_channel(&db,&params)
+    {
+        sql = "
+            SELECT c.sys_pk, c.sys_recver, c.name _name, p.manifest
+            FROM snd_channel c
+                INNER JOIN snd_provider p ON c.prov=p.sys_pk
+            WHERE c.sys_pk=@_entity_id LIMIT 1;
+        "
+        ref d = dbr.rec(db, sql, params)
+        if isnull(d){ return record.create() }
+        
+        new data
+        {
+            @"channel_data*": d
+            @"channel_config*": v12.channel.config.get(db, @@(d,"$_name"))
+        }
+        
+        return data
+    }
+
     point @list to list
     point @create to create
     point @update to update

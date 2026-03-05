@@ -1,0 +1,20 @@
+#include "dkli.dkh"
+#!
+program ""
+{
+    function setUrlFormChannel(&channels)
+    {
+        for i=0; i<list.count(channels)
+        {
+            ref channel = list.obj(channels, i)
+            frm_channel = @@(channel, "$entry_point")
+
+            channel<"view">: ""
+
+            if contains(frm_channel,"dbext/comm")
+            {
+                channel<"view">: "light_provider/"
+            }
+        }
+    }
+}

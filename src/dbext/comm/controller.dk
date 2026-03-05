@@ -10,5 +10,12 @@ module "controller"
             point @list to buscar_proveedor
             break
         }
+        case "light_provider"
+        {
+            @table_name = "snd_channel"
+            point @update to update_light_channel
+            point @read to read_light_channel
+            break
+        }
     }
 }

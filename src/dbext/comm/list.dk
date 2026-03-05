@@ -6,12 +6,16 @@ module "list.dk"
     #include "serialize.dkh"
     #include "uielements.v12.dkl"
     #include "../config.dk"
+    #include "lib.dk"
 
     do @context.begin(@crud_context)
 
 	@_entities_type = @("$parameters/_entities_type")
 	table_id = "tbl_"+@_entities_type
     current_url = url_encode(@DBEXT_COMM)
+
+    // si el canal no tiene formulario de edición (form.dk) se asigna uno genérico (comm/form.dk).
+    do setUrlFormChannel(@('&./channels'))
 
     new sel_proveedor
     {
@@ -41,7 +45,7 @@ module "list.dk"
                 @"caption":"Acciones" 
                 @"template":ftext('
                     <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
-                        <a href="${DataRow.entry_point}${DataRow.sys_pk}/?exit_url_encode=#<current_url>" style="cursor:pointer; text-decoration: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Editar</a>
+                        <a href="${DataRow.entry_point}${DataRow.sys_pk}/${DataRow.view}?exit_url_encode=#<current_url>" style="cursor:pointer; text-decoration: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Editar</a>
                         <button onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})" style="cursor:pointer; border: none; outline: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Eliminar</button>
                     </div>')
                 @"no-print":@true
