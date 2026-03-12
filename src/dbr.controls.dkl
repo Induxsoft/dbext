@@ -98,7 +98,7 @@ module ":dbr.control"
                     div("#<wrap_attr>"="")
                     {
                         label(class="form-label #<ifstr(is_required,'fw-bold','')>" "for"="#<id>"){$"#<caption>"}
-                        textarea(class="form-control rounded-0" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"=""){$""}
+                        textarea(class="form-control rounded-0" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"=""){$"#<value>"}
                     }
                     #!
                     break
