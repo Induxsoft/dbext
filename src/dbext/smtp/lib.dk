@@ -32,6 +32,9 @@ module ":lib"
         do smtp.send(send)
     }
 
-    ref c = @com_context
-    do sendMessage(@@(c,'&config'), @@(c,'&message'), @@(c,'&replace'))
+    if isset("@com_context")
+    {
+        ref c = @com_context
+        do sendMessage(@@(c,'&config'), @@(c,'&message'), @@(c,'&replace'))
+    }
 }
