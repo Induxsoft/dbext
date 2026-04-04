@@ -508,6 +508,7 @@ module ":dbr.apps"
     {
         ref fields=list.create_from_fields(data)
         str_fields=replace(ranychars(to.json(fields),'[]{}"', " ")," ","")
+        str_fields="`"+replace(str_fields,",","`,`")+"`"
 
         sql="INSERT INTO "+tablename+" ("+str_fields+") VALUES ("
 
@@ -521,7 +522,7 @@ module ":dbr.apps"
         for i=0; i<list.count(fields) {
             field=list.str(fields,i)
             if i>0 { sql=sql+"," }
-            sql=sql+field+"=@"+field
+            sql=sql+"`"+field+"`=@"+field
         }
 
         sql=sql+";"

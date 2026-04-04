@@ -125,28 +125,51 @@ module "Variables alojadas en la base de datos :dbr.vars"
         return value
 
     }
-    save::&db,tablename,&data
+
+    has_sys_recver :: &db, tname
     {
-        ref fields=list.create_from_fields(data)
-        str_fields=replace(ranychars(to.json(fields),'[]{}"', " ")," ","")
-        str_fields="`"+replace(str_fields,",","`,`")+"`"
+        if not(isset("@_cache_sys_recver")) { ref @_cache_sys_recver = record.create() }
+        if field.exist(@_cache_sys_recver,tname) { return @@(@_cache_sys_recver, "#"+tname) }
+
+        ref info = dbr.rec(db,"show columns from "+tname+" like 'sys_recver';",@null)
+        has_sys_recver = not(isnull(info))
+        @_cache_sys_recver<tname> : has_sys_recver
+
+        return has_sys_recver
+    }
+    save :: &db, tname, &data
+    {
+        ref fields = list.create_from_fields(data)
+        str_fields = replace(ranychars(to.json(fields),'[]{}"'," ")," ","")
+        str_fields = "`"+replace(str_fields,",","`,`")+"`"
+        count_fields = list.count(fields)
+
+        has_sys_recver = isanyword("`sys_recver`",str_fields)
+        if not(has_sys_recver) {
+            has_sys_recver = has_sys_recver(db,tname)
+        }
         
-        sql="INSERT INTO "+tablename+" ("+str_fields+") VALUES ("
+        sql = "INSERT INTO "+tname+" ("+str_fields+") VALUES ("
 
-        for i=0; i<list.count(fields) {
-            if i>0 { sql=sql+"," }
-            sql=sql+"@"+list.str(fields,i)
+        for i = 0; i < count_fields
+        {
+            if i > 0 { sql = sql + "," }
+            sql = sql + "@"+list.str(fields,i)
         }
 
-        sql=sql+") ON DUPLICATE KEY UPDATE "
+        sql = sql + ") ON DUPLICATE KEY UPDATE "
 
-        for i=0; i<list.count(fields) {
-            field=list.str(fields,i)
-            if i>0 { sql=sql+"," }
-            sql=sql+"`"+field+"`=@"+field
+        for i = 0; i < count_fields
+        {
+            field = list.str(fields,i)
+            if i > 0 { sql = sql + "," }
+            
+            sql = sql + "`"+field+"` = "
+            if has_sys_recver { sql = sql + "IF(ifnull(sys_recver,0)=0, @"+field+", "+field+")" }
+            else { sql = sql + "@"+field }
         }
 
-        sql=sql+";"
+        sql = sql + ";"
         return dbr.execute(db, sql, data)
     }
     ImportList::&db,&list,tname
