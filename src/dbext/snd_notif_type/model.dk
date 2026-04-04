@@ -1,0 +1,220 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    @table_name              = "snd_notif_type"
+    @keyfield                = "sys_pk"
+    @update_exclude_fields   = "sys_pk,sys_guid,sys_dtcreated,sys_user"
+
+    @list_query = "
+    SELECT
+        n.sys_pk,
+        n.sys_guid,
+        n.name,
+        n.description,
+        c.name  AS channel,
+        IF(n.enabled,'Sí','No') AS active
+    FROM #<@table_name> n
+        INNER JOIN snd_channel c ON n.template = c.sys_pk
+    WHERE
+        NOT IFNULL(n.sys_deleted, 0)
+        AND (IFNULL(@search, '') = '' OR n.name LIKE CONCAT('%', @search, '%') OR c.name LIKE CONCAT('%', @search, '%'))
+    ORDER BY n.name
+    LIMIT #<@default_max_rows>
+    "
+    @read_query = "SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
+
+    //#region prepareView()
+    function prepareView(&db, &params, &data)
+    {
+        ref snd_channel = dbr.list(db, "SELECT sys_pk, name FROM snd_channel WHERE NOT IFNULL(sys_deleted, 0) ORDER BY name", @null)
+
+        if @@(params, "$_operation") == "list"
+        {
+            using data
+            {
+                @"itemactions*": dbr.apps.itemactions(db, "DET0BF", "action", "", 0)
+                @"itemreports*": dbr.apps.itemactions(db, "DET0BF", "report", "", 0)
+            }
+        }
+
+        if isanyword(@@(params, "$_operation"), "read,create,update")
+        {
+            do list.ins(snd_channel, 0, from.json('{ "sys_pk":"", "name":"Seleccione..." }'))
+
+            using data
+            {
+                @"snd_channel*": snd_channel
+            }
+
+            // Determina el canal: primero desde params (recarga por cambio de canal),
+            // luego desde el registro leído.
+            template = @@(params, "#template")
+            if template < 1 { template = @@(data, "#template") }
+
+            if template > 0
+            {
+                template >> params
+                json = dbr.str(db,"SELECT IF(IFNULL(p.manifest,'')='', '{}', p.manifest) FROM snd_channel c INNER JOIN snd_provider p ON c.prov = p.sys_pk WHERE c.sys_pk = @template",params)
+                ref manifest = from.json(json)
+                data<"template_controls*"> : @@(manifest, "&template")
+            }
+
+            // Deserializa params guardados para pre-poblar los controles dinámicos.
+            json = @@(data, "$params")
+            if json == "" { json = "{}" }
+            data<"params*"> : from.json(json)
+        }
+    }
+
+    //#region validateFields()
+    function validateFields(&data)
+    {
+        if @@(data, "$name")     == "" { do rise_error(511, "El nombre es requerido") }
+        if @@(data, "#template")  < 1  { do rise_error(512, "El canal es requerido") }
+
+        // Normaliza params: si llegó como objeto lo serializa de vuelta a JSON.
+        if field.typeof(data, "params") == 3 { data<"params"> : to.json(@@(data, "&params")) }
+        if @@(data, "$params") == "" { data<"params"> : "{}" }
+    }
+
+    //#region list()
+    function entity.list(&db, &params)
+    {
+        do dbr.apps.action.grant("XB170")
+
+        new data
+        {
+            @"data*": dbr.list(db, ftext(@list_query), params)
+        }
+        do prepareView(db, params, data)
+        return data
+
+        exception{ do catch(db, params, @null) }
+    }
+
+    //#region read()
+    function entity.read(&db, &params)
+    {
+        do dbr.apps.action.grant("XB170")
+
+        ref data = dbr.rec(db, ftext(@read_query), params)
+
+        if not(isset("@just_read_entity")) { @just_read_entity = @false }
+        if @just_read_entity { return data }
+
+        // Aplica overrides de params de URL (p.ej. tras recarga por cambio de canal).
+        if field.exist(params, "template") { data.template := @@(params, "#template") }
+
+        do prepareView(db, params, data)
+        return data
+
+        exception{ do catch(db, params, @null) }
+    }
+
+    //#region blank()
+    function entity.blank(&db, &params)
+    {
+        do dbr.apps.action.grant("XB170")
+
+        ref data = record.copy(params, "name,description,template,params,enabled")
+        do prepareView(db, params, data)
+        return data
+
+        exception{ do catch(db, params, @null) }
+    }
+
+    //#region create()
+    function notif_type.create(&db, &params, &data)
+    {
+        @just_read_entity = @true
+        do dbr.apps.action.grant("XB171")
+        do validateFields(data)
+        ref entity = entity.create(db, params, data)
+        return entity
+
+        exception{ do catch(db, params, data) }
+    }
+
+    //#region update()
+    function notif_type.update(&db, &params, &data)
+    {
+        @just_read_entity = @true
+        do dbr.apps.action.grant("XB172")
+        do validateFields(data)
+        ref entity = entity.update(db, params, data)
+        return entity
+
+        exception{ do catch(db, params, data) }
+    }
+
+    //#region delete()
+    function notif_type.delete(&db, &params)
+    {
+        do dbr.apps.action.grant("XB173")
+
+        ref entity = @null
+        deleted    = @false
+
+        codeblock "Intentar eliminación física"
+        {
+            do entity.delete(db, params)
+            deleted = @true
+
+            exception
+            {
+                do dbr.apps.action.log()
+                do pop_exception()
+            }
+        }
+
+        if not(deleted)
+        {
+            lastuser = @@(@http_context, "$session/user/uid")
+            sql = ftext("
+                UPDATE #<@table_name> SET
+                    sys_timestamp = NOW(),
+                    sys_lastuser  = '#<lastuser>',
+                    sys_deleted   = 1
+                WHERE #<@keyfield> = @_entity_id
+            ")
+            do dbr.execute(db, sql, params)
+            ref entity: entity.read(db, params)
+        }
+
+        return entity
+
+        exception{ do catch(db, params, @null) }
+    }
+
+    //#region catch()
+    function catch(&db, &params, &data)
+    {
+        do errordet(@false)
+        code  = last_error_code()
+        error = last_error()
+
+        if dbr.in_transaction(db) { do dbr.rollback(db) }
+        if isset("@@_action_context") { do dbr.apps.action.log() }
+
+        if isanyword(@@(params, "$_operation"), "create,update")
+        {
+            if isnull(data) { ref data: record.create() }
+            if contains(error, "Duplicate entry") { error = "Ya existe un tipo de notificación con ese nombre." }
+        }
+        else if @@(params, "$_operation") == "delete"
+        {
+            if contains(error, "Cannot delete or update a parent row") || contains(error, "DELETE Error")
+            {
+                error = "No es posible eliminar: existen notificaciones programadas que dependen de este tipo."
+            }
+        }
+
+        do clear_exceptions()
+        do rise_error(code, error)
+    }
+
+    point @create to notif_type.create
+    point @update to notif_type.update
+    point @delete to notif_type.delete
+}

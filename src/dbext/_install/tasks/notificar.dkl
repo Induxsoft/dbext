@@ -1,0 +1,18 @@
+#include "dkli.dkh"
+#!
+program "Enviar notificaciones pendientes a usuarios externos"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "dbr.dkh"
+    #include "dbr.apps.dkl"
+    #include "dbr.security.dkl"
+    #include "batch.v12.dkl"
+
+    do @context.begin(@batch_context)
+
+    do batch.v12.grant("XB174")
+    #include "snd-scheduled-task.dkl"
+
+    do @context.end()
+}

@@ -37,3 +37,11 @@ XB151,Restaurar elemento borrado,Restaurar,,javascript:recbin.restore(),0,dbext.
 XB152,Eliminar elemento borrado,Eliminar,,javascript:recbin.delete(),0,dbext.recbin,DET097,1,action
 
 XB160,"Integración, puntos finales",Integración,,"/!/dbext/integration/",0,dbext.rest_integration,DET0B2,0,action
+
+XB170,Administrar tipos de notificaciones,Notificaciones,,/!/dbext/snd-notif-type/,0,dbext.snd_notif_type,DET0BF,0,shortcut
+XB171,Crear tipo de notificación,Crear,,/!/dbext/snd-notif-type/_new/,0,dbext.snd_notif_type,DET0BF,0,action
+XB172,Editar tipo de notificación,Editar,,/!/dbext/snd-notif-type/@_src_context_item_id/,0,dbext.snd_notif_type,DET0BF,1,action
+XB173,Eliminar tipo de notificación,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,dbext.snd_notif_type,DET0BF,1,action
+XB174,Enviar notificaciones pendientes,Enviar notificaciones,,/!/batch/taskman/XB/notificar/?exit_url_encode=LyEvZGJleHQvc25kLW5vdGlmLXR5cGUv,0,dbext.snd_notif_type,DET0BF,0,action
+
+XB180,Administrar notificaciones programadas,Notificaciones,,/!/dbext/snd-scheduled-notif/,0,dbext.snd_scheduled_notif,DET0C0,0,shortcut

@@ -1,2 +1,4 @@
 sys_guid,sys_dtcreated,sys_timestamp,sys_recver,id,description,token,source,pack_id,disabled
 34b09c39dc4c11f08b087ced8d22c890,2025-12-18 14:04:23,2025-12-18 14:04:23,0,user-ses-validation-v12,"Validación de sesión de V12",user-ses-validation-v12,dbext/sise/user-ses-validationv12.dkl,dbext,0
+9225cef5a24146c490eeb535e7be90f6,2026-04-01 12:00:00,2026-04-01 12:00:00,0,scheduled-notification,"Crear notificación programada",snd-scheduled-notif,dbext/sise/scheduled-notification.dkl,dbext,0
+86b20dfbc9664d6d865c1221743a6c0c,2026-04-01 12:00:00,2026-04-01 12:00:00,0,scheduled-notification-cancel,"Cancelar notificación programada",snd-scheduled-notif-cancel,dbext/sise/scheduled-notification-cancel.dkl,dbext,0

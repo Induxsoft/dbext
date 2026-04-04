@@ -256,6 +256,67 @@ model "Variables globales"
         @"config" mmemo
     }
 
+    entity "snd_notif_type" : "TableModel"
+    {
+        @"name"        string(100) required unique  // Nombre descriptivo del tipo
+        @"description" string(255)                  // Descripción de uso
+        @"template"    ref:"snd_channel" required  // Plantilla base respecto al canal
+        @"params"      memo required  // JSON con valores base y/o marcas de sustitución
+                                    // Las variables dinámicas se indican con {{marca}}
+                                    // El invocador proveerá sus valores en cada solicitud
+        @"enabled"     bool
+    }
+
+    entity "snd_scheduled_notif" : "TableModel"
+    {
+        @"notif_type"       ref:"snd_notif_type" required
+        @"scheduled_for"    datetime required       // Fecha y hora de envío programado
+        @"recipient_name"   string(250) required
+        @"recipient_email"  string(250)
+        @"recipient_phone"  string(50)
+        @"params"           memo required  // JSON con los valores concretos de las variables
+                                        // del tipo, provistos por el invocador
+        @"status"           string(20) required  // pending | sent | failed | cancelled
+        @"detsrc"           string(15)  // Tipo de elemento de datos que originó la notificación
+        @"srcid"            int         // ID del registro que originó la notificación
+        @"tag"              string(32)  // Información de propósito general
+        @"created_by"       string(50)  // ID del agente IA u origen que creó el registro
+
+        index "snd_scheduled_notif_idx1"
+        {
+            field "status"
+            field "scheduled_for"
+        }
+        index "snd_scheduled_notif_idx2"
+        {
+            field "detsrc"
+            field "srcid"
+        }
+    }
+
+    entity "snd_scheduled_notif_log" : "TableModel"
+    {
+        @"notif_guid"       string(32) required  // sys_guid de snd_scheduled_notif
+        @"scheduled_for"    datetime required
+        @"recipient_name"   string(250) required
+        @"recipient_email"  string(250)
+        @"recipient_phone"  string(50)
+        @"sent_at"          datetime
+        @"status"           string(20) required  // sent | failed
+        @"channel_response" memo
+        @"error_detail"     memo
+
+        index "snd_scheduled_notif_log_idx1"
+        {
+            field "notif_guid"
+        }
+        index "snd_scheduled_notif_log_idx2"
+        {
+            field "status"
+            field "scheduled_for"
+        }
+    }
+
     entity "det_usr" : "TableModel"
     {
         @"ref_user" ref:"tuser" required

@@ -1,0 +1,360 @@
+#include "dkli.dkh"
+#!
+program ""
+{
+    if not(isset("@batch_context"))
+    {
+        #include "functions.dkh"
+        #include "serialize.dkh"
+        #include "dbr.dkh"
+    }
+    #include "webcl.dkh"
+    #include "v12.com.dkl"
+    #include "dbext.induxsoft.dk"
+
+    //#region >SETTINGS
+    do errordet(@false)
+
+    @_retries_to_extract_json = 1
+
+    @default_lookback  = 5
+    @default_retention = 30
+    //#endregion
+
+    //#region >FUNCTIONS
+
+    print_error :: error
+    {
+        do print("")
+        do print("-  ERROR -")
+        do print(error)
+        do print("------------------------------------------------------------")
+        do print("")
+        do print("- USO DE LA HERRAMIENTA -")
+        do print('./dkl snd-scheduled-task db="nombrebd@grupodeapps"')
+        do print("    o")
+        do print('./dkl snd-scheduled-task db="nombrebd@grupodeapps" lookback=4 retention=30')
+        do print("")
+        do print("Donde:")
+        do print("db=Nombre cualificado de conexión a la base de datos.")
+        do print("lookback=Ventana hacia atrás en minutos para capturar notificaciones no procesadas en el ciclo anterior.")
+        do print("retention=Días de retención de los registros en la bitácora de envíos.")
+        do print("------------------------------------------------------------")
+    }
+
+    // Parsea un JSON con fallback a un JSON por defecto si está vacío o es inválido.
+    from.djson :: json, djson
+    {
+        if json == "" { json = djson }
+        return from.json(json)
+        exception
+        {
+            do pop_exception()
+            return from.json(djson)
+        }
+    }
+
+    // Extrae el primer objeto JSON válido de una cadena que puede contener texto adicional.
+    // Usado para parsear errores de canal que vienen mezclados con texto.
+    ExtractJsonAsObject :: input
+    {
+        if not(isset("@_retries_to_extract_json"))  { @_retries_to_extract_json  = 0 }
+        if not(isset("@_attempts_to_extract_json")) { @_attempts_to_extract_json = 0 }
+
+        string = trim(input)
+        if string == "" { return @null }
+
+        ini = findstr(string, "{")
+        if ini == -1 { return @null }
+
+        strlen = length(string)
+        depth  = 0
+
+        for i = ini; i < strlen
+        {
+            char = substring(string, i, 1)
+            if char == "{" { depth = depth + 1 }
+            else if char == "}" { depth = depth - 1 }
+
+            if depth == 0
+            {
+                fin  = i - ini + 1
+                json = substring(string, ini, fin)
+                ref object = from.json(json)
+                @_attempts_to_extract_json = 0
+                return object
+
+                exception
+                {
+                    do pop_exception()
+                    if @_attempts_to_extract_json < @_retries_to_extract_json
+                    {
+                        @_attempts_to_extract_json = @_attempts_to_extract_json + 1
+                        return ExtractJsonAsObject(left(string, fin))
+                    }
+                    @_attempts_to_extract_json = 0
+                    break
+                }
+            }
+        }
+
+        return @null
+    }
+
+    UpdatePercent :: value
+    {
+        if not(isset("@batch_context")) { return }
+
+        new data
+        {
+            @"percentage":    value
+            @"progress_type": 2
+        }
+        do dbr.update(batch.openDB(), "job", data, "sys_guid=@token", @("&job"))
+    }
+
+    Log :: tab, text
+    {
+        if isset("@orchestrator_context") {/*ignore*/}
+        else if isset("@batch_context") { do batch.saveLog(@("$job/token"), text) }
+        else
+        {
+            text = padleft("", tab * 4, " ") + text
+            do print(text)
+        }
+    }
+
+    // Elimina registros de la bitácora más antiguos que `retention` días.
+    DeleteOldRecords :: &db, retention
+    {
+        retention >> p
+        do dbr.execute(db,"DELETE FROM snd_scheduled_notif_log WHERE sys_dtcreated < (NOW() - INTERVAL @retention DAY)",p)
+    }
+
+    // Consulta notificaciones pendientes cuya hora de envío ya llegó,
+    // dentro de la ventana lookback para no reprocesar notificaciones muy antiguas.
+    FindPendingNotifs :: &db, lookback
+    {
+        lookback >> p
+        sql = "
+        SELECT
+            n.sys_guid AS notif_guid,
+            n.sys_pk AS notif_pk,
+            DATE_FORMAT(n.scheduled_for,'%Y-%m-%d %H:%i') AS scheduled_for,
+            DATE_FORMAT(n.scheduled_for,'%Y-%m-%d') AS scheduled_date,
+            DATE_FORMAT(n.scheduled_for,'%r') AS scheduled_time,
+            n.recipient_name,
+            n.recipient_email,
+            n.recipient_phone,
+            n.params AS notif_params,
+            n.detsrc,
+            n.srcid,
+            n.tag,
+            t.params AS type_params,
+            t.template
+        FROM snd_scheduled_notif n
+            INNER JOIN snd_notif_type t ON t.sys_pk = n.notif_type
+        WHERE
+            n.status IN ('pending', 'failed')
+            AND n.scheduled_for <= NOW()
+            AND n.scheduled_for >= (NOW() - INTERVAL @lookback MINUTE)
+            AND NOT IFNULL(n.sys_deleted, 0)
+            AND t.enabled = TRUE
+            AND NOT IFNULL(t.sys_deleted, 0)
+        ORDER BY n.scheduled_for
+        "
+        return dbr.list(db, sql, p)
+    }
+
+    // Actualiza el status de la notificación en snd_scheduled_notif.
+    UpdateNotifStatus :: &db, &notif, status
+    {
+        new p
+        {
+            @"notif_guid": @@(notif, "$notif_guid")
+            @"status":     status
+        }
+        do dbr.execute(db,"UPDATE snd_scheduled_notif SET sys_timestamp = NOW(), status = @status WHERE sys_guid = @notif_guid",p)
+    }
+
+    // Inserta un registro en la bitácora del intento de envío.
+    // El log es autocontenido: replica los datos del destinatario para
+    // preservar el historial aunque la notificación original sea eliminada.
+    SaveNotifLog :: &db, &notif, status, channel_response, error_detail
+    {
+        ref now = dbr.sql("now()")
+        new log
+        {
+            @"sys_guid": uuid()
+            @"sys_dtcreated*": now
+            @"sys_timestamp*": now
+            @"sys_recver": 0
+
+            @"notif_guid": @@(notif, "$notif_guid")
+            @"scheduled_for": @@(notif, "$scheduled_for")
+            @"recipient_name": @@(notif, "$recipient_name")
+            @"recipient_email": @@(notif, "$recipient_email")
+            @"recipient_phone": @@(notif, "$recipient_phone")
+            @"status": status
+            @"sent_at*": if(status=="sent", now, @null)
+            @"channel_response": channel_response
+            @"error_detail": error_detail
+        }
+        do dbr.insert(db,"snd_scheduled_notif_log",log)
+    }
+
+    // Construye el contexto de marcas del destinatario y de la fecha programada.
+    // Estas marcas se resuelven automáticamente sin intervención del invocador.
+    BuildRecipientContext :: &notif
+    {
+        // Valores de la notificación resueltas automáticamente (Contexto automático)
+        ref automatic = record.copy(notif,"recipient_name,recipient_email,recipient_phone,scheduled_date,scheduled_time")
+        // Valores del invocador (Contexto dinámico)
+        ref dynamic = from.djson(@@(notif, "$notif_params"), "{}")
+        // Combinar contextos prefiriendo a 'automatic'
+        ref context = record.copyex(automatic, dynamic, "*", ",", "", ":")
+
+        return context
+    }
+
+    // Resuelve todas las marcas {{...}} de los parámetros base del tipo de notificación.
+    ResolveMarksInParams :: &notif, &context
+    {
+        // Parámetros base del canal configurado para el tipo de la notificación.
+        ref params = from.djson(@@(notif,"$type_params"), "{}")
+
+        ref keys = list.create_from_fields(params)
+        ref marks = list.create_from_fields(context)
+        
+        count_marks = list.count(marks)
+        for i = 0; i < list.count(keys)
+        {
+            key = list.str(keys,i)
+            val = @@(params,"$"+key)
+            // Reemplazar {{marca}} en cada valor de 'params'.
+            // Fuentes de resolución: contexto automático + notif_params del invocador.
+            if contains(val,"{{")
+            {
+                for n = 0; n < count_marks
+                {
+                    mark = list.str(marks,n)
+                    val = replace(val, "{{"+mark+"}}", @@(context,"$"+mark))
+                }
+                params<key> : val
+            }
+        }
+
+        // Parámetros base resueltos
+        notif<"type_params*"> : params
+    }
+
+    // Obtiene el nombre del canal y la ruta de la biblioteca del proveedor
+    // e inyecta esos valores en los params resueltos para que v12.com los use.
+    GetChannelSettings :: &db, &notif
+    {
+        ref resolved = @@(notif, "&type_params")
+        
+        template_pk = @@(notif, "#template")
+        template_pk >> p
+
+        ref snd = dbr.rec(db,"SELECT c.name, p.lib FROM snd_channel c INNER JOIN snd_provider p ON c.prov = p.sys_pk WHERE c.sys_pk = @template_pk",p)
+
+        resolved.channel := @@(snd, "$name")
+        resolved.lib     := @@(snd, "$lib")
+
+        return resolved
+    }
+    //#endregion
+
+    //#region >MAIN
+
+    // Inicialización del contexto: orquestador, batch o línea de comandos.
+    if isset("@orchestrator_context")
+    {
+        ref args = @orchestrator_context
+        ref db   = dbr.open(@@(args, "$db"))
+    }
+    else if isset("@batch_context")
+    {
+        ref args = @("&params")
+        ref db   = @("&database")
+    }
+    else
+    {
+        ref args = commandline("=")
+
+        if @@(args, "$db") == "" { do rise_error(400, "Nombre cualificado de conexión es requerido.") }
+        ref db = dbr.open(@@(args, "$db"))
+    }
+
+    lookback  = @@(args, "#lookback")
+    retention = @@(args, "#retention")
+
+    if lookback  < 1 { lookback  = @default_lookback  }
+    if retention < 1 { retention = @default_retention }
+
+    do Log(0, ":: ENVIAR NOTIFICACIONES PROGRAMADAS ::")
+    do DeleteOldRecords(db, retention)
+
+    ref pending = FindPendingNotifs(db, lookback)
+    total = list.count(pending)
+    do Log(0, "Notificaciones pendientes encontradas: " + str(total))
+
+    for i = 0; i < total
+    {
+        ref notif = list.obj(pending, i)
+
+        do Log(1, "> [" + str(i+1) + "/" + str(total) + "] Notificando a: " + @@(notif,"$recipient_name"))
+        // Marcar como 'sent' de forma optimista antes de enviar.
+        // Si falla, el bloque exception la revierte a 'failed'.
+        do UpdateNotifStatus(db, notif, "sent")
+
+        ref replace = BuildRecipientContext(notif)
+        do ResolveMarksInParams(notif, replace)
+        ref message = GetChannelSettings(db, notif)
+
+        if isset("@batch_context") || isset("@orchestrator_context")
+        {
+            include @@(message, "$lib")
+        }
+        do field.remove(message, "lib")
+
+        ref response = v12.com.sendMessageV2(db, message, replace)
+        if not(isnull(response)) && not(@@(response, "#success")) { do rise_error(500, @@(response, "$message")) }
+
+        do SaveNotifLog(db, notif, "sent", to.json(@@(response, "&data")), "")
+        do Log(2, "OK")
+
+        exception
+        {
+            error      = last_error()
+            ref detail = ExtractJsonAsObject(error)
+
+            if not(isnull(detail)) { error = to.json(detail) }
+            if error == "" && isset("response") { error = to.json(response) }
+
+            do Log(2, "* Error: " + error)
+
+            do UpdateNotifStatus(db, notif, "failed")
+            do SaveNotifLog(db, notif, "failed", "", error)
+            do clear_exceptions()
+        }
+
+        do UpdatePercent((i + 1) * 100 / total)
+    }
+
+    exception
+    {
+        if isset("@batch_context") || isset("@orchestrator_context") { do Log(0, last_error()) }
+        else { do print_error(last_error()) }
+        do clear_exceptions()
+    }
+
+    if isset("db")
+    {
+        if dbr.in_transaction(db) { do dbr.rollback(db) }
+        if not(isset("@batch_context")) { do dbr.close(db) }
+    }
+    if isset("@orchestrator_context") { @orchestrator_context.status := "finished" }
+    //#endregion
+}

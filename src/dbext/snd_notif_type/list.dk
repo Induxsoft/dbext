@@ -1,0 +1,107 @@
+#include "dkli.dkh"
+#!
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+    @_entities_type = @("$parameters/_entities_type")
+    table_id        = "tbl_" + @_entities_type
+
+    function printNavButtons()
+    {
+        cls = "btn btn-sm border-secondary induxsoft-corners no-shadow"
+        #$
+        a(class="#<cls>" href="/!/dbext/snd-scheduled-notif/"){"Notificaciones"}
+        #!
+    }
+    point buttons to printNavButtons
+    new nav_config
+    {
+        @"title":          "Tipos de notificación"
+        @"urlexit":        "/"
+        @"buttons*":       buttons
+        @"main":           "XB171,XB172,XB173"
+        @"actions*":       ifnull(@("&./itemactions"), list.create())
+        @"reports*":       ifnull(@("&./itemreports"), list.create())
+        @"jscurrentcontext": "getCurrentContext"
+
+        member "hidden"
+        {
+            @"send":  @true
+            @"copy":  @true
+            @"csv":   @true
+            @"print": @true
+        }
+    }
+
+    new table_definition
+    {
+        @"datatable*": ifnull(@("&./data"), list.create())
+        member @"columns"
+        {
+            member @"name"        { @"caption": "Nombre" }
+            member @"description" { @"caption": "Descripción" }
+            member @"channel"     { @"caption": "Canal" }
+            member @"active"      { @"caption": "Activo" }
+        }
+        @"table_footer": "Mostrando los primeros # registros"
+    }
+
+    #$
+    div(class="container" id="view")
+    {
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+            form(class="mb-1" action="./" method="GET" id="form-filter")
+            {
+                div(class="d-flex align-items-center gap-2 flex-wrap w-100 py-1")
+                {
+                    div(class="flex-grow-1")
+                    {
+                        "filter-text"(class="w-100" "text-field"="search"
+                            value="#<@('$parameters/search')>"
+                            placeholder="Buscar por nombre o canal..."
+                            "form"="form-filter"
+                            "auto-submit"="true"){""}
+                    }
+                }
+            }
+        }
+
+        section(id="work_area")
+        {
+            #!
+            do uie.dbeditable(table_definition, table_id)
+            #$
+        }
+
+        section(id="bottom_area")
+        {
+            div(id="_custom_area")
+            {
+                script(type="text/javascript")
+                {$'
+                    function getCurrentContext() {
+                        const table = document.getElementById("#<table_id>");
+                        const id = (table?.DataArray[table.CurrentRowIndex()]?.sys_pk ?? "");
+                        return { item_id: id, context: {} };
+                    }
+
+                    document.addEventListener("DOMContentLoaded", () => {
+                        #<@@(@crud_context, "$script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+
+    do @context.end()
+}

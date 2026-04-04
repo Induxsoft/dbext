@@ -74,3 +74,12 @@ XB160,"Integración",dbext.rest_integration
 XB161,"Agregar Integración",dbext.rest_integration
 XB162,"Editar Integración",dbext.rest_integration
 XB163,"Eliminar Integración",dbext.rest_integration
+dbext.snd_notif_type,Configurar tipos de notificaciones,dbext
+XB170,Administrar tipos de notificaciones,dbext.snd_notif_type
+XB171,Crear tipo de notificación,dbext.snd_notif_type
+XB172,Editar tipo de notificación,dbext.snd_notif_type
+XB173,Eliminar tipo de notificación,dbext.snd_notif_type
+XB174,Enviar notificaciones pendientes,dbext.snd_notif_type
+dbext.snd_scheduled_notif,Administrar notificaciones programadas,dbext
+XB180,Administrar notificaciones programadas,dbext.snd_scheduled_notif
+XB181,Cancelar notificación programada,dbext.snd_scheduled_notif

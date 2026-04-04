@@ -1,0 +1,179 @@
+#include "dkli.dkh"
+#!
+module "list.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+    @_entities_type = @("$parameters/_entities_type")
+    table_id        = "tbl_" + @_entities_type
+
+    new table_definition
+    {
+        @"datatable*": ifnull(@("&./data"), list.create())
+        member @"columns"
+        {
+            member @"notif_type"     { @"caption": "Tipo" }
+            member @"recipient_name" { @"caption": "Destinatario" }
+            member @"scheduled_for"  { @"caption": "Programada para" }
+            member @"status_label"   { @"caption": "Estado" }
+        }
+        @"table_footer": "Mostrando los primeros # registros"
+    }
+
+    // Selector de estado para el filtro
+    new status_select
+    {
+        @"id":          "status_filter"
+        @"text_field":  "label"
+        @"value_field": "val"
+        @"datatable*":  from.json('[
+            { "val":"",          "label":"Todos los estados" },
+            { "val":"pending",   "label":"Pendiente" },
+            { "val":"sent",      "label":"Enviado" },
+            { "val":"failed",    "label":"Fallido" },
+            { "val":"cancelled", "label":"Cancelado" }
+        ]')
+        @"selected": @("$parameters/status")
+        member "attributes"
+        {
+            @"class":    "form-select"
+            @"name":     "status"
+            @"onchange": "this.form.submit()"
+        }
+    }
+
+    // Selector de tipo de notificación para el filtro
+    new notif_type_select
+    {
+        @"id":          "notif_type_filter"
+        @"text_field":  "name"
+        @"value_field": "sys_pk"
+        @"datatable*":  ifnull(@("&./snd_notif_type"), list.create())
+        @"selected":    @("$parameters/notif_type")
+        member "attributes"
+        {
+            @"class":    "form-select"
+            @"name":     "notif_type"
+            @"onchange": "this.form.submit()"
+        }
+    }
+
+    new dr_init
+    {
+        @"start": @("$parameters/fi")
+        @"end": @("$parameters/ff")
+    }
+
+    function printNavButtons()
+    {
+        cls = "btn btn-sm border-secondary induxsoft-corners no-shadow"
+        #$
+        a(class="#<cls>" href="/!/dbext/snd-notif-type/"){"Configuraciones"}
+        // Botón cancelar — solo habilitado cuando la fila seleccionada tiene status=pending.
+        button(class="#<cls> btn-danger" type="button" id="btn-cancel" disabled=""){"Cancelar"}
+        #!
+    }
+    point buttons to printNavButtons
+    new nav_config
+    {
+        @"title":            "Notificaciones programadas"
+        @"urlexit":          "/"
+        @"buttons*":         buttons
+        @"actions*":         ifnull(@("&./itemactions"), list.create())
+        @"reports*":         ifnull(@("&./itemreports"), list.create())
+        @"jscurrentcontext": "getCurrentContext"
+
+        member "hidden"
+        {
+            @"send":  @true
+            @"copy":  @true
+            @"csv":   @true
+            @"print": @true
+        }
+    }
+
+    #$
+    div(class="container" id="view")
+    {
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+
+            form(class="mb-1" action="./" method="GET" id="form-filter")
+            {
+                div(class="d-flex align-items-center gap-2 flex-wrap w-100 py-1")
+                {
+                    // Filtro por estado
+                    div
+                    {
+                        #!
+                        do uie.dbSelect(status_select)
+                        #$
+                    }
+
+                    // Filtro por tipo de notificación
+                    div
+                    {
+                        #!
+                        do uie.dbSelect(notif_type_select)
+                        #$
+                    }
+
+                    // Filtro por rango de fechas
+                    div
+                    {
+                        "date-range"(class="w-100" "hidden-input-name-start"="fi" "hidden-input-name-end"="ff" data='#<to.json(dr_init)>' id="date_range"){""}
+                    }
+
+                    // Búsqueda por destinatario
+                    div(class="flex-grow-1")
+                    {
+                        "filter-text"(class="w-100" "text-field"="search" value="#<@('$parameters/search')>" placeholder="Buscar por destinatario..." "form"="#form-filter" "auto-submit"="true"){""}
+                    }
+                }
+            }
+        }
+
+        section(id="work_area")
+        {
+            #!
+            do uie.dbeditable(table_definition, table_id)
+            #$
+        }
+
+        section(id="bottom_area")
+        {
+            div(id="_custom_area")
+            {
+                script(src="/$/dbext/js/snd_scheduled_notif.js"){""}
+                script(type="text/javascript")
+                {$'
+                    function getCurrentContext() {
+                        const table = document.getElementById("#<table_id>");
+                        const row   = table?.DataArray[table.CurrentRowIndex()] ?? null;
+                        return {
+                            item_id: row?.sys_pk ?? "",
+                            context: { status: row?.status ?? "" }
+                        };
+                    }
+
+                    document.addEventListener("DOMContentLoaded", () => {
+                        snd_scheduled_notif.table_id = "#<table_id>";
+                        snd_scheduled_notif.init();
+                        
+                        #<@@(@crud_context, "$script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+
+    do @context.end()
+}

@@ -1,0 +1,16 @@
+{
+    "lookback": {
+        "control":"integer",
+        "caption":"Ventana hacia atrás en minutos para capturar notificaciones no procesadas en el ciclo anterior.",
+        "wrp_attr": {
+            "class":"col-auto"
+        }
+    },
+    "retention": {
+        "control":"integer",
+        "caption":"Días de retención de los registros de notificaciones procesadas.",
+        "wrp_attr": {
+            "class":"col-auto"
+        }
+    }
+}

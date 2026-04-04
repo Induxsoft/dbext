@@ -40,6 +40,8 @@ module "Controller configs"
 	do crudl.routes.entity("/authtpy/","authtpy")
 	do crudl.routes.entity("/comm/","comm")
 	do crudl.routes.entity("/smtp/","smtp")
+	do crudl.routes.entity("/snd-notif-type/","snd_notif_type")
+	do crudl.routes.entity("/snd-scheduled-notif/","snd_scheduled_notif")
 	do crudl.routes.entity("/detusr/","detusr")
 	do crudl.routes.entity("/divisa/","divisa")
 	do crudl.routes.entity("/pais/","pais")

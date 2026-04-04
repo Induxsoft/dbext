@@ -1,0 +1,280 @@
+#include "dkli.dkh"
+#!
+program "Notificaciones programadas"
+{
+    //#region Utilidades
+    _db ::
+    {
+        return @@(@http_context,"&session/idp/database")
+    }
+
+    _params ::
+    {
+        return @@(@http_context,"&request/get")
+    }
+
+    _payload ::
+    {
+        ref post = ifnull(@@(@http_context,"&request/post"),record.create())
+
+        if list.count(list.create_from_fields(post)) < 1 {
+            post_string = field.dstr(@http_context,"request/POST_STRING","{}")
+            if post_string == "" { post_string = "{}" }
+            
+            ref post:from.json(post_string)
+        }
+
+        return post
+    }
+
+    set_response :: type, text
+    {
+        // Establecer encabezado de respuesta http
+        @http_context<"response/headers/Content-Type"> : type
+        // Indicar tipo de respuesta
+        @http_context<"response/output"> : "text"
+        // Asignar la respuesa de salida
+        @http_context<"response/text"> : text  
+    }
+
+    build_response :: is_json, &response
+    {
+        if is_json
+        {
+            if @@(response,"#success")
+            {
+                do field.remove(response,"message")
+                return to.json(response)
+            }
+            else
+            {
+                do field.remove(response,"data")
+                return to.json(response)
+            }
+        }
+
+        // Texto plano
+        return @@(response, "$message")
+    }
+
+    filter_args::&record,fields
+    {
+        ref cleaned = record.copy(record,fields)
+        ref keys = list.create_from_fields(cleaned)
+        for i = 0; i < list.count(keys)
+        {
+            key = list.str(keys,i)
+            if isnull(@@(cleaned,"&"+key)) {
+                do field.remove(cleaned,key)
+            }
+        }
+        return cleaned
+    }
+
+    date_format :: dtm, fmt
+    {
+        if dtm == "" { return "" }
+        if fmt == "" { fmt = "yyyy-MM-dd HH:mm:ss" }
+
+        fecha = date_str(str2dt(dtm),fmt)
+        return fecha
+
+        exception
+        {
+            do pop_exception()
+            return ""
+        }
+    }
+    //#endregion
+
+    //#region scheduledNotification()
+    /**
+     * Crea una notificación programada en 'snd_scheduled_notif'.
+     *
+     * Campos esperados en 'payload.params'
+     * - response_type   : "json" o "text" (por defecto: text)
+     *
+     * Campos esperados en 'payload.data'
+     * - notif_type      : Nombre o sys_guid del tipo (snd_notif_type)
+     * - scheduled_for   : Fecha y hora: yyyy-MM-dd H:mm
+     * - recipient_name  : Nombre del destinatario
+     * - recipient_email : Correo del destinatario
+     * - recipient_phone : Teléfono del destinatario con código de país e indicador de número móvil
+     * - params          : Un objeto con variables dinámicas del tipo
+     * - detsrc          : Tipo de elemento de datos que origina la notif (ej. DET014)
+     * - srcid           : ID del registro que origina la notif
+     * - tag             : Cadena de propósito general
+     */
+    scheduledNotification :: &db, &params, &payload
+    {
+        new response { @"success": @true }
+        is_json = contains(@@(params, "$response_type"), "json")
+
+        valid_fields = "notif_type,scheduled_for,recipient_name,recipient_email,recipient_phone,params,detsrc,srcid,tag"
+        // Filtrar campos validos de 'params'
+        ref fields_in_params = filter_args(params, valid_fields)
+        // Filtrar campos validos de 'payload.data'
+        ref fields_in_data = filter_args(@@(payload,"&data"), valid_fields)
+        // Combinar resultados prefiriendo los valores de 'payload.data'
+        ref data = record.copyexin(fields_in_data, fields_in_params, "*", ",", "", ":")
+
+        // - Validación de campos
+        notif_type_key = trim(@@(data, "$notif_type"))
+        scheduled_for = trim(@@(data, "$scheduled_for"))
+        recipient_name = trim(@@(data, "$recipient_name"))
+        recipient_email = trim(@@(data, "$recipient_email"))
+        recipient_phone = trim(@@(data, "$recipient_phone"))
+        created_by = trim(@@(data, "$created_by"))
+
+        if notif_type_key == "" { do rise_error(400, "El valor de 'notif_type' es requerido") }
+        if scheduled_for == "" { do rise_error(400, "El valor de 'scheduled_for' es requerido") }
+        else
+        {
+            scheduled_for = date_format(scheduled_for,"yyyy-MM-dd HH:mm")
+            if scheduled_for == "" { do rise_error(400,"'scheduled_for' no tiene un formato válido, se esperaba: yyyy-MM-dd HH:mm.") }
+        }
+        if recipient_name == "" { do rise_error(400, "El valor de 'recipient_name' es requerido") }
+        if recipient_email + recipient_phone == "" { do rise_error(400, "Los valores de 'recipient_email' y 'recipient_phone' son opcionales individualmente, pero al menos uno debe estar presente.") }
+
+        notif_type_key >> p
+
+        ref notif_type = dbr.rec(db,"
+        SELECT t.sys_pk, t.name, t.params AS type_params, c.name AS channel_name
+        FROM
+            snd_notif_type t
+            INNER JOIN snd_channel c ON c.sys_pk = t.template
+        WHERE
+            NOT IFNULL(t.sys_deleted, 0)
+            AND t.enabled = TRUE
+            AND (t.name = @notif_type_key OR t.sys_guid = @notif_type_key)
+        LIMIT 1
+        ",p)
+        if isnull(notif_type) { do rise_error(404, "Tipo de notificación no encontrado o inactivo: '" + notif_type_key + "'") }
+
+        // - Serialización de variables dinámicas
+        ref dynamic_vars = @@(data,"&params")
+        if isnull(dynamic_vars)
+        {
+            json = @@(data,"$params")
+            if json == "" { json = "{}" }
+            ref dynamic_vars = from.json(json)
+
+            exception
+            {
+                do pop_exception()
+                ref dynamic_vars = record.create()
+            }
+        }
+
+        // - INSERT INTO snd_scheduled_notif
+        ref now = dbr.sql("now()")
+        notif_id = uuid()
+
+        new notif
+        {
+            @"sys_guid": notif_id
+            @"sys_dtcreated*": now
+            @"sys_timestamp*": now
+            @"sys_pk": 0
+
+            @"notif_type": @@(notif_type, "#sys_pk")
+            @"scheduled_for": scheduled_for
+            @"recipient_name": recipient_name
+            @"recipient_email": recipient_email
+            @"recipient_phone": recipient_phone
+            @"params": to.json(dynamic_vars)
+            @"status": "pending"
+            @"detsrc": trim(@@(data, "$detsrc"))
+            @"srcid": @@(data, "#srcid")
+            @"tag": trim(@@(data, "$tag"))
+            @"created_by": ifstr(created_by!="", created_by, @@(payload,"$agent_id"))
+        }
+        do dbr.insert(db,"snd_scheduled_notif",notif)
+
+        // - Respuesta
+        notif_id >> p
+
+        ref datetime = dbr.rec(db,"
+        SELECT
+            DATE_FORMAT(scheduled_for,'%Y-%m-%d') as scheduled_date,
+            DATE_FORMAT(scheduled_for,'%r') as scheduled_time
+        FROM snd_scheduled_notif
+        WHERE sys_guid = @notif_id
+        ",p)
+        scheduled_date, scheduled_time << datetime
+
+        using response
+        {
+            new member @"data"
+            {
+                @"id": notif_id
+                @"notif_type": @@(notif_type, "$name")
+                @"scheduled_for": scheduled_for
+                @"recipient_name": recipient_name
+            }
+            @"message": "Notificación programada exitosamente (id: " + notif_id + ") para el " + scheduled_date + " a las " + scheduled_time + "."
+        }
+
+        exception
+        {
+            using response
+            {
+                @"success": @false
+                @"message": "No fue posible programar la notificación: " + last_error()
+            }
+        }
+
+        return build_response(is_json, response)
+    }
+
+    //#region scheduledNotificationCancel()
+    /**
+     * Cancela una notificación programada si aún está en estado 'pending'.
+     *
+     * Campos esperados en 'payload.params'
+     * - response_type  : "json" o "text" (por defecto: text)
+     *
+     * Campos esperados en 'payload.data'
+     * - notif_id   : sys_guid de la notificación en snd_scheduled_notif
+     */
+    scheduledNotificationCancel :: &db, &params, &payload
+    {
+        new response { @"success": @true }
+        is_json = contains(@@(params, "$response_type"), "json")
+
+        // - Validación
+        notif_id = trim(@@(payload, "$data/notif_id"))
+        if notif_id == "" { do rise_error(400, "El valor de 'notif_id' es requerido.") }
+
+        notif_id >> params
+
+        ref notif = dbr.rec(db,"SELECT sys_guid, status FROM snd_scheduled_notif WHERE sys_guid = @notif_id LIMIT 1",params)
+
+        if isnull(notif) { do rise_error(404, "Notificación no encontrada (id: " + notif_id + ")") }
+        if notif.status != "pending" { do rise_error(400, "Solo se pueden cancelar notificaciones en estado 'pendiente'.") }
+
+        // - Cancelación
+        do dbr.execute(db,"UPDATE snd_scheduled_notif SET sys_timestamp = NOW(), status = 'cancelled' WHERE sys_guid = @notif_id AND status = 'pending'",params)
+
+        // - Respuesta
+        using response
+        {
+            new member @"data"
+            {
+                @"id": notif_id
+            }
+            @"message": "La notificación (id: " + notif_id + ") ha sido cancelada exitosamente."
+        }
+
+        exception
+        {
+            using response
+            {
+                @"success": @false
+                @"message": "No fue posible cancelar la notificación: " + last_error()
+            }
+        }
+
+        return build_response(is_json, response)
+    }
+}

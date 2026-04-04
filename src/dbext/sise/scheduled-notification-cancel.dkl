@@ -1,0 +1,21 @@
+#include "dkli.dkh"
+#!
+program "Cancelar notificación programada"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "dbr.dkh"
+    #include "snd-scheduled-notif.dk"
+
+
+    do errordet(@false)
+    
+    ref payload = ifnull(_payload(),record.create())
+    // Combinar parámetros de url con los parámetros de la carga útil
+    ref params = record.copyex(_params(), ifnull(@@(payload,"&params"),record.create()), "*", ",", "", ":")
+
+    type = ifstr(contains(@@(params,"$response_type"),"json"), "application/json", "text/plain")
+    result = scheduledNotificationCancel(_db(), params, payload)
+
+    do set_response(type,result)
+}

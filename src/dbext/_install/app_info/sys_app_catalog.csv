@@ -17,3 +17,5 @@
 "dbext","dbext.recbin","Papelera de reciclaje","2025-07-07 11:20:00",""
 "dbext","dbext.rest_integration","Integración","2025-07-07 11:20:00",""
 "dbext","dbext.assocpf","Perfiles Induxsoft","2026-02-16 13:00:00","Asociar perfil Induxsoft"
+"dbext","dbext.snd_notif_type","Tipos de notificaciones","2026-04-01 12:00:00","Configurar tipos de notificaciones"
+"dbext","dbext.snd_scheduled_notif","Notificaciones programadas","2026-04-01 12:00:00","Administrar notificaciones programadas"

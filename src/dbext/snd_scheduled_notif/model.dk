@@ -1,0 +1,132 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    @table_name = "snd_scheduled_notif"
+    @keyfield   = "sys_pk"
+
+    @list_query = "
+    SELECT
+        n.sys_pk,
+        n.sys_guid,
+        COALESCE(t.name, '(Tipo eliminado)') AS notif_type,
+        n.recipient_name,
+        n.recipient_email,
+        n.recipient_phone,
+        DATE_FORMAT(n.scheduled_for,'%Y-%m-%d %r') AS scheduled_for,
+        n.status,
+        CASE n.status
+            WHEN 'pending'   THEN 'Pendiente'
+            WHEN 'sent'      THEN 'Enviado'
+            WHEN 'failed'    THEN 'Fallido'
+            WHEN 'cancelled' THEN 'Cancelado'
+            ELSE n.status
+        END AS status_label,
+        n.tag,
+        n.created_by,
+        n.detsrc,
+        n.srcid
+    FROM #<@table_name> n
+        LEFT JOIN snd_notif_type t ON n.notif_type = t.sys_pk
+    WHERE
+        NOT IFNULL(n.sys_deleted, 0)
+        AND (IFNULL(@status,'') = '' OR n.status = @status)
+        AND (IFNULL(@notif_type,0) = 0 OR n.notif_type = @notif_type)
+        AND (
+            CASE
+                WHEN @fi != '' && @ff != '' THEN (DATE(n.scheduled_for) BETWEEN DATE(@fi) AND DATE(@ff))
+                WHEN @fi != '' && @ff = '' THEN (DATE(n.scheduled_for) >= DATE(@fi))
+                WHEN @fi = '' && @ff != '' THEN (DATE(n.scheduled_for) <= DATE(@ff))
+                ELSE TRUE
+            END
+        )
+        AND (
+            IFNULL(@search,'') = ''
+            OR n.recipient_name LIKE CONCAT('%', @search, '%')
+            OR n.recipient_email LIKE CONCAT('%', @search, '%')
+        )
+    ORDER BY n.scheduled_for DESC
+    LIMIT #<@default_max_rows>
+    "
+
+    //#region prepareView()
+    function prepareView(&db, &params, &data)
+    {
+        if @@(params, "$_operation") == "list"
+        {
+            ref notif_types = dbr.list(db,"SELECT sys_pk, name FROM snd_notif_type WHERE NOT IFNULL(sys_deleted,0) ORDER BY name",@null)
+            do list.ins(notif_types, 0, from.json('{ "sys_pk":"", "name":"Todos los tipos" }'))
+
+            using data
+            {
+                @"snd_notif_type*": notif_types
+                @"itemactions*":    dbr.apps.itemactions(db, "DET0C0", "action", "", 0)
+                @"itemreports*":    dbr.apps.itemactions(db, "DET0C0", "report", "", 0)
+            }
+        }
+    }
+
+    //#region list()
+    function entity.list(&db, &params)
+    {
+        do dbr.apps.action.grant("XB180")
+
+        if not(field.exist(params,"fi")) { params<"fi"> : date_str(now(),"yyyy-MM-dd") }
+        if not(field.exist(params,"ff")) { params<"ff"> : dbr.str(db,"select cast(date_add(curdate(), interval 1 month) as char)",0) }
+
+        new data
+        {
+            @"data*": dbr.list(db, ftext(@list_query), params)
+        }
+        do prepareView(db, params, data)
+        return data
+
+        exception{ do catch(db, params, @null) }
+    }
+
+    //#region cancel()
+    function notif.cancel(&db, &params)
+    {
+        do dbr.apps.action.grant("XB181")
+
+        // Verificar estado actual antes de actualizar.
+        current_status = dbr.str(db,ftext("SELECT status FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"),params)
+
+        if current_status == "" { do rise_error(511, "Notificación no encontrada") }
+        if current_status != "pending" { do rise_error(512, "Solo se pueden cancelar notificaciones en estado 'pendiente'") }
+
+        // La condición AND status='pending' es un seguro ante condición de carrera.
+        do dbr.execute(db, ftext("
+        UPDATE #<@table_name>
+        SET
+            sys_timestamp = NOW(),
+            status        = 'cancelled'
+        WHERE
+            #<@keyfield> = @_entity_id
+            AND status = 'pending'
+        "), params)
+
+        ref entity = dbr.rec(db,ftext("SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"),params)
+        return entity
+
+        exception{ do catch(db, params, @null) }
+    }
+
+    //#region catch()
+    function catch(&db, &params, &data)
+    {
+        do errordet(@false)
+        code  = last_error_code()
+        error = last_error()
+
+        if dbr.in_transaction(db) { do dbr.rollback(db) }
+        if isset("@@_action_context") { do dbr.apps.action.log() }
+
+        do clear_exceptions()
+        do rise_error(code, error)
+    }
+
+    // Solo se expone list y cancel (delete).
+    // No hay create/update desde esta app.
+    point @delete to notif.cancel
+}
