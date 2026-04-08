@@ -116,7 +116,6 @@ module "list.dk"
                         do uie.dbSelect(status_select)
                         #$
                     }
-
                     // Filtro por tipo de notificación
                     div
                     {
@@ -124,13 +123,11 @@ module "list.dk"
                         do uie.dbSelect(notif_type_select)
                         #$
                     }
-
                     // Filtro por rango de fechas
                     div
                     {
                         "date-range"(class="w-100" "hidden-input-name-start"="fi" "hidden-input-name-end"="ff" data='#<to.json(dr_init)>' id="date_range"){""}
                     }
-
                     // Búsqueda por destinatario
                     div(class="flex-grow-1")
                     {

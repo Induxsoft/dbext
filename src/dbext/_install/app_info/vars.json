@@ -131,6 +131,40 @@
                 {
                     "control": "text"
                 }
+            },
+            {
+                "varname": "FXTZ001",
+                "vardefault": "America/Mexico_City|-06:00",
+                "varvalue": "America/Mexico_City|-06:00",
+                "varcaption": "Zona horaria del sistema",
+                "varhelp": "Define la zona horaria base del sistema. Incluye identificador IANA y desplazamiento UTC como respaldo.",
+                "vartype": "string",
+                "varinput": {
+                    "control": "select",
+                    "source": {
+                        "type": "list",
+                        "values": [
+                            { "id": "America/Mexico_City|-06:00", "const": "México (Centro) UTC-06:00" },
+                            { "id": "America/Tijuana|-08:00", "const": "México (Noroeste) UTC-08:00" },
+                            { "id": "America/Chihuahua|-07:00", "const": "México (Pacífico) UTC-07:00" },
+
+                            { "id": "America/Bogota|-05:00", "const": "Colombia UTC-05:00" },
+                            { "id": "America/Lima|-05:00", "const": "Perú UTC-05:00" },
+
+                            { "id": "America/New_York|-05:00", "const": "EE.UU. Este UTC-05:00" },
+                            { "id": "America/Chicago|-06:00", "const": "EE.UU. Central UTC-06:00" },
+                            { "id": "America/Denver|-07:00", "const": "EE.UU. Montaña UTC-07:00" },
+                            { "id": "America/Los_Angeles|-08:00", "const": "EE.UU. Pacífico UTC-08:00" },
+
+                            { "id": "Europe/Madrid|+01:00", "const": "España UTC+01:00" },
+                            { "id": "Europe/Paris|+01:00", "const": "Francia UTC+01:00" },
+
+                            { "id": "UTC|+00:00", "const": "UTC (Tiempo Universal Coordinado)" }
+                        ],
+                        "showfield": "const",
+                        "keyfield": "id"
+                    }
+                }
             }
         ]
     },

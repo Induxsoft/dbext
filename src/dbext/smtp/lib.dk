@@ -8,9 +8,17 @@ module ":lib"
 
     function sendMessage(&config, &message, &remplace_template)
     {
-        go foreach.fstr(index:i, key:k, value:v) with(remplace_template) {
+        ref keys = list.create_from_fields(remplace_template)
+        for i = 0; i < list.count(keys)
+        {
+            k = list.str(keys,i)
+            v = @@(remplace_template,"$"+k)
+            
             message<"message">: replace(@@(message,"message"), "@"+k, v)
         }
+        // go foreach.fstr(index:i, key:k, value:v) with(remplace_template) {
+        //     message<"message">: replace(@@(message,"message"), "@"+k, v)
+        // }
 
         new send
         {
