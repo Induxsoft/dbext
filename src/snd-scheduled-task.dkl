@@ -131,6 +131,35 @@ program ""
         do dbr.execute(db,"DELETE FROM snd_scheduled_notif_log WHERE sys_dtcreated < (NOW() - INTERVAL @retention DAY)",p)
     }
 
+    // Establece la zona horaria de acuerdo al valor configurado en la variable global de bd 'FXTZ001'
+    SetTimeZone :: &db
+    {
+        ref var = dbr.rec(db,"select vardefault, varvalue from globalvar where varname='FXTZ001'",@null)
+        // Si no existe la variable de configuración, no se cambia la zona
+        if isnull(var) { return }
+
+        cfg = @@(var,"$varvalue")
+        if cfg == "" { cfg = @@(var,"$vardefault") }
+        ref tz = split(cfg,"|")
+
+        var<"tz_name"> : list.str(tz,0)
+        var<"tz_offset"> : list.str(tz,1)
+
+        has_tz = dbr.num(db,"SELECT CONVERT_TZ('2000-01-01 00:00:00', 'UTC', @tz_name) IS NOT NULL;",var)
+        if has_tz
+        {
+            // Si la zona a usar esta cargada
+            do dbr.execute(db,"SET time_zone = @tz_name",var)
+        }
+        else
+        {
+            // No hay zonas (o no reconoce esa zona)
+            do dbr.execute(db,"SET time_zone = @tz_offset",var)
+        }
+
+        exception{ do clear_exceptions() }
+    }
+
     // Consulta notificaciones pendientes cuya hora de envío ya llegó,
     // dentro de la ventana lookback para no reprocesar notificaciones muy antiguas.
     FindPendingNotifs :: &db, lookback
@@ -286,6 +315,8 @@ program ""
         if @@(args, "$db") == "" { do rise_error(400, "Nombre cualificado de conexión es requerido.") }
         ref db = dbr.open(@@(args, "$db"))
     }
+
+    do SetTimeZone(db)
 
     lookback  = @@(args, "#lookback")
     retention = @@(args, "#retention")
