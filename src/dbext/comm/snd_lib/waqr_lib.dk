@@ -23,6 +23,7 @@ module ":lib"
         new payload
         {
             @"message": @@(message, "$message")
+            @"queue": @@(config,"$queue")
         }
 
         endpoint = "https://agent.induxsoft.net/svc/{agent_id}/send/whatsappqr/?to={to}"

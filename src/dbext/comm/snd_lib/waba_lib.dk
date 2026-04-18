@@ -12,6 +12,7 @@ module ":lib"
         {
             @"template_id": @@(message, "$template_id")
             @"template_vars*": remplace_template
+            @"queue": @@(config,"$queue")
         }
 
         endpoint = "https://agent.induxsoft.net/svc/{agent_id}/send/whatsapp/?to={to}"

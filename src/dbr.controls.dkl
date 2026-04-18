@@ -15,21 +15,26 @@ module ":dbr.control"
             control = tolower(trim(@@(ctrlDef,"$control")))
             control = ranydiffchars(control,"abcdefghijklmnopqrstuvwxyz","-")
             control = replace(control,"-","")
-            
+
+            caption = @@(ctrlDef,"$caption")
+            if caption == "" { caption = @@(ctrlDef,"$label") }
+
             name = @@(ctrlDef,"$name")
-            id = @@(ctrlDef,"$id")
-            caption = trim(@@(ctrlDef,"$caption"))
-            
             if name == "" { name = ctrlKey }
+
+            id = @@(ctrlDef,"$id")
             if id == "" { id = ctrlKey }
-            value = @@(parameters,name)
+
+            value = @@(parameters,"$"+name)
+            if value == "" { value = @@(ctrlDef,"$value") }
+
             if caption == ""
             {
                 caption = ranychars(tolower(trim(name)), "-_.:;/\\", " ")
                 first_character = toupper(lremove(caption,1))
                 caption = first_character + left(caption,1)
             }
-            
+
             is_required = parse.bool(trim(@@(ctrlDef,"$required")))
             is_readonly = parse.bool(trim(@@(ctrlDef,"$readonly")))
             is_disabled = parse.bool(trim(@@(ctrlDef,"$disabled")))
@@ -60,6 +65,7 @@ module ":dbr.control"
                         input(class="form-control rounded-0" type="date" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
+                    break
                 }
                 case "time"
                 {
@@ -70,6 +76,7 @@ module ":dbr.control"
                         input(class="form-control rounded-0" type="time" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
+                    break
                 }
                 case "datetime"
                 {
@@ -80,6 +87,7 @@ module ":dbr.control"
                         input(class="form-control rounded-0" type="datetime-local" name="#<name>" id="#<id>" value="#<value>" "#<required>"="" "#<readonly>"="" "#<disabled>"="")
                     }
                     #!
+                    break
                 }
                 case "hexcolor"
                 {
