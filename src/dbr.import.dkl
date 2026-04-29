@@ -1,0 +1,438 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    @cclaseproducto_def= 4
+
+    importLineaProd::&db,file
+    {
+        if (@@(@batch_context,"$job/token") != "") {
+            token = @@(@batch_context,"$job/token")
+        }
+
+        if (length(@@(@batch_context,"#job/steps")) > 0) {
+            steps = @@(@batch_context,"#job/steps")
+        } else {
+            steps = 10
+        }
+        
+        if (tolower(file.extension(file)) != ".csv") {
+            do file.delete(file)
+            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            return
+        }
+        
+        ref lib_csv = _import_library("devkron.serialize.csv.dll")
+        do _map_function(lib_csv,"devkron.serialize.csv.csvHelper","CsvRead","CsvRead","System.String,System.String","*")
+
+        query1 = "SELECT codigo FROM linea WHERE codigo = @codigo"
+        query2 = "SELECT codigo FROM linea WHERE descripcion = @descripcion"
+        query3 = "INSERT INTO linea (codigo, descripcion, comision1, comision2, comision3, comision4, comision5, clase, color, sys_guid, sys_dtcreated, sys_timestamp, sys_recver,visible) VALUES (@codigo, @descripcion, @comision1, @comision2, @comision3, @comision4, @comision5, @clase, @color, @sys_guid, @sys_dtcreated, @sys_timestamp, @sys_recver,@visible)"
+        query4 = "UPDATE linea SET descripcion = @descripcion, comision1 = @comision1, comision2 = @comision2, comision3 = @comision3, comision4 = @comision4, comision5 = @comision5,clase=@clase,visible=@visible WHERE codigo = @codigo"
+
+        if file.exists(file) {
+            ref data = CsvRead(file,"")
+            do file.delete(file)
+
+            list_size = @count(data)
+            contador = 0
+            progreso = 0
+            div = (list_size/steps)
+            
+            for i=0; i<list_size {
+                ref itm = record.caseinsensitive(@item(data,i))
+
+                codigo = length(@@(itm,"codigo"))
+                descripcion = length(@@(itm,"descripcion"))
+                comision1 = length(@@(itm,"comision1"))
+                comision2 = length(@@(itm,"comision2"))
+                comision3 = length(@@(itm,"comision3"))
+                comision4 = length(@@(itm,"comision4"))
+                comision5 = length(@@(itm,"comision5"))
+
+                if (codigo < 1 || codigo > 15) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. El código (" + @@(itm,"codigo") + ") debe ser de mínimo 1 caracter y máximo 15 caracteres.")
+                    }
+                } else if (descripcion < 1 || descripcion > 50) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La descripción (" + @@(itm,"descripcion") + ") debe ser de mínimo 1 caracter y máximo 50 caracteres.")
+                    }
+                } else if (comision1 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 1 (" + @@(itm,"comision1") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (comision2 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 2 (" + @@(itm,"comision2") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (comision3 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 3 (" + @@(itm,"comision3") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (comision4 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 4 (" + @@(itm,"comision4") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else if (comision5 > 27) {
+                    if (token != "") {
+                        do batch.saveLog(token,"No se pudo insertar/actualizar el registro. La comisión 5 (" + @@(itm,"comision5") + ") debe ser de máximo 27 caracteres.")
+                    }
+                } else {
+                    desc_duplicated = dbr.str(db,query2,itm)
+
+                    if (desc_duplicated == @@(itm,"codigo") || desc_duplicated == "") {
+                        duplicated =  dbr.str(db,query1,itm)
+
+                        if (@@(itm,"comision1") == "") { itm<"comision1*">: @null }
+                        if (@@(itm,"comision2") == "") { itm<"comision2*">: @null }
+                        if (@@(itm,"comision3") == "") { itm<"comision3*">: @null }
+                        if (@@(itm,"comision4") == "") { itm<"comision4*">: @null }
+                        if (@@(itm,"comision5") == "") { itm<"comision5*">: @null }
+
+                        if not(field.exist(itm,"clase")){itm<"clase">: @cclaseproducto_def}
+                        if not(field.exist(itm,"visible")){itm<"visible">: 1}
+
+                        itm<"clase">: dbr.num(db,"SELECT id FROM cclaseproducto WHERE (id = @clase OR const = @clase)",itm)
+                        
+                        if (duplicated != "") {
+                            do dbr.execute(db,query4,itm)
+                        } else 
+                        {
+                            itm<"sys_guid">: uuid()
+                            itm<"sys_dtcreated*">: now()
+                            itm<"sys_timestamp*">: now()
+                            itm<"sys_recver">: 0
+                            // itm<"clase">: dbr.num(db,"SELECT id FROM cclaseproducto WHERE (id = @clase OR const = @clase)",itm)
+                            itm<"color">: 0
+
+                            do dbr.execute(db,query3,itm)
+                        }
+                    } else {
+                        if (token != "") {
+                            do batch.saveLog(token,"No se pudo insertar/actualizar el registro. Ya existe una linea con descripción = '" + @@(itm,"descripcion") + "'")
+                        }
+                    }
+                }
+
+                contador = contador + 1
+
+                if (contador >= div) {
+                    contador = contador - div
+                    progreso = progreso + steps
+
+                    if (token != "") {
+                        do batch.saveLog(token,"En proceso... " + str(progreso) + "%")
+                    }
+                }
+            }
+
+            if (list_size < steps) {
+                if (token != "") {
+                    do batch.saveLog(token,"En proceso... 100%")
+                }
+            }
+
+            exception 
+            {
+                do file.delete(file)
+                
+                if (token != "") {
+                    do batch.saveLog(token,last_error())
+                }
+            }
+        }
+    }
+
+    // Importar productos
+
+    importProductos::&db,file
+    {
+        if (@@(@batch_context,"$job/token") != "") {
+            token = @@(@batch_context,"$job/token")
+        }
+
+        if (length(@@(@batch_context,"#job/steps")) > 0) {
+            steps = @@(@batch_context,"#job/steps")
+        } else {
+            steps = 10
+        }
+
+        if (tolower(file.extension(file)) != ".csv") {
+            do file.delete(file)
+            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            return
+        }
+
+        if not(file.exists(file)) {
+            if (token != "") { do batch.saveLog(token,"El archivo proporcionado no existe.") }
+            return
+        }
+
+        ref data = CsvRead(file,"")
+        data_size = @count(data)
+
+        if data_size < 1 {
+            if (token != "") { do batch.saveLog(token,"Nada para importar.") }
+            return
+        }
+
+        sys_fields = "sys_pk,sys_guid,sys_dtcreated,sys_timestamp,sys_info,sys_user,sys_lastuser,sys_exported,sys_dtexported,sys_recver,sys_deleted,sys_lock"
+
+        imp_fields = "cproduccion,codigo,descripcion,unidad,clase,tipo,valuacion,linea,divisa,impuestos,costo,precio1,precio2,precio3,precio4,precio5,marca,departamento,formacomision,tipocomision,proveedor1,proveedor2,proveedor3,codbarras1,codbarras2,codbarras3,reqlote,reqserie,uf_sat_proser,uf_sat_uniproser"
+
+        contador = 0
+        progreso = 0
+        div = div(data_size,steps)
+        
+        for i = 0; i < data_size
+        {
+            ref itm = record.caseinsensitive(record.copy(record.caseinsensitive(@item(data,i)), imp_fields))
+            ref fk_fields = record.create()
+            
+            if not(field.exist(itm,"clase")){itm<"clase">:@cclaseproducto_def}
+            message = ""
+
+            pCodigo = cut(trim(@@(itm,"$codigo")),35)
+            pDescripcion = cut(trim(@@(itm,"$descripcion")),150)
+            pUnidad = cut(trim(@@(itm,"$unidad")),10)
+            pClase = trim(@@(itm,"$clase"))
+            pTipo = trim(@@(itm,"$tipo"))
+            pValuacion = trim(@@(itm,"$valuacion"))
+            pLinea = trim(@@(itm,"$linea"))
+            pDivisa = trim(@@(itm,"$divisa"))
+            pImpuestos = trim(@@(itm,"$impuestos"))
+            uf_sat_proser = cut(trim(@@(itm,"$uf_sat_proser")),50)
+            uf_sat_uniproser = cut(trim(@@(itm,"$uf_sat_uniproser")),50)
+
+            // VALIDACIÓN DE CAMPOS REQUERIDOS
+            if pCodigo=="" { message = "No es posible continuar, el valor de 'codigo' es requerido." }
+            else if pDescripcion=="" { message = "No es posible continuar, el valor de 'descripcion' es requerido." }
+            else if pUnidad=="" { message = "No es posible continuar, el valor de 'unidad' es requerido." }
+            else if pClase=="" { message = "No es posible continuar, el valor de 'clase' es requerida." }
+            // else if pTipo=="" { message = "No es posible continuar, el valor de 'tipo' es requerido." }
+            else if pValuacion=="" { message = "No es posible continuar, el valor de 'valuacion' es requerido." }
+            else if pLinea=="" { message = "No es posible continuar, el valor de 'linea' es requerida." }
+            else if pDivisa=="" { message = "No es posible continuar, el valor de 'divisa' es requerida." }
+            else if pImpuestos=="" { message = "No es posible continuar, el valor de 'impuestos' es requerido." }
+            // else if uf_sat_proser=="" { message = "No es posible continuar, el valor de 'uf_sat_proser' es requerido." }
+            // else if uf_sat_uniproser=="" { message = "No es posible continuar, el valor de 'uf_sat_uniproser' es requerido." }
+            else
+            {
+                new cclaseproducto
+                {
+                    @"S": "cServicio"
+                    @"A": "cArtículo"
+                    @"K": "cEnsamble"
+                }
+                pClase = field.dstr(cclaseproducto,toupper(pClase),pClase)
+                new cfgimpuesto
+                {
+                    @"G16": "IVA 16% (México)"
+                    @"G8": "IVA 8% (México)"
+                    @"G0": "IVA 0% (México)"
+                    @"E": "Exento"
+                }
+                pImpuestos = field.dstr(cfgimpuesto,toupper(pImpuestos),pImpuestos)
+
+                // ASEGURAR CLAVES FORANEAS
+                pFormaComision = trim(@@(itm,"$formacomision"))
+                pTipoComision = trim(@@(itm,"$tipocomision"))
+                pDepartamento = trim(@@(itm,"$departamento"))
+                pMarca = trim(@@(itm,"$marca"))
+                pProveedor1 = trim(@@(itm,"$proveedor1"))
+                pProveedor2 = trim(@@(itm,"$proveedor2"))
+                pProveedor3 = trim(@@(itm,"$proveedor3"))
+
+                sql_fk_fields = "
+                SELECT
+                    -- Requeridos
+                    IFNULL((SELECT id FROM cclaseproducto WHERE (id = @pClase OR const = @pClase)), 0) AS iclase,
+                    -- IFNULL((SELECT id FROM ctipoproducto WHERE (id = @pTipo OR const = @pTipo)), 0) AS itipo,
+                    IFNULL((SELECT id FROM cmetodosvaluacion WHERE (id = @pValuacion OR const = @pValuacion)), 99) AS metodovaluacion,
+                    IFNULL((SELECT sys_pk FROM linea WHERE (sys_guid = @pLinea OR codigo = @pLinea)), 0) AS ilinea,
+                    IFNULL((SELECT sys_pk FROM divisa WHERE (sys_guid = @pDivisa OR codigo = @pDivisa)), 0) AS idivisa,
+                    IFNULL((SELECT sys_pk FROM cfgimpuesto WHERE (sys_pk = @pImpuestos OR sys_guid = @pImpuestos OR nombre = @pImpuestos)), 0) AS impuestos,
+                    -- No requeridos
+                    (SELECT id FROM cformacomisionproducto WHERE (id = @pFormaComision OR const = @pFormaComision)) AS formacomision,
+                    (SELECT id FROM ctiposcomisionesproducto WHERE (id = @pTipoComision OR const = @pTipoComision)) AS tipocomision,
+                    (SELECT sys_pk FROM departamento WHERE (sys_guid = @pDepartamento OR codigo = @pDepartamento)) AS idepartamento,
+                    (SELECT sys_pk FROM marca WHERE (sys_guid = @pMarca OR codigo = @pMarca)) AS imarca,
+                    (SELECT sys_pk FROM proveedor WHERE (sys_guid = @pProveedor1 OR codigo = @pProveedor1)) AS proveedor1,
+                    (SELECT sys_pk FROM proveedor WHERE (sys_guid = @pProveedor2 OR codigo = @pProveedor2)) AS proveedor2,
+                    (SELECT sys_pk FROM proveedor WHERE (sys_guid = @pProveedor3 OR codigo = @pProveedor3)) AS proveedor3
+                ;
+                "
+                
+                pClase, pLinea, pTipo, pValuacion, pDivisa, pImpuestos, pFormaComision, pTipoComision, pDepartamento, pMarca, pProveedor1, pProveedor2, pProveedor3 >> params1
+                ref fk_fields:dbr.rec(db,sql_fk_fields,params1)
+
+                if fk_fields.iclase == 4 || fk_fields.iclase == 5 { fk_fields<"itipo"> : 2 }
+                else { fk_fields<"itipo"> : 1 }
+                
+                // VALIDAR CLAVES FORANEAS
+                if fk_fields.iclase < 1 { message = "La 'clase' proporcionada no existe." }
+                // else if fk_fields.itipo < 1 { message = "El 'tipo' proporcionado no existe." }
+                else if fk_fields.metodovaluacion < 1 { message = "El 'metodovaluacion' proporcionado no existe.'" }
+                else if fk_fields.ilinea < 1 { message = "La 'linea' proporcionado no existe.'" }
+                else if fk_fields.idivisa < 1 { message = "La 'divisa' proporcionado no existe.'" }
+                else if fk_fields.impuestos < 1 { message = "El 'impuestos' proporcionado no existe.'" }
+            }
+
+            if message != "" { do batch.saveLog(token,message+"\r\n"+to.json(itm)) }
+            else
+            {
+                pUnidadb = cut(trim(@@(itm,"$unidadb")),10)
+                pUnidadc = cut(trim(@@(itm,"$unidadc")),10)
+                pUnidadd = cut(trim(@@(itm,"$unidadd")),10)
+                pUnidade = cut(trim(@@(itm,"$unidade")),10)
+                pCodbar1 = cut(trim(@@(itm,"$codbarras1")),35)
+                pCodbar2 = cut(trim(@@(itm,"$codbarras2")),35)
+                pCodbar3 = cut(trim(@@(itm,"$codbarras3")),35)
+                // pData1 = cut(trim(@@(itm,"$data1")),500)
+                // pData2 = cut(trim(@@(itm,"$data2")),500)
+                // pData3 = cut(trim(@@(itm,"$data3")),500)
+                // uf_codigoparaproveedor1 = cut(trim(@@(itm,"$uf_codigoparaproveedor1")),50)
+                // uf_codigoparaproveedor2 = cut(trim(@@(itm,"$uf_codigoparaproveedor2")),50)
+                // uf_codigoparaproveedor3 = cut(trim(@@(itm,"$uf_codigoparaproveedor3")),50)
+                uf_sat_proser = ifstr(uf_sat_proser!="", uf_sat_proser, "01010101")
+                uf_sat_uniproser = ifstr(uf_sat_uniproser!="", uf_sat_uniproser, "H87")
+
+                isNew = @false
+
+                pCodigo, pCodbar1, pCodbar2, pCodbar3 >> params2
+
+                if trim(pCodbar1)==""{do field.remove(params2,"pCodbar1")}
+                if trim(pCodbar2)==""{do field.remove(params2,"pCodbar2")}
+                if trim(pCodbar3)==""{do field.remove(params2,"pCodbar3")}
+
+                ref producto = dbr.rec(db,"SELECT "+sys_fields+" FROM producto WHERE codigo=@pCodigo OR codbar1=@pCodbar1 OR codbar2=@pCodbar2 OR codbar3=@pCodbar3",params2)
+                if isnull(producto)
+                {
+                    ref producto:record.create()
+                    using producto
+                    {
+                        @"sys_pk": 0 // Clave primaria para la tabla (alcance local)
+                        @"sys_guid": uuid() // GUID que puede usarse como clave primaria de alcance global
+                        @"sys_dtcreated*": dbr.sql("now()") // Fecha y hora de creación del registro
+                        @"sys_timestamp*": dbr.sql("now()") // Fecha y hora de la última actualización del registro (marca de tiempo con precisión hasta segundos)
+                        @"sys_info": ""
+                        @"sys_user": "" // UserId del usuario logueado que creo el registro.
+                        @"sys_lastuser": "" // UserId del usuario logueado que modifico el registro.
+                        @"sys_exported": @false // Indica si el registro ha sido exportado por las utilidades de transporte de datos
+                        // @"sys_dtexported*": @null // Indica la fecha en que se exportó por última vez
+                        @"sys_recver": 0 // Número de versión de instancia de registro
+                        @"sys_deleted": @false // Indica si la fila está marcada como eliminada
+                        /**
+                        * Clave foránea que indica si se ha establecido un bloqueo pesimista sobre la fila.
+                        * Este campo admite valores Nulos que significan que el registro no está bloqueado.
+                        * No se admiten duplicados
+                        */
+                        // @"sys_lock*": @null
+                    }
+
+                    isNew = @true
+                }
+                params2<"sys_pk"> : @@(producto,"#sys_pk")
+                
+                if not(field.exist(itm,"visible")){itm<"visible">:@true}
+
+                using producto
+                {
+                    // @"adicional": parse.bool(trim(@@(itm,"$adicional")))
+                    @"codigo": pCodigo
+                    @"codbar1": pCodbar1
+                    @"codbar2": pCodbar2
+                    @"codbar3": pCodbar3
+                    // @"data1": pData1
+                    // @"data2": pData2
+                    // @"data3": pData3
+                    @"descripcion": pDescripcion
+                    @"costoultimo": @@(itm,"#costo")
+                    @"precio1": @@(itm,"#precio1")
+                    @"precio2": @@(itm,"#precio2")
+                    @"precio3": @@(itm,"#precio3")
+                    @"precio4": @@(itm,"#precio4")
+                    @"precio5": @@(itm,"#precio5")
+                    // @"flaglimites": parse.bool(trim(@@(itm,"$flaglimites")))
+                    // @"flagutilidad": parse.bool(trim(@@(itm,"$flagutilidad")))
+                    @"reqlote": parse.bool(trim(@@(itm,"$reqlote")))
+                    @"reqserie": parse.bool(trim(@@(itm,"$reqserie")))
+                    // @"vinculardata": parse.bool(trim(@@(itm,"$vinculardata")))
+                    @"visible": parse.bool(trim(@@(itm,"$visible")))
+                    @"unidad": pUnidad
+                    @"unidadb": pUnidadb
+                    @"unidadc": pUnidadc
+                    @"unidadd": pUnidadd
+                    @"unidade": pUnidade
+                    // @"uf_solicitarcantidad": parse.bool(trim(@@(itm,"$uf_solicitarcantidad")))
+                    // @"uf_sys_baja": parse.bool(trim(@@(itm,"$uf_sys_baja")))
+                    // @"uf_complemento": parse.bool(trim(@@(itm,"$uf_complemento")))
+                    // @"uf_inhabilitado": parse.bool(trim(@@(itm,"$uf_inhabilitado")))
+                    // @"uf_codigoparaproveedor1": uf_codigoparaproveedor1
+                    // @"uf_codigoparaproveedor2": uf_codigoparaproveedor2
+                    // @"uf_codigoparaproveedor3": uf_codigoparaproveedor3
+                    @"uf_sat_proser": uf_sat_proser
+                    @"uf_sat_uniproser": uf_sat_uniproser
+                }
+                if trim(pCodbar1)==""{do field.remove(producto,"codbar1")}
+                if trim(pCodbar2)==""{do field.remove(producto,"codbar2")}
+                if trim(pCodbar3)==""{do field.remove(producto,"codbar3")}
+
+                ref producto:record.copyexin(fk_fields,producto,"*",",","",":")
+                
+                if isNew 
+                { 
+                    do dbr.insert(db,"producto",producto) 
+                    params2<"sys_pk">:dbr.num(db,"SELECT sys_pk from producto where sys_guid=@sys_guid",producto)
+                }
+                else { do dbr.update(db,"producto",producto,"sys_pk=@sys_pk",params2) }
+
+                if field.exist(itm,"cproduccion") && trim(@@(itm,"$cproduccion")) != ""
+                {
+                    new cproduccion_producto_
+                    {
+                        @"sys_timestamp*":dbr.sql("now()")
+                        @"sys_recver":0
+                        @"iproductos":@@(params2,"#sys_pk")
+                        @"icentrosproduccion":dbr.num(db,"SELECT sys_pk FROM cproduccion c WHERE c.codigo=@cproduccion OR c.descripcion=@cproduccion;",itm)
+                    }
+                    if dbr.num(db,"SELECT IFNULL(sys_pk,0) FROM cproduccion_producto_ WHERE iproductos=@iproductos AND icentrosproduccion=@icentrosproduccion",cproduccion_producto_) < 1
+                    {
+                        do dbr.insert(db,"cproduccion_producto_",cproduccion_producto_)
+                    }
+                }
+            }
+
+            contador = contador + 1
+
+            if (contador >= div) {
+                contador = contador - div
+                progreso = progreso + steps
+
+                if (token != "") {
+                    do batch.saveLog(token,"En proceso... " + str(progreso) + "%")
+                }
+            }
+        }
+
+        if (data_size < steps) {
+            if (token != "") {
+                do batch.saveLog(token,"En proceso... 100%")
+            }
+        }
+        do file.delete(file)
+
+        exception 
+        {
+            do errordet(@false)
+            code = last_error_code()
+            error = last_error()
+
+            if file.exists(file) { do file.delete(file) }
+            if dbr.in_transaction(db) { do dbr.rollback(db) }
+            // if token != "" { do batch.saveLog(token,error) }
+            do rise_error(code,error)
+        }
+    }
+}
