@@ -3,6 +3,10 @@
 module ""
 {
     @cclaseproducto_def= 4
+    @clase_articulo= 4
+    @clase_receta= 2
+    @clase_ensamble = 5
+    @clase_servicio= 3
 
     importLineaProd::&db,file
     {
@@ -267,8 +271,18 @@ module ""
                 pClase, pLinea, pTipo, pValuacion, pDivisa, pImpuestos, pFormaComision, pTipoComision, pDepartamento, pMarca, pProveedor1, pProveedor2, pProveedor3 >> params1
                 ref fk_fields:dbr.rec(db,sql_fk_fields,params1)
 
-                if fk_fields.iclase == 4 || fk_fields.iclase == 5 { fk_fields<"itipo"> : 2 }
-                else { fk_fields<"itipo"> : 1 }
+                if pTipo == "" // si no viene el tipo o es vació
+                {
+                    // 2 - inventariable
+                    // 1 - No inventariable
+                    if fk_fields.iclase == @clase_articulo || fk_fields.iclase == @clase_ensamble{ fk_fields<"itipo"> : 2 }
+                    else { fk_fields<"itipo"> : 1 }
+                }
+                else
+                {
+                    fk_fields<"itipo"> : dbr.num(db,"SELECT id from ctipoproducto WHERE (id=@tipo OR const=@tipo)",itm)
+                }
+                
                 
                 // VALIDAR CLAVES FORANEAS
                 if fk_fields.iclase < 1 { message = "La 'clase' proporcionada no existe." }
