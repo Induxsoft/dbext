@@ -1,0 +1,144 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.dkl"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+    entity_id = @("$parameters/_entity_id")
+    error = @("$error/message")
+    isNew = (entity_id == "_new")
+    ref logs = @("&./")
+    
+    new nav_config
+    {
+        @"title": "Logs ["+@("$parameters/_entity_id")+"]"
+        @"urlexit": ".."
+        
+        member @"hidden"
+        {
+            @"copy": @true
+            @"csv": @true
+            @"print": @true
+            @"send": @true
+        }
+    }
+
+    #$
+    div(class="container")
+    {   
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        div(id="work_area" class="container-section")
+        {
+            div(class="table-responsive")
+            {
+                table(class="table table-hover")
+                {
+                    thead(class="table-light")
+                    {
+                        tr
+                        {
+                            th{"ID"}
+                            th{"Creación"}
+                            th{"Compatible"}
+                            th{"Correcto"}
+                            th{""}
+                        }
+                    }
+                    tbody
+                    {$""
+                        #!
+                        for i = 0; i < @count(logs)
+                        {
+                            ref l=@item(logs,i)
+                            ref detail_logs=@@(l,"&logs")
+
+                            compatible=ifstr(@@(l,"#compatible"),"Sí","No")
+                            success=ifstr(@@(l,"#success"),"Sí","No")
+                            style="color: red;"
+                            #$
+                            tr(class="clickable-row" onclick="toggleDetails(this)" style="#<ifstr(@@(l,'#success'),'',style)>")
+                            {
+                                td{"#<@@(l,'$sys_pk')>"}
+                                td{"#<@@(l,'$created')>"}
+                                td{"#<compatible>"}
+                                td{"#<success>"}
+                                td("data-label"=""){small(class="text-muted"){"▼ Detalles"}}
+                            }
+                            tr(class="expandable-row")
+                            {
+                                td(colspan="5")
+                                {
+                                    #!
+                                    if @count(detail_logs) < 1
+                                    {
+                                        #$
+                                        p(class="text-center fw-bold"){"No hay logs"}
+                                        #!
+                                    }
+                                    for j = 0; j < @count(detail_logs)
+                                    {
+                                        ref dlogs=@item(detail_logs,j)
+                                        #$
+                                        strong{"ID: "}span{"#<@@(dlogs,'$sys_pk')>"}br{}
+                                        strong{"Acción: "}span{"#<@@(dlogs,'$action')>"}br{}
+                                        strong{"Mensaje: "}span{"#<@@(dlogs,'$message')>"}
+                                    }
+                                    #$
+                                }
+                            }
+                        }
+                        #$
+                    }
+                }
+            }
+
+            #$
+            style
+            {
+                $"
+                .chart-container {
+                    position: relative;
+                    height: 400px;
+                    margin-bottom: 2rem;
+                }
+                .expandable-row {
+                    background-color: #f8f9fa;
+                    display: none;
+                }
+                .expandable-row.show {
+                    display: table-row;
+                }
+                .clickable-row {
+                    cursor: pointer;
+                }
+                .clickable-row:hover {
+                    background-color: #f8f9fa;
+                }
+                "
+            }
+
+            script(type="text/javascript")
+            {$'
+                function toggleDetails(row) {
+                    var nextRow = row.nextElementSibling;
+                    if (nextRow && nextRow.classList.contains("expandable-row")) {
+                        nextRow.classList.toggle("show");
+                        var indicator = row.querySelector("small");
+                        indicator.textContent = nextRow.classList.contains("show") ? "▲ Ocultar" : "▼ Detalles";
+                    }
+                }
+            '}
+        }
+    }
+}

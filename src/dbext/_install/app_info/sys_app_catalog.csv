@@ -19,3 +19,4 @@
 "dbext","dbext.assocpf","Perfiles Induxsoft","2026-02-16 13:00:00","Asociar perfil Induxsoft"
 "dbext","dbext.snd_notif_type","Tipos de notificaciones","2026-04-01 12:00:00","Configurar tipos de notificaciones"
 "dbext","dbext.snd_scheduled_notif","Notificaciones programadas","2026-04-01 12:00:00","Administrar notificaciones programadas"
+"dbext","dbext.install_log","Logs de instación","2026-05-23 10:03:00","Logs de instalación"

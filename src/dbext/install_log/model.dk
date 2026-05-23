@@ -1,0 +1,62 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    @table_name="sys_app_catalog"
+    @devkron="./dkl"
+    install_pakcs::&db,&params,&data
+    {
+        packs=trim(@@(params,"$packs"))
+        qname=dbr.full_qname(db)
+        //inferir base de datos
+        // cmd=ftext('install-modell db="#<qname>" action="infer-model"')
+        // res = exec(@devkron,cmd,@true)
+
+        cmd = ftext('deployv12 packs="#<packs>" -hide-log')
+        res = exec(@devkron,cmd,@true)
+        
+        cmd = ftext('installv12 db="#<qname>" packs="#<packs>" -hide-log')
+        res = exec(@devkron,cmd,@false)
+    }
+    list::&db,&params
+    {
+        return dbr.list(db,"SELECT distinct a.pack_id,'' _version,
+        (
+            SELECT TRIM(l.sys_dtcreated)created
+            FROM sys_model_log l WHERE l.`source` LIKE CONCAT('%',a.pack_id,'%') 
+            order BY l.sys_dtcreated DESC limit 1
+        )last_install
+         from sys_app_catalog a",params)
+    }
+    read::&db,&params
+    {
+        ref model_logs=dbr.list(db,"SELECT 
+        l.sys_pk,TRIM(l.sys_dtcreated)created, 
+        -- l.`source`,l.`install`,
+        l.analisys,
+        l.compatible,l.success
+        -- l.model
+        FROM sys_model_log l WHERE l.`source` LIKE concat('%',@_entity_id,'%')
+        ORDER BY l.sys_dtcreated desc;",params)
+
+        for i = 0; i < @count(model_logs)
+        {
+            ref ml=@item(model_logs,i)
+            ml<"logs*">:dbr.list(db,"SELECT l.sys_pk,TRIM(l.sys_dtcreated)created,l.`action`,l.message,l.success FROM sys_model_ddl_log l 
+                        WHERE TRIM(l.message)<>''
+                        AND l.ref_model_log=@sys_pk
+                        ORDER BY l.sys_dtcreated DESC",ml)
+        }
+
+        return model_logs
+    }
+    update::&db,&params,&data
+    {
+        if trim(@@(params,"$packs")) != ""{do install_pakcs(db,params,data)}
+
+        return @null
+    }
+    point @list to list
+    point @read to read
+    point @update to update
+}
