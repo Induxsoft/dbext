@@ -68,6 +68,19 @@ module ""
 
 		return @null
 	}
+    filter_args::&record,fields
+    {
+        ref cleaned = record.copy(record,fields)
+        ref keys = list.create_from_fields(cleaned)
+        for i = 0; i < list.count(keys)
+        {
+            key = list.str(keys,i)
+            if isnull(@@(cleaned,"&"+key)) {
+                do field.remove(cleaned,key)
+            }
+        }
+        return cleaned
+    }
 
     SetContentHttp::text
     {

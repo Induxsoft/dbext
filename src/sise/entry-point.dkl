@@ -22,9 +22,13 @@ module ""
     token=trim(@@(integration,"$token"))
     if token==""{do rise_error(500,"El punto final no contiene un 'token'.")}
     
-    authorization=trim(@@(@http_context,"$request/headers/http_Authorization"))
-
-    if token != authorization{do rise_error(500,"El token de autorización indicado no es válido")}
+    ref http_headers = ifnull(@@(@http_context,"&request/headers"), record.create())
+    
+    method = @@(http_headers,"$REQUEST_METHOD")
+    authorization = trim(@@(http_headers,"$HTTP_AUTHORIZATION"))
+    
+    if method == "GET" && authorization == "" { authorization = @@(params,"$authorization") }
+    if token != authorization { do rise_error(500,"El token de autorización indicado no es válido") }
 
     source=trim(@@(integration,"$source"))
 
