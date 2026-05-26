@@ -1,0 +1,72 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.dkl"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+    entity_id = @("$parameters/_entity_id")
+    error = @("$error/message")
+    isNew = (entity_id == "_new")
+    ref log=@("&.")
+    ref logs = @("&./logs")
+    
+    new nav_config
+    {
+        @"title": "Logs ["+@("$parameters/_entity_id")+"]"
+        @"urlexit": "/!/dbext/install_log/"+replace(@@(log,"$source"),file.extension(@@(log,"$source")),"")+"/"
+        
+        member @"hidden"
+        {
+            @"copy": @true
+            @"csv": @true
+            @"print": @true
+            @"send": @true
+        }
+    }
+
+    #$
+    div(class="container")
+    {   
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        div(id="work_area" class="container-section")
+        {
+            #!
+            if @count(logs) < 1
+            {
+                #$
+                h5(class="text-center fw-bold"){"No hay logs"}
+                #!
+            }
+            for i = 0; i < @count(logs)
+            {
+                ref log=@item(logs,i)
+                success=parse.bool(@@(log,"$success"))
+                style_error="border: 1px solid red"
+                #$
+                div(class="card" )
+                {
+                    div(class="card-body" style="#<ifstr(success,'',style_error)>")
+                    {
+                        strong{"ID: "}span{"#<@@(log,'$sys_pk')>"}br{}
+                        strong{"Acción: "}span{"#<@@(log,'$action')>"}br{}
+                        strong{"Fecha: "}span{"#<@@(log,'$created')>"}br{}
+                        strong{"Mensaje: "}span{"#<@@(log,'$message')>"}br{}
+                        strong{"Comando SQL: "}span{"#<@@(log,'$cmdsql')>"}br{}
+                        strong{"JSON: "}span{"#<@@(log,'$jsondef')>"}
+                    }
+                }
+            }
+        }
+    }
+}

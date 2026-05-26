@@ -23,6 +23,8 @@ module "list"
         member @"columns"
         {
             member @"pack_id"{@"caption": "Paquete"}
+            member @"version"{@"caption":"Versión esquema"}
+            member @"version_pack"{@"caption":"Versión"}
             member @"last_install"{@"caption":"Últ. instalación"}
             member @"_action"
             {

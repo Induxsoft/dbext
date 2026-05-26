@@ -4,6 +4,9 @@ module ""
 {
     @table_name="sys_app_catalog"
     @devkron="./dkl"
+    @path_deployed_md5="_deployed/db34bd7c09326754137a1adf95068874/"
+    @cat_file=""
+
     install_pakcs::&db,&params,&data
     {
         packs=trim(@@(params,"$packs"))
@@ -18,15 +21,37 @@ module ""
         cmd = ftext('installv12 db="#<qname>" packs="#<packs>" -hide-log')
         res = exec(@devkron,cmd,@false)
     }
+
     list::&db,&params
     {
-        return dbr.list(db,"SELECT distinct a.pack_id,'' _version,
-        (
-            SELECT TRIM(l.sys_dtcreated)created
-            FROM sys_model_log l WHERE l.`source` LIKE CONCAT('%',a.pack_id,'%') 
-            order BY l.sys_dtcreated DESC limit 1
-        )last_install
-         from sys_app_catalog a",params)
+        ref packs= dbr.list(db,"SELECT DISTINCT
+            COALESCE(p.pack, a.pack_id) AS pack_id,
+
+            COALESCE(
+                if(trim(p.schema_ver)='','1.0.10',p.schema_ver),
+                '1.0.10'
+            ) AS version,
+
+            (
+                SELECT trim(l.sys_dtcreated)
+                FROM sys_model_log l
+                WHERE l.source LIKE CONCAT('%', COALESCE(p.pack, a.pack_id), '%')
+                ORDER BY l.sys_dtcreated DESC
+                LIMIT 1
+            ) AS last_install
+
+        FROM sys_app_catalog a
+        LEFT JOIN sys_packs p 
+        ON p.pack = a.pack_id;",params)
+
+        for i = 0; i < @count(packs)
+        {
+            ref pack=@item(packs,i)
+            ref manifest=catalog.manifest(@@(pack,"$pack_id"))
+            pack<"version_pack">:ifstr(isnull(manifest),"0.0.0",@@(manifest,"$version"))
+        }
+
+        return packs
     }
     read::&db,&params
     {
@@ -37,18 +62,36 @@ module ""
         l.compatible,l.success
         -- l.model
         FROM sys_model_log l WHERE l.`source` LIKE concat('%',@_entity_id,'%')
-        ORDER BY l.sys_dtcreated desc;",params)
+        ORDER BY l.sys_dtcreated desc LIMIT 50;",params)
 
-        for i = 0; i < @count(model_logs)
-        {
-            ref ml=@item(model_logs,i)
-            ml<"logs*">:dbr.list(db,"SELECT l.sys_pk,TRIM(l.sys_dtcreated)created,l.`action`,l.message,l.success FROM sys_model_ddl_log l 
-                        WHERE TRIM(l.message)<>''
-                        AND l.ref_model_log=@sys_pk
-                        ORDER BY l.sys_dtcreated DESC",ml)
-        }
+        // for i = 0; i < @count(model_logs)
+        // {
+        //     ref ml=@item(model_logs,i)
+        //     ml<"logs*">:dbr.list(db,"SELECT l.sys_pk,TRIM(l.sys_dtcreated)created,l.`action`,l.message,l.success FROM sys_model_ddl_log l 
+        //                 WHERE TRIM(l.message)<>''
+        //                 AND l.ref_model_log=@sys_pk
+        //                 ORDER BY l.sys_dtcreated DESC LIMIT 50",ml)
+        // }
 
         return model_logs
+    }
+
+    detail_logs::&db,&params
+    {
+        ref log=ifnull(dbr.rec(db,"SELECT 
+        l.sys_pk,TRIM(l.sys_dtcreated)created, 
+        l.source,
+        l.compatible,l.success
+        FROM sys_model_log l WHERE sys_pk=@_entity_id",params),record.create())
+
+        log<"logs*">: dbr.list(db,"SELECT l.sys_pk,TRIM(l.sys_dtcreated)created,l.`action`,l.message,l.success,
+        l.cmdsql,l.jsondef ,ml.source
+        FROM sys_model_ddl_log l 
+        INNER JOIN sys_model_log ml on l.ref_model_log=ml.sys_pk
+        WHERE l.ref_model_log=@_entity_id
+        ORDER BY l.sys_dtcreated DESC LIMIT 100",params)
+
+        return log
     }
     update::&db,&params,&data
     {

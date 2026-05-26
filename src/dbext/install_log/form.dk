@@ -61,13 +61,13 @@ module "form.dk"
                         for i = 0; i < @count(logs)
                         {
                             ref l=@item(logs,i)
-                            ref detail_logs=@@(l,"&logs")
+                            // ref detail_logs=@@(l,"&logs")
 
                             compatible=ifstr(@@(l,"#compatible"),"Sí","No")
                             success=ifstr(@@(l,"#success"),"Sí","No")
                             style="color: red;"
                             #$
-                            tr(class="clickable-row" onclick="toggleDetails(this)" style="#<ifstr(@@(l,'#success'),'',style)>")
+                            tr(class="clickable-row" onclick="toggleDetails(this,#<@@(l,'#sys_pk')>)" style="#<ifstr(@@(l,'#success'),'',style)>")
                             {
                                 td{"#<@@(l,'$sys_pk')>"}
                                 td{"#<@@(l,'$created')>"}
@@ -75,28 +75,28 @@ module "form.dk"
                                 td{"#<success>"}
                                 td("data-label"=""){small(class="text-muted"){"▼ Detalles"}}
                             }
-                            tr(class="expandable-row")
-                            {
-                                td(colspan="5")
-                                {
-                                    #!
-                                    if @count(detail_logs) < 1
-                                    {
-                                        #$
-                                        p(class="text-center fw-bold"){"No hay logs"}
-                                        #!
-                                    }
-                                    for j = 0; j < @count(detail_logs)
-                                    {
-                                        ref dlogs=@item(detail_logs,j)
-                                        #$
-                                        strong{"ID: "}span{"#<@@(dlogs,'$sys_pk')>"}br{}
-                                        strong{"Acción: "}span{"#<@@(dlogs,'$action')>"}br{}
-                                        strong{"Mensaje: "}span{"#<@@(dlogs,'$message')>"}
-                                    }
-                                    #$
-                                }
-                            }
+                            // tr(class="expandable-row")
+                            // {
+                            //     td(colspan="5")
+                            //     {
+                            //         #!
+                            //         if @count(detail_logs) < 1
+                            //         {
+                            //             #$
+                            //             p(class="text-center fw-bold"){"No hay logs"}
+                            //             #!
+                            //         }
+                            //         for j = 0; j < @count(detail_logs)
+                            //         {
+                            //             ref dlogs=@item(detail_logs,j)
+                            //             #$
+                            //             strong{"ID: "}span{"#<@@(dlogs,'$sys_pk')>"}br{}
+                            //             strong{"Acción: "}span{"#<@@(dlogs,'$action')>"}br{}
+                            //             strong{"Mensaje: "}span{"#<@@(dlogs,'$message')>"}
+                            //         }
+                            //         #$
+                            //     }
+                            // }
                         }
                         #$
                     }
@@ -130,13 +130,15 @@ module "form.dk"
 
             script(type="text/javascript")
             {$'
-                function toggleDetails(row) {
-                    var nextRow = row.nextElementSibling;
-                    if (nextRow && nextRow.classList.contains("expandable-row")) {
-                        nextRow.classList.toggle("show");
-                        var indicator = row.querySelector("small");
-                        indicator.textContent = nextRow.classList.contains("show") ? "▲ Ocultar" : "▼ Detalles";
-                    }
+                function toggleDetails(row,sys_pk) 
+                {
+                    window.location.href="../"+sys_pk+"/detail_log/"
+                    // var nextRow = row.nextElementSibling;
+                    // if (nextRow && nextRow.classList.contains("expandable-row")) {
+                    //     nextRow.classList.toggle("show");
+                    //     var indicator = row.querySelector("small");
+                    //     indicator.textContent = nextRow.classList.contains("show") ? "▲ Ocultar" : "▼ Detalles";
+                    // }
                 }
             '}
         }

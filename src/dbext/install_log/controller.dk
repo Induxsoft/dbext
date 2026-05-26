@@ -1,0 +1,15 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    
+    switch @@(params,"$_view")
+    {
+        case "detail_log"
+        {
+            @form_view="detail_log.dk"
+            point @read to detail_logs
+            break
+        }
+    }
+}

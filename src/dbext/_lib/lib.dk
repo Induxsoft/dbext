@@ -87,4 +87,42 @@ module
         if string_length < keyword_length { return @false }
         return lremove(string,keyword_length) == keyword
     }
+    @path_deployed_md5="_deployed/db34bd7c09326754137a1adf95068874/"
+    function get.manifest(src,pack_id)
+    {
+        if src == ""
+        {
+            src = _get(@_run_settings,"$SourceCodeFile")
+            src=dir.name(src)
+        }
+        
+        path_manifiest=path.concat(src,pack_id + ".manifest")
+
+        if not(file.exists(path_manifiest)){return @null}
+
+        ref manifiest=from.json(file.rtext(path_manifiest))
+        return manifiest
+    }
+    
+    function catalog.manifest(pack)
+    {
+        if not(dir.exists(@path_deployed_md5)){return @null}
+
+        ref manifest=get.manifest(@path_deployed_md5,pack)
+        
+        if not(isnull(manifest)){return manifest}
+        
+        path_catalog=path.concat(@path_deployed_md5,"catalog.json")
+        if not(file.exists(path_catalog)){return @null}
+
+        ref catalog=from.json(file.rtext(path_catalog))
+        
+        ref data=@@(catalog,"&"+pack)
+        
+        if isnull(data){return @null}
+
+        name_file=file.justname(list.str(data,0))
+        
+        return get.manifest(@path_deployed_md5,name_file)
+    }
 }
