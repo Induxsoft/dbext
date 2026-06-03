@@ -22,7 +22,7 @@ module ""
         
         if (tolower(file.extension(file)) != ".csv") {
             do file.delete(file)
-            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            do saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") 
             return
         }
         
@@ -164,12 +164,12 @@ module ""
 
         if (tolower(file.extension(file)) != ".csv") {
             do file.delete(file)
-            if (token != "") { do batch.saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") }
+            do saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv") 
             return
         }
 
         if not(file.exists(file)) {
-            if (token != "") { do batch.saveLog(token,"El archivo proporcionado no existe.") }
+            do saveLog(token,"El archivo proporcionado no existe.") 
             return
         }
 
@@ -177,7 +177,7 @@ module ""
         data_size = @count(data)
 
         if data_size < 1 {
-            if (token != "") { do batch.saveLog(token,"Nada para importar.") }
+            do saveLog(token,"Nada para importar.") 
             return
         }
 
@@ -448,5 +448,110 @@ module ""
             // if token != "" { do batch.saveLog(token,error) }
             do rise_error(code,error)
         }
+    }
+
+    //importar igredientes
+    importIngredients::&db,file
+    {
+        token = trim(@@(@batch_context,"$job/token"))
+        
+        if @@(@batch_context,"#job/steps") > 0 {steps = @@(@batch_context,"#job/steps")} 
+        else {steps = 10}
+
+        if tolower(file.extension(file)) != ".csv" 
+        {
+            do file.delete(file)
+            do saveLog(token,"Extensión incorrecta del archivo, se esperaba un .csv")
+            return
+        }
+
+        if not(file.exists(file)) 
+        {
+            do saveLog(token,"El archivo proporcionado no existe.") 
+            return
+        }
+
+        ref data = CsvRead(file,"")
+        data_size = @count(data)
+
+        if data_size < 1 
+        {
+            do saveLog(token,"Nada para importar.") 
+            return
+        }
+
+        contador = 0
+        progreso = 0
+        div = div(data_size,steps)
+
+        for i = 0; i < data_size
+        {
+            ref itm=record.caseinsensitive(@item(data,i))
+
+            receta=dbr.num(db,"SELECT IFNULL(sys_pk,0) FROM producto WHERE iclase=2 AND (codigo=@receta or codbar1=@receta or codbar2=@receta or codbar3=@receta)",itm)
+            materia_prima=dbr.num(db,"SELECT IFNULL(sys_pk,0) FROM producto WHERE iclase=1 AND (codigo=@materia_prima or codbar1=@materia_prima or codbar2=@materia_prima or codbar3=@materia_prima)",itm)
+
+            if receta < 1{do saveLog(token,"No se encontró la receta indicada: "+@@(itm,"$receta"))}
+            if materia_prima < 1{do saveLog(token,"No se encontró la materia prima indicada: "+@@(itm,"$materia_prima"))}
+
+            if receta > 0 && materia_prima > 0
+            {
+                receta,materia_prima >> p
+
+                iensamble=dbr.num(db,"SELECT IFNULL(sys_pk,0) from iensamble WHERE fk_producto_elementos=@receta and elemento=@materia_prima",p)
+
+                new ensamble
+                {
+                    @"sys_timestamp*":dbr.sql("now()")
+                    @"fk_producto_elementos":receta
+                    @"elemento":materia_prima
+                    @"cantidad":@@(itm,"#cantidad")
+                    @"cantdemasiado":@@(itm,"#cantidad_demasiado")
+                    @"cantmucho":@@(itm,"#cantidad_mucho")
+                    @"cantpoco":@@(itm,"#cantidad_poco")
+                    @"omitible":parse.bool(@@(itm,"$omitible"))
+                }
+
+                if iensamble > 0
+                {
+                    iensamble >> p
+                    do dbr.update(db,"iensamble",ensamble,"sys_pk=@iensamble",p)
+                }
+                else
+                {
+                    using ensamble
+                    {
+                        @"sys_guid":uuid()
+                        @"sys_dtcreated*":dbr.sql("now()")
+                        @"sys_recver": 0
+                    }
+                    do dbr.insert(db,"iensamble",ensamble)
+                }
+            }
+
+            contador = contador + 1
+
+            if contador >= div 
+            {
+                contador = contador - div
+                progreso = progreso + steps
+
+                do saveLog(token,"En proceso... " + str(progreso) + "%")                
+            }
+
+            exception
+            {
+                do saveLog(token,last_error())
+            }
+        }
+
+        if data_size < steps {do saveLog(token,"En proceso... 100%")}
+
+        do file.delete(file)
+    }
+    saveLog::token,msg
+    {
+        if token != ""{do batch.saveLog(token,msg)}
+        do print(msg)
     }
 }
