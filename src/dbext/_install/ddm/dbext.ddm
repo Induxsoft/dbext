@@ -22,7 +22,11 @@ model "Variables globales"
         @"disabled" bool
     }
     // Tipos de documentos comerciales
-    entity "cdocumentos" : "EnumModel" {}
+    entity "cdocumentos" : "EnumModel"
+    {
+        @"sys_recver" int
+        @"sys_deleted" bool
+    }
 
     entity "jobsgroup" : "TableModel"
     {

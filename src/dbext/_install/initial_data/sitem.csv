@@ -83,3 +83,8 @@ XB174,Enviar notificaciones pendientes,dbext.snd_notif_type
 dbext.snd_scheduled_notif,Administrar notificaciones programadas,dbext
 XB180,Administrar notificaciones programadas,dbext.snd_scheduled_notif
 XB181,Cancelar notificación programada,dbext.snd_scheduled_notif
+dbext.cdocumentos,Tipos de documentos comerciales,dbext
+XB200,Tipo de documento comercial,dbext.cdocumentos
+XB201,Agregar documento comercial,dbext.cdocumentos
+XB202,Editar documento comercial,dbext.cdocumentos
+XB203,Eliminar documento comercial,dbext.cdocumentos

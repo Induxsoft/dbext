@@ -38,11 +38,17 @@ XB152,Eliminar elemento borrado,Eliminar,,javascript:recbin.delete(),0,dbext.rec
 
 XB160,"Integración, puntos finales",Integración,,"/!/dbext/integration/",0,dbext.rest_integration,DET0B2,0,action
 
-XB170,Administrar tipos de notificaciones,Notificaciones,,/!/dbext/snd-notif-type/,0,dbext.snd_notif_type,DET0BF,0,shortcut
-XB171,Crear tipo de notificación,Crear,,/!/dbext/snd-notif-type/_new/,0,dbext.snd_notif_type,DET0BF,0,action
+XB170,Administrar tipos de notificaciones genéricas,Notificaciones,,/!/dbext/snd-notif-type/,0,dbext.snd_notif_type,DET0BF,0,shortcut
+XB171,Crear tipo de notificación genérica,Crear,,/!/dbext/snd-notif-type/_new/,0,dbext.snd_notif_type,DET0BF,0,action
 XB172,Editar tipo de notificación,Editar,,/!/dbext/snd-notif-type/@_src_context_item_id/,0,dbext.snd_notif_type,DET0BF,1,action
 XB173,Eliminar tipo de notificación,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,dbext.snd_notif_type,DET0BF,1,action
-XB174,Enviar notificaciones pendientes,Enviar notificaciones,,/!/batch/taskman/XB/notificar/?exit_url_encode=LyEvZGJleHQvc25kLW5vdGlmLXR5cGUv,0,dbext.snd_notif_type,DET0BF,0,action
+XB174,Enviar notificaciones genéricas pendientes,Enviar notificaciones,,/!/batch/taskman/XB/notificar/?exit_url_encode=LyEvZGJleHQvc25kLW5vdGlmLXR5cGUv,0,dbext.snd_notif_type,DET0BF,0,action
 
-XB180,Administrar notificaciones programadas,Notificaciones,,/!/dbext/snd-scheduled-notif/,0,dbext.snd_scheduled_notif,DET0C0,0,shortcut
+XB180,Administrar notificaciones genéricas programadas,Notificaciones,,/!/dbext/snd-scheduled-notif/,0,dbext.snd_scheduled_notif,DET0C0,0,shortcut
+
 "XB190","Logs de instalación","Logs",,/!/dbext/install_log/,0,dbext.install_log,DET0BF,0,action
+
+XB200,Tipos de documentos comerciales,cdocumentos,,/!/dbext/cdocumentos/,0,dbext.cdocumentos,DET0C4,0,shortcut
+XB201,Agregar documento comercial,Agregar,,/!/dbext/cdocumentos/_new/,0,dbext.cdocumentos,DET0C4,0,action
+XB202,Editar documento comercial,Editar,,/!/dbext/cdocumentos/@_src_context_item_id/,0,dbext.cdocumentos,DET0C4,1,action
+XB203,Eliminar documento comercial,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,dbext.cdocumentos,DET0C4,1,action

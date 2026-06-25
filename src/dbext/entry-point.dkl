@@ -58,6 +58,7 @@ module "Controller configs"
 	do crudl.routes.entity("/integration/","integration")
 	do crudl.routes.entity("/rest/","rest")
 	do crudl.routes.entity("/install_log/","install_log")
+	do crudl.routes.entity("/cdocumentos/","cdocumentos")
 
 	@dbmvc_path="crudl/"
 	

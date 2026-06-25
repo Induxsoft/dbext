@@ -1,0 +1,97 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "../_lib/config.dk"
+    // #include "../_lib/lib.dk"
+	// #include "../_lib/icons.dk"
+
+    do @context.begin(@crud_context)
+
+	@_entities_type = @("$parameters/_entities_type")
+    table_id = "tbl_"+@_entities_type
+    
+    new table_definition
+    {
+        @"datatable*": ifnull(@("&./data"),list.create())
+        member @"columns"
+        {
+            member @"id" { @"caption":"ID" }
+            member @"const" { @"caption":"Descripción" }
+        }
+        @"table_footer": "Mostrando los primeros # registros"
+    }
+
+    new nav_config
+    {
+        @"title": "Tipos de documentos comerciales"
+        @"urlexit": "/"
+
+        @"actions*": ifnull(@("&./itemactions"),list.create())
+        @"reports*": ifnull(@("&./itemreports"),list.create())
+        @"jscurrentcontext": "getCurrentContext"
+
+        member "hidden"
+        {
+            @"send": @true
+            @"copy": @true
+            @"csv": @true
+            @"print": @true
+        }
+    }
+    
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container" id="view")
+    {
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+
+            form(class="mb-1" action="./" method="GET" id="form-filter")
+            {
+                "filter-text"(class="w-100" "text-field"="search" value="#<@('$parameters/search')>" placeholder="Buscar ..." "form"="#form-filter" "auto-submit"="true"){""}
+            }
+        }
+        // Contenido principal
+        section(id="work_area")
+        {
+            #!
+            do uie.dbeditable(table_definition,table_id)
+            #$
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                // script(src=""){$""}
+                script(type="text/javascript")
+                {$'
+                    function filter(ff) { ff.form.submit(); }
+                    
+                    function getCurrentContext() {
+                        const table = document.getElementById("#<table_id>");
+                        const id = (table?.DataArray[table.CurrentRowIndex()]?.id ?? "");
+                        return { item_id:id, context: {} }
+                    }
+                    
+                    document.addEventListener("DOMContentLoaded", () => {
+                        // Script injection
+                        #<@@(@crud_context,"script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+
+    do @context.end()
+}

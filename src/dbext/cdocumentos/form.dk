@@ -1,0 +1,102 @@
+#include "dkli.dkh"
+#!
+module "form.dk"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+	@_entities_type = @("$parameters/_entities_type")
+	@_entity_id = @("$parameters/_entity_id")
+	@is_new = (@_entity_id == "_new")
+    @form_id = @_entities_type
+
+    function printNavButtons()
+    {
+        cls = "btn btn-main-action btn-sm border-secondary induxsoft-corners no-shadow"
+        #$
+        button(class="#<cls>" type="submit" form="#<@form_id>"){"Guardar"}
+        #!
+    }
+    point buttons to printNavButtons
+    new nav_config
+    {
+        @"title": "Documento comercial"
+        @"urlexit": ".."
+        @"buttons*": buttons
+        
+        member @"hidden"
+        {
+            @"send": @true
+            @"copy": @true
+            @"csv": @true
+            @"print": @true
+        }
+    }
+
+    // Encapsula a la vista en su totalidad, todo lo que hay antes o después no se considera 
+    #$
+    div(class="container" id="view")
+    {
+        // Filtros y acciones
+        section(id="top_area")
+        {
+            #!
+            do uie.printV12FormBar(nav_config)
+            #$
+        }
+        // Contenido principal
+        section(id="work_area" style="overflow-y:auto; overflow-x:hidden;")
+        {
+            link(href="#<@css_main>" rel="stylesheet")
+            #!
+            error = @("$error/message")
+            if error != ""
+            {
+                #$
+                div(class="alert alert-danger alert-dismissible fade show mb-2 pb-1" role="alert")
+                {
+                    div(class="w-100 overflow-auto pb-2"){$"#<error>"}
+                    button(type="button" class="btn-close" "data-bs-dismiss"="alert" "aria-label"="Close"){""}
+                }
+            }
+            #$
+            form(class="mb-3 px-1" action="./" method="POST" id="#<@form_id>")
+            {
+                div(class="row gx-1 gx-sm-2 gx-md-3 gx-lg-4")
+                {
+                    div(class="col-3 col-md-3 col-lg-2")
+                    {
+                        label(class="form-label" "for"="id"){"ID"}
+                        input(class="form-control" type="number" name="id" value="#<@('./id')>" id="id" placeholder="#<rnd(1,100)>" required="" "#<ifstr(@is_new,'','readonly')>"="")
+                    }
+                    div(class="col-9 col-md-6 col-lg-4")
+                    {
+                        label(class="form-label" "for"="const"){"Descripción"}
+                        input(class="form-control" type="text" name="const" value="#<@('./const')>" id="const" maxlength="150" placeholder="cNuevo_documento" required="")
+                    }
+                }
+            }
+        }
+        // Resúmenes y datos al pie
+        section(id="bottom_area")
+        {
+            //////////////////////////////////////////////////////////////////
+            div(id="_custom_area")
+            {
+                script(type="text/javascript")
+                {$'
+                    document.addEventListener("DOMContentLoaded", () => {
+                        // Script injection
+                        #<@@(@crud_context,"$script")>
+                    });
+                '}
+            }
+        }
+    }
+    #!
+    
+    do @context.end()
+}

@@ -20,3 +20,4 @@
 "dbext","dbext.snd_notif_type","Tipos de notificaciones","2026-04-01 12:00:00","Configurar tipos de notificaciones"
 "dbext","dbext.snd_scheduled_notif","Notificaciones programadas","2026-04-01 12:00:00","Administrar notificaciones programadas"
 "dbext","dbext.install_log","Logs de instación","2026-05-23 10:03:00","Logs de instalación"
+"dbext","dbext.cdocumentos","Documentos comerciales","2026-06-24 12:00:00","Administrar tipos de documentos comerciales"

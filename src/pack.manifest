@@ -1,6 +1,6 @@
 {
 	"id":"dbext",
 	"installable":["dbext"],
-	"version":"1.0.259",
-	"schema_ver":"1.0.10"
+	"version":"1.0.260",
+	"schema_ver":"1.0.11"
 }

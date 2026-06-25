@@ -1,0 +1,103 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    do errordet(@false)
+
+    @table_name = "cdocumentos"
+    @keyfield = "id"
+
+
+    _buildNewEntity :: &data
+    {
+        id = @@(data,"#id")
+        const = cut(trim(@@(data,"$const")),150)
+
+        if id < 1 { do rise_error(511,"El identificador (id) es requerido.") }
+        if const == "" { do rise_error(512,"La descripción (const) es requerido.") }
+
+        new entity
+        {
+            @"sys_recver*": dbr.sql("ifnull(sys_recver,0) + 1")
+            @"sys_deleted": @false
+        }
+        id, const >> entity
+
+        return entity
+    }
+
+    entity.list :: &db, &params
+    {
+        do dbr.apps.action.grant("XB200")
+
+        new resp
+        {
+            @"data*": dbr.list(db,ftext(@list_query),params)
+            @"itemactions*": dbr.apps.itemactions(db,"DET0C4","action","",0)
+            @"itemreports*": dbr.apps.itemactions(db,"DET0C4","report","",0)
+        }
+        return resp
+
+        exception{ do catch(db,params,@null) }
+    }
+
+    entity.create :: &db, &params, &data
+    {
+        do dbr.apps.action.grant("XB201")
+
+        ref cdoc = _buildNewEntity(data)
+        do dbr.insert(db,@table_name,cdoc)
+
+        params._entity_id := cdoc.id
+        return entity.read(db,params)
+
+        exception{ do catch(db,params,data) }
+    }
+
+    entity.update :: &db, &params, &data
+    {
+        do dbr.apps.action.grant("XB202")
+
+        ref cdoc = _buildNewEntity(data)
+        do dbr.update(db,@table_name,cdoc,"id=@_entity_id",params)
+
+        return entity.read(db,params)
+
+        exception{ do catch(db,params,data) }
+    }
+
+    entity.delete :: &db, &params
+    {
+        do dbr.apps.action.grant("XB203")
+
+        do dbr.delete(db,@table_name,"id=@_entity_id",params)
+        return @null
+
+        exception{ do catch(db,params,@null) }
+    }
+
+
+    function catch(&db,&params,&data)
+    {
+        code = last_error_code()
+        error = last_error()
+
+        if dbr.in_transaction(db) { do dbr.rollback(db) }
+        if isset("@@_action_context") { do dbr.apps.action.log() }
+
+        if isanyword(@@(params,"$_operation"),"create,update")
+        {
+            if isnull(data) { ref data:record.create() }
+            if contains(error,"Duplicate entry") { error = "Entrada duplicada, ya existe un registro con los mismos valores." }
+        }
+        else if @@(params,"$_operation") == "delete"
+        {
+            if contains(error,"Cannot delete or update a parent row") || contains(error,"DELETE Error") {
+                error = "No es posible eliminar, otros registros dependen del elemento proporcionado."
+            }
+        }
+        
+        do clear_exceptions()
+        do rise_error(code,error)
+    }
+}
