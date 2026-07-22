@@ -1,0 +1,61 @@
+#include "dkli.dkh"
+#!
+module ":lib"
+{
+    // #include "functions.dkh"
+    // #include "serialize.dkh"
+    // #include "webcl.dkh"
+
+
+    /**
+     * Realiza una solicitud de llamada saliente.
+     *
+     * @param Object &config - Referencia a un registro de la configuración el canal.
+     * @param Object &template - Referencia a un registro de la plantila de mensaje.
+     * @param Object &context - Referencia a un registro de las variables dinámicas.
+     */
+    // Ref: https://docs.induxsoft.net/es/api/cloud/voice/voip.md#iniciar-llamada
+    function sendMessage(&config, &template, &context)
+    {
+        // Resolver variables dinámicas en el mensaje de la plantilla.
+        message = @@(template,"$say")
+        if contains(message,"@")
+        {
+            ref marks = list.create_from_fields(context)
+            for i = 0; i < list.count(marks)
+            {
+                mark = list.str(marks,i)
+                value = @@(context,"$"+mark)
+                
+                message = replace(message, "@"+mark, value)
+            }
+        }
+
+        // Request
+        endpoint = "https://voice.induxsoft.net/api/v1/dial/"
+
+        new headers
+        {
+            @"Content-Type": "application/json"
+        }
+
+        new payload
+        {
+            @"channel": @@(config,"$channel_id")
+            @"from": @@(config,"$from")
+            @"to": @@(template,"$to")
+            @"ext": @@(template,"$ext")
+            @"say": message
+            @"attempts": @@(template,"#attempts")
+            @"delay": @@(template,"#delay")
+            @"queue": @@(config,"$queue")
+        }
+
+        if @@(config,"$authorization") != "" { headers<"Authorization"> : @@(config,"$authorization") }
+
+        response = http.request(endpoint, "POST", headers, to.json(payload))
+        ref resp = from.json(response)
+
+        return resp
+    }
+}
