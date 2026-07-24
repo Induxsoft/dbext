@@ -1,0 +1,136 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+    #include "dbr.dkh"
+    #include "dbr.controls.dkl"
+    #include "dbext/config.dk"
+
+    do @context.begin(@crud_context)
+
+    new types
+    {
+        @"id": "types"
+        @"datatable*": dbr.list(@("&database"),"select * from host_site_type",@null)
+        member "attributes"
+        {
+            @"class": "form-select rounded-0"
+            @"name": "type"
+            @"required":"true"
+        }
+        @"first_value":"0"
+        @"first_text":"(Tipo)"
+        @"value_field": "id"
+        @"text_field": "const"
+        @"selected": @("#./type")
+    }
+    @isNew=@("$parameters/_entity_id") == "_new"
+    if not(@isNew)
+    {
+        types<"attributes/readonly">: "true"
+    }
+    header_act::
+    { 
+        #$ 
+        button(type="submit" form="form_config_sites" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" ){$"Guardar"}
+        #!
+    }
+    point general_act to header_act
+    new nav_config
+    {
+        @"title": "Configuración de sitio"
+        @"buttons*": general_act
+        @"urlexit": ".."
+    }
+
+
+    #$ div(class="container p-0")
+    {
+        #! do uie.printV12FormBar(nav_config)
+
+        #$ div(id="work_area" class="container-section mt-1 p-2 pt-0")
+        {
+            p(class="#<ifstr(trim(@('$error/message'))=='','','alert alert-danger')>"){$"#<@('$error/message')>"}
+
+            form(action="." method="POST" id="form_config_sites")
+            {
+                input(type="hidden" name="sys_recver" value="#<@('#./sys_recver')>" id="")
+                div(class="row")
+                {
+                    div(class="col-md-8")
+                    {
+                        label(class="" "for"=""){"Host:"}
+                        input(class="form-control" type="" name="host" value="#<@('$./host')>" required="")
+                    }
+                    div(class="col-md-4")
+                    {
+                        label(class="" "for"=""){"Tipo:"}
+                        // input(class="form-control" type="" name="type" value="#<@('$./type')>" required="" readonly="")
+                        #!
+                        do uie.dbSelect(types)
+                        #$
+                    }
+                    #$
+                    div(class="col-md-12")
+                    {
+                        hr{}
+                        label(class="fw-bold" "for"=""){"Configuración:"}
+                        #! if not(@controls_from_json)
+                        {
+                            #$
+                            textarea(class="form-control" rows="8" name="config" required=""){"#<@('$./config')>"}
+                            #!
+                        }
+                        else
+                        {
+                            ref config=@("&./config")//from.json(field.dstr(@("&."),"config","{}"))
+                            ref @control_params=@("&./values")
+
+                            if isnull(config)  || @count(list.create_from_fields(config)) < 1
+                            {
+                                #$
+                                div(class="alert alert-warning"){"No hay una configuración para el tipo seleccionado"}
+                            }
+                            #$
+                            div(class="row")
+                            {
+                                #!
+                                do dbr.control.GenerateHtml(@("&database"),config)
+                            }
+                            #$
+                        }
+                        
+                    }
+                    
+                }
+            }
+
+            script(type="text/javascript")
+            {$'
+                document.addEventListener("DOMContentLoaded",()=>
+                {
+                    function formObj(formOrId) {
+                        const form = (typeof formOrId === "string") ? document.getElementById(formOrId) : formOrId;
+                        return Object.fromEntries(new FormData(form).entries());
+                    }
+
+                    let type=document.getElementById("types");
+                    const form = document.getElementById("form_config_sites");
+                    if(type)
+                    {
+                        type.addEventListener("change",()=>
+                        {
+                            let url = ".";
+                            let qry = (new URLSearchParams(formObj(form))).toString();
+
+                            window.location.href = url + (url.includes("?") ? "&" : "?") + qry;
+                        });
+                    }
+                })
+            '}
+        }
+    }
+}

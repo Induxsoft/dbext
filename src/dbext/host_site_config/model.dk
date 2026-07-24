@@ -1,0 +1,144 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    @table_name="host_site_config"
+    @list_query="SELECT c.sys_pk,c.host,t.const type from host_site_config c INNER JOIN host_site_type t ON c.type=t.id"
+
+    valid_json::json
+    {
+        do from.json(json)
+        return @true
+
+        exception{}
+        return @false
+    }
+    parse_json::json,def_json
+    {
+        return from.json(json)
+
+        exception{do pop_exception()}
+
+        return from.json(def_json)
+    }
+    getConfigType::&db,&params
+    {
+        config=dbr.str(db,"SELECT manifest from host_site_type where id=@type",params)
+
+        ref json= parse_json(config,"{}")
+        return json
+    }
+    list::&db,&params
+    {
+        do dbr.apps.action.grant("XB210")
+        ref entity =entity.list(db,params)
+        
+        return entity
+    }
+    read::&db,&params
+    {
+        do dbr.apps.action.grant("XB210")
+        ref entity=entity.read(db,params)
+        if field.exist(params,"type") && @@(params,"#type") > -1{entity<"type">:@@(params,"#type")}
+        entity<"values*">:parse_json(@@(entity,"$config"),"{}")
+        entity<"config*">:getConfigType(db,entity)
+        
+        return entity
+    }
+    save::&db,&params,&data
+    {
+        params<"type">:@@(data,"#type")
+        if @@(data,"#type") < 1{do rise_error(500,"No ha indicado un tipo")}
+        // if field.exist(data,"config") {if not(valid_json(@@(data,"$config"))){do rise_error(500,"El valor del campo config no contiene un formato JSON válido")}}
+
+        ref values=record.copy(data,"*")
+        do field.remove(values,"host")
+        do field.remove(values,"type")
+
+        new ndata
+        {
+            @"sys_recver":@@(data,"#sys_recver")
+            @"type":@@(data,"#type")
+            @"host":@@(data,"$host")
+            @"config":to.json(values)
+        }
+        
+        if @@(params,"$_entity_id") == "_new"{ref entity=entity.create(db,params,ndata) }
+        else{ref entity=entity.update(db,params,ndata)}
+
+        return entity
+    }
+    create::&db,&params,&data
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB211")
+        do dbr.begin(db)
+        
+        ref result = save(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            data<"config*">:getConfigType(db,params)
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+    update::&db,&params,&data
+    {
+        @use_transaction = @false
+
+        do dbr.apps.action.pre("XB212")
+        do dbr.begin(db)
+
+        ref result = save(db,params,data)
+
+        do dbr.apps.action.pos(result)
+        do dbr.commit(db)
+        do dbr.apps.action.ext(result)
+
+        return result
+
+        exception
+        {
+            data<"config*">:getConfigType(db,params)
+            do errordet(@false)
+            if dbr.in_transaction(db){ do dbr.rollback(db) }
+            do dbr.apps.action.log()
+            do rise_error(last_error_code(),last_error())
+        }
+    }
+    blank::&db,&params
+    {
+        do dbr.apps.action.grant("XB210")
+
+        new entity
+        {
+            @"config*":getConfigType(db,params)
+            @"type":@@(params,"#type")
+            @"host":@@(params,"$host")
+        }
+
+        return entity
+    }
+    delete::&db,&params
+    {
+        do dbr.apps.action.grant("XB213")
+        return entity.delete(db,params)
+    }
+
+    point @blank to blank
+    point @list to list
+    point @read to read
+    point @create to create
+    point @update to update
+
+}

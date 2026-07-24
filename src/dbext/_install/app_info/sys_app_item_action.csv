@@ -52,3 +52,5 @@ XB200,Tipos de documentos comerciales,cdocumentos,,/!/dbext/cdocumentos/,0,dbext
 XB201,Agregar documento comercial,Agregar,,/!/dbext/cdocumentos/_new/,0,dbext.cdocumentos,DET0C4,0,action
 XB202,Editar documento comercial,Editar,,/!/dbext/cdocumentos/@_src_context_item_id/,0,dbext.cdocumentos,DET0C4,1,action
 XB203,Eliminar documento comercial,Eliminar,,"javascript:InduxsoftCrudlModel.Delete(`@_src_context_item_id`);",0,dbext.cdocumentos,DET0C4,1,action
+
+XB210,Configuración de sitios,Config_site,,/!/dbext/host-site-config/,0,dbext.host_site_config,DET0C4,0,shortcut

@@ -88,3 +88,8 @@ XB200,Tipo de documento comercial,dbext.cdocumentos
 XB201,Agregar documento comercial,dbext.cdocumentos
 XB202,Editar documento comercial,dbext.cdocumentos
 XB203,Eliminar documento comercial,dbext.cdocumentos
+dbext.host_site_config,Configuración de sitios,dbext
+XB210,Configuraciones de sitios,dbext.host_site_config
+XB211,Agregar configuraciones de sitios,dbext.host_site_config
+XB212,Editar configuraciones de sitios,dbext.host_site_config
+XB213,Eliminar Configuraciones de sitios,dbext.host_site_config

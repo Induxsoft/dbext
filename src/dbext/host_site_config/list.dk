@@ -1,0 +1,57 @@
+#include "dkli.dkh"
+#!
+module ""
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "uielements.v12.dkl"
+
+    do @context.begin(@crud_context)
+
+    header_act::
+    { 
+        #$ a(href="./_new/" class="btn btn-sm border-secondary induxsoft-corners btn-main-action no-print" ){$"Agregar"}
+    }
+
+    #! point general_act to header_act
+
+    new table_definition
+    {
+        @"datatable*": @('&.')
+        @"table_footer": "Mostrando los primeros # canales"
+        member @"columns"
+        {
+            member @"host" { @"caption":"Host" }
+            member @"type" { @"caption":"Tipo" }
+            member @"_actions" 
+            { 
+                @"caption":"Acciones" 
+                @"template":ftext('
+                    <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
+                        <a href="./${DataRow.sys_pk}/" style="cursor:pointer; text-decoration: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Editar</a>
+                        <button onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})" style="cursor:pointer; border: none; outline: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Eliminar</button>
+                    </div>')
+                @"no-print":@true
+            }
+        }
+    }
+
+    new nav_config
+    {
+        @"title": "Configuraciones de sitios"
+        @"buttons*": general_act
+        @"urlexit": "/"
+    }
+    #$ div(class="container-fluid p-0")
+    {
+        #! do uie.printV12FormBar(nav_config)
+
+        #$ div(id="work_area" class="container-section mt-1 p-2 pt-0")
+        {
+            p{$"#<@('$error/message')>"}
+
+            #! do uie.dbeditable(table_definition, "table_config_sites")
+        }
+    }
+
+}
