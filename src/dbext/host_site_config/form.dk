@@ -49,6 +49,7 @@ module ""
 
     #$ div(class="container p-0")
     {
+        script(src="/$/dbext/js/availability-scheduler.js"){""}
         #! do uie.printV12FormBar(nav_config)
 
         #$ div(id="work_area" class="container-section mt-1 p-2 pt-0")
