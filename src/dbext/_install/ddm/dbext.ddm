@@ -67,27 +67,27 @@ model "Variables globales"
     entity "usergroup" : "TableModel"
     {
         @"description" string(80) required
-        @"groupid" string(32) unique 
+        @"groupid" string(32) unique required
         @"notes" memo 
         @"uf_hidetoolbar" string(1) 
     }
     entity "recycle_bin"
     {
-        // @"det" string(10) unique required
-        // @"qbrowser" memo required //Consulta para visualización: select sys_pk, sys_info codigo, descripcion, unidad from producto where sys_deleted=1 and (descripcion like concat('%',@text,'%')) order by sys_timestamp desc;
-        // @"qrestore" memo required //Consulta para restaurar: update producto set sys_deleted=null, codigo=sys_info where sys_pk=@sys_pk;
-        // @"qforze" memo //Consulta para forzar restauración: update producto set sys_deleted=null, codigo=concat('R',sys_pk) where sys_pk=@sys_pk;
-        // @"qdelete" memo //Consulta para eliminar definitivamente: delete from producto where sys_pk=@sys_pk;
+        @"det" string(10) unique required
+        @"qbrowser" memo required //Consulta para visualización: select sys_pk, sys_info codigo, descripcion, unidad from producto where sys_deleted=1 and (descripcion like concat('%',@text,'%')) order by sys_timestamp desc;
+        @"qrestore" memo required //Consulta para restaurar: update producto set sys_deleted=null, codigo=sys_info where sys_pk=@sys_pk;
+        @"qforze" memo //Consulta para forzar restauración: update producto set sys_deleted=null, codigo=concat('R',sys_pk) where sys_pk=@sys_pk;
+        @"qdelete" memo //Consulta para eliminar definitivamente: delete from producto where sys_pk=@sys_pk;
     }
 
     entity "sitem_sec"
     {
-        // @"item_id" string (32) unique required
+        @"item_id" string (32) unique required
     }
 
     entity "usergroup_sec"
     {
-        // @"group_id" string(32) unique required
+        @"group_id" string(32) unique required
     }
     // Relacion entre usuarios y los grupos a los que pertenece
     entity "user_usergroup_" : "NmModel"
