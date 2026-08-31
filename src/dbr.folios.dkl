@@ -52,7 +52,7 @@ module "Gestión de folios :dbr.folios"
         for i=0;i<intentos
         {
             do dbr.insert(db,"foliosdocumentos",foliosdocumentos)
-            do dbr.execute(db,"update blockdocumentos set fultimo="+str(folio)+" where sys_pk=@iblock",params)
+            do dbr.execute(db,"update blockdocumentos set sys_timestamp=now(), sys_recver=ifnull(sys_recver,0)+1, fultimo="+str(folio)+" where sys_pk=@iblock",params)
             res=folio
             break
             
