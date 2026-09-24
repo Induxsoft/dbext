@@ -20,7 +20,10 @@ module "Gestión de folios :dbr.folios"
     get_new::&db, idblock
     {
         new p{@"block":idblock}
-        return dbr.num(db,"select fultimo+1 from blockdocumentos where sys_pk=@block and activo",p)
+        return dbr.num(db,"SELECT IF(finicial > fultimo + 1, finicial, fultimo + 1)
+            FROM blockdocumentos
+            WHERE sys_pk = @block
+            AND activo",p)
     }
 
     // Establece el folio y retorna su valor si tiene éxito, en caso contrario devuelve cero
@@ -51,6 +54,7 @@ module "Gestión de folios :dbr.folios"
 
         for i=0;i<intentos
         {
+            foliosdocumentos<"folio">:folio
             do dbr.insert(db,"foliosdocumentos",foliosdocumentos)
             do dbr.execute(db,"update blockdocumentos set sys_timestamp=now(), sys_recver=ifnull(sys_recver,0)+1, fultimo="+str(folio)+" where sys_pk=@iblock",params)
             res=folio
@@ -136,6 +140,67 @@ module "Gestión de folios :dbr.folios"
 			}
 			
 			return autocode
+        }
+
+        ref.mascara_a_formato :: mascara
+        {
+            fmt = ""
+            n = length(mascara)
+            i = 0
+            en_literal = 0
+            hay_digitos = 0
+
+            while i < n
+            {
+                c = substring(mascara, i, 1)
+                if c == "0" || c == "#"
+                {
+                    if en_literal == 1
+                    {
+                        fmt = fmt + "'"
+                        en_literal = 0
+                    }
+                    fmt = fmt + c
+                    hay_digitos = 1
+                }
+                else
+                {
+                    if en_literal == 0
+                    {
+                        fmt = fmt + "'"
+                        en_literal = 1
+                    }
+                    fmt = fmt + c
+                }
+                i = i + 1
+            }
+
+            if en_literal == 1 { fmt = fmt + "'" }
+
+            // Si la máscara no trae 0 ni #, el folio va al final
+            if hay_digitos == 0 { fmt = fmt + "0" }
+
+            return fmt
+        }
+
+        get.mascara::db,iblock
+        {
+            iblock >> params
+            if not(isnull(dbr.rec(db,"SHOW COLUMNS FROM blockdocumentos LIKE 'format_ref';",@null)))
+            {
+                return dbr.str(db,"SELECT IFNULL(format_ref,'0000000000') FROM blockdocumentos where sys_pk",params)
+            }
+
+            return "0000000000"
+        }
+        // serie y folio son obligatorios; la máscara la define el usuario
+        reference :: serie, folio, mascara, ref_size
+        {
+            if mascara == ""
+            {
+                return serie + padleft(str(folio), ref_size, "0")
+            }
+            return serie + format(folio, ref.mascara_a_formato(mascara))
         }
     }
 }

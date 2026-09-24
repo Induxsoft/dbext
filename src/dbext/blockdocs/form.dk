@@ -124,7 +124,12 @@ module "form.dk"
                                         colcaptions="Código,Descripción"){$""}
                                 }
                             }
-                            div(class="col-md-6")
+                            div(class="col-md-3")
+                            {
+                                label(class="" "for"=""){"Formato de referencia:"}
+                                input(class="induxsoft-form-control" type="" name="format_ref" value="#<@('$./format_ref')>")
+                            }
+                            div(class="col-md-3")
                             {
                                 div(class="d-flex mt-4")
                                 {

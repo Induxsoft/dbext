@@ -14,6 +14,12 @@ module ""
     "+like+"
     order by cd.id,bd.sys_pk desc "
 
+    @format_ref_def="00000000000"
+
+    dbr.field.exist::&db,table,field
+    {
+        return not(isnull(dbr.rec(db,"SHOW COLUMNS FROM "+table+" LIKE '"+field+"';",@null)))
+    }
     Prepare.View::&db,&params,&data
     {
         if isnull(data){return}
@@ -23,7 +29,10 @@ module ""
     {
         do dbr.apps.action.grant("XB30")
 
-        new entity{}
+        new entity
+        {
+            @"format_ref":@format_ref_def
+        }
         do Prepare.View(db,params,entity)
         return entity
 
@@ -40,10 +49,17 @@ module ""
         // if @@(params,"$_entity_id") == "_new" && not(dbr.security.isauth(db,@AUT_CREATE_FOLIO)) { do rise_error(500,"No autorizado") }
         // if @@(params,"$_entity_id") != "_new" && not(dbr.security.isauth(db,@AUT_UPDATE_FOLIO)) { do rise_error(500,"No autorizado") }
 
+        if not(dbr.field.exist(db,"blockdocumentos","format_ref"))
+        {
+            do dbr.execute(db,"ALTER TABLE blockdocumentos ADD format_ref VARCHAR(32);",@null)
+        }
+
         if @@(data,"$finicial")=="" || @@(data,"#finicial")<1{data<"finicial">:1}
         if @@(data,"$fultimo")==""{data<"fultimo">:0}
         if @@(data,"$numcontrol")==""{data<"numcontrol">:0}
 
+        if @@(data,"#finicial") > @@(data,"#fultimo") + 1{data<"fultimo">:@@(data,"#finicial")}
+        
         if parse.bool(@@(data,"activo")){data<"activo">:1}
         else{data<"activo">:0}
 
@@ -148,6 +164,8 @@ module ""
 
         ref entity=entity.read(db,params)
         if @@(entity,"$ubicacion")!=""{entity<"ubicacion*">:dbr.rec(db,"select * from ubicacion where sys_pk=@ubicacion",entity)}
+        if trim(@@(entity,"$format_ref")) == ""{entity<"format_ref">:@format_ref_def}
+        
         do Prepare.View(db,params,entity)
         return entity
 

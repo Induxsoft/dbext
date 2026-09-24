@@ -178,6 +178,7 @@ model "Variables globales"
         @"uf_cfdfolio" int
         @"uf_cfdi_info" int
         @"ubicacion" ref:"ubicacion"
+        @"format_ref" string(32) // formato de referencia
     }
     // Control de folios de documentos
     entity "foliosdocumentos" : "TableModel"
