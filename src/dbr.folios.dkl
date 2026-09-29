@@ -3,7 +3,25 @@
 module "Gestión de folios :dbr.folios"
 {
 	@max_autocode_attemps=10
-	
+	/*
+     * Summary:
+     * - db : conexión a la base de datos
+     * - ifolio : clave primaria(sys_pk) de la tabla foliosdocumentos
+    */
+    
+    recover_folio_block::&db,ifolio
+    {
+        if not(dbr.in_transaction(db)) { do rise_error(0,"Se requiere iniciar una transacción de bases de datos.")}
+
+        ifolio >> p
+        p<"block">:dbr.num(db,"SELECT block FROM foliosdocumentos WHERE sys_pk=@ifolio",p)
+
+        if @@(p,"#block") < 1{do rise_error(99,"No se encontró datos del block de documentos")}
+
+        do dbr.execute(db,"DELETE FROM foliosdocumentos where sys_pk=@ifolio",p)
+        fultimo=dbr.num(db,"SELECT IFNULL(MAX(fd.Folio),0) AS MaxFolio FROM foliosdocumentos fd WHERE block=@block",p)
+        do dbr.execute(db,"UPDATE blockdocumentos bd SET bd.FUltimo = "+str(fultimo)+" WHERE bd.sys_pk=@block;",p)
+    }
     // Devuele la clave primaria correspondiente al block cuya serie y tipo de documento se indican
     id_block::&db,doctype, serie
     {
