@@ -8,7 +8,7 @@ module ":dbext.induxsoft"
     @dbext.induxsoft.type_cloud="cloud"
     @dbext.induxsoft.type_onpremise="onpremise"
     @dbext.induxsoft.var_cloud_id="induxsoft_cloud_id"
-
+    @dbext.induxsoft.induxsoft_cloud_id = ""
     // **Códigos de error posibles:**
     new @errores
     {
@@ -50,7 +50,19 @@ module ":dbext.induxsoft"
 
     getDeploymentType::&db
     {
-        induxsoft_cloud_id=dbr.vars.get(db,@dbext.induxsoft.var_cloud_id)
+        induxsoft_cloud_id = @dbext.induxsoft.induxsoft_cloud_id
+        
+        if induxsoft_cloud_id == ""{induxsoft_cloud_id = trim(dbr.vars.get(db,@dbext.induxsoft.var_cloud_id))}
+        
+        if induxsoft_cloud_id == ""
+        {
+            qname = dbr.relative_qname(db)
+            cnn = list.str(split(qname,"@"),0)
+            induxsoft_cloud_id = replace(cnn,"vxii","")
+        }
+        
+        @dbext.induxsoft.induxsoft_cloud_id = induxsoft_cloud_id
+
         if induxsoft_cloud_id !="" && length(induxsoft_cloud_id) == 32{return @dbext.induxsoft.type_cloud}
 
         return @dbext.induxsoft.type_onpremise
@@ -69,7 +81,7 @@ module ":dbext.induxsoft"
             {
                 new auth
                 {
-                    @"svc_id":dbr.vars.get(db,@dbext.induxsoft.var_cloud_id)
+                    @"svc_id":@dbext.induxsoft.induxsoft_cloud_id
                     @"ids":ids
                 }
                 return auth
@@ -117,6 +129,8 @@ module ":dbext.induxsoft"
             if error == "No autorizado"{error="invalid_token"}
 
             _error=@@(@errores,"$"+error)
+            if _error == ""{_error=error}
+
             if _error == ""{_error=error}
 
             new response
