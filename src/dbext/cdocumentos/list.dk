@@ -5,7 +5,7 @@ module ""
     #include "functions.dkh"
     #include "serialize.dkh"
     #include "uielements.v12.dkl"
-    #include "../_lib/config.dk"
+    #include "../config.dk"
     // #include "../_lib/lib.dk"
 	// #include "../_lib/icons.dk"
 
