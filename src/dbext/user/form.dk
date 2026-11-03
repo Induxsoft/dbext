@@ -61,7 +61,7 @@ module "form.dk"
                 div(class="alert #<ifstr(s_msg!='','alert-success','alert-danger')> alert-dismissible fade show overflow-auto mb-2" role="alert")
                 {
                     $"#<e_msg + s_msg>"
-                    button(type="button" class="btn-close" "data-bs-dismiss"="alert" "aria-label"="Close"){$""}
+                    button(type="button" class="btn-close" onclick="this.closest('.alert').remove()" "aria-label"="Close"){$""}
                 }
             }
             #$
