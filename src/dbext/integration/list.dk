@@ -41,7 +41,7 @@ module "list"
             }
         }
         @"control_styles":'
-            tbody tr:hover { background-color: #F5F5F5 !important; }
+            tbody tr:hover { background-color: var(--et-hover-bg, var(--et-t-hover-bg, #F5F5F5)) !important; }
             .EdiTable-Row-Selected { background-color:unset !important; color:unset !important; } 
         '
     }

@@ -98,7 +98,7 @@ module "form.dk"
                 "edit-table"(id="tbl_sitems" data="#<to.json(sitems)>" "auto-confirm"="true" style="width:100%;"
                 "row-height"="1.2rem"
                 "control-styles"="
-                    tr th { font-size:.9rem; outline:none !important; font-weight:500 !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -o-text-overflow:ellipsis; }
+                    tr th { font-size:.9rem; outline:none !important; font-weight:var(--et-header-weight, var(--et-t-header-weight, 500)) !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -o-text-overflow:ellipsis; }
                     tr td { font-size:.8rem; }
                     #__table_input { font-size:unset !important; }
                 ")
