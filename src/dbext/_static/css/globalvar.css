@@ -46,7 +46,7 @@
     margin-top: 4px;
 }
 .show-hint:hover ~ .hint {
-    color: #888 !important;
+    color: var(--et-muted-fg, var(--ixt-muted-fg, #888)) !important;
 }
 /* input:focus {
     outline: 2px solid var(--color-blue) !important;

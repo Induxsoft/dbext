@@ -4,12 +4,12 @@
     padding: 0;
 }
 :root {
-    --color-white: #FFF;
-    --color-blue: #3483FA;
-    --color-gray: #EDEDED;
-    --color-light-gray: #F5F5F5;
-    --color-dark-gray: #888;
-    --color-borders: #DDD;
+    --color-white: var(--et-bg, var(--ixt-bg, #FFF));
+    --color-blue: var(--et-accent, var(--ixt-accent, #3483FA));
+    --color-gray: var(--et-hover-bg, var(--ixt-hover-bg, #EDEDED));
+    --color-light-gray: var(--et-header-bg, var(--ixt-header-bg, #F5F5F5));
+    --color-dark-gray: var(--et-muted-fg, var(--ixt-muted-fg, #888));
+    --color-borders: var(--et-border, var(--ixt-border, #DDD));
 }
 .fw-4{font-weight: 400 !important;}
 .fw-5{font-weight: 500 !important;}
@@ -38,7 +38,7 @@
 {
     pointer-events: none;
     user-select: none;
-    background-color: #e9ecef;
+    background-color: var(--ix-input-disabled-bg, #e9ecef);
     opacity: 1;
 }
 .event-none
