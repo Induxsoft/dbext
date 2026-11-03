@@ -1,5 +1,6 @@
 script{
 	$'
+		function valorDe(s){ var e=document.querySelector(s); return e ? e.value : undefined; }
 		function deleteEntity(sys_pk){
 			var res=confirm("¿Esta seguro de eliminar la fila?");
 			if(!res)
@@ -54,11 +55,11 @@ script{
         });
 		function validate()
         {
-            if ($("input[name=codigo]").val()===""){
+            if (valorDe("input[name=codigo]")===""){
 				alert("Rellene el campo: Código");
 				return;
 			}
-            else if($("input[name=nombre]").val()===""){
+            else if(valorDe("input[name=nombre]")===""){
 				alert("Rellene el campo: Nombre");
 				return;
 			}
@@ -70,14 +71,14 @@ script{
 		{
 			let ciudad =
             {
-                "sys_recver": $("input[name=sys_recver]").val(),
-                "codigo": $("input[name=codigo]").val(),
-                "nombre": $("input[name=nombre]").val(),
-				"codigotel": $("input[name=codigotel]").val(),
-                "estado": $("select[name=estado]").val()
+                "sys_recver": valorDe("input[name=sys_recver]"),
+                "codigo": valorDe("input[name=codigo]"),
+                "nombre": valorDe("input[name=nombre]"),
+				"codigotel": valorDe("input[name=codigotel]"),
+                "estado": valorDe("select[name=estado]")
             }
 
-			var mthd=((Number($("#sys_pk").val())>0) ? "PUT": "POST");
+			var mthd=((Number(valorDe("#sys_pk"))>0) ? "PUT": "POST");
 
 			definitive.rest(".", mthd, ciudad,
                 function(entity){

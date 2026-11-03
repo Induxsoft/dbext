@@ -76,7 +76,6 @@ module "form.dk"
             }
         }
         #$
-        script(src="#<@jQuery>"){$""}
         script(src="#<@js_definitive_api>"){$""}
         #!
         #include "edoprov.dk"

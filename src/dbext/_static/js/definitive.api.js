@@ -1,19 +1,54 @@
 var definitive=definitive || {};
 
+// Antes usaba $.ajax de jQuery (cargado de code.jquery.com). Mismo comportamiento con fetch:
+// - success(data) con respuesta 2xx y JSON válido (o success(null) si no hay contenido, 204);
+// - error(xhr) con un objeto como el jqXHR (readyState, status, statusText, responseText, responseJSON)
+//   cuando la respuesta no es 2xx, el JSON no se puede leer o falla la red.
 definitive.rest=function(uri, method, data, success, fail, error,reload=false){
-       $.ajax({
-        "url":uri,
-        "type":method,
-        "data":JSON.stringify(data),
-        "contentType":"application/json",
-        "dataType":"json",
-        success:function (data, textStatus, xhr) {
-            console.log(data);
-            if (xhr.status>=200 && xhr.status<300)
+    var verbo=String(method || "GET").toUpperCase();
+    var cuerpo=JSON.stringify(data);
+    var url=uri;
+    var opciones={
+        "method":verbo,
+        "headers":{
+            "Content-Type":"application/json",
+            "Accept":"application/json, text/javascript, */*; q=0.01",
+            "X-Requested-With":"XMLHttpRequest"
+        },
+        "credentials":"same-origin"
+    };
+    if (verbo==="GET" || verbo==="HEAD")
+    {
+        if (cuerpo!==undefined) url+=(url.indexOf("?")>=0 ? "&" : "?")+cuerpo;
+    }
+    else if (cuerpo!==undefined)
+        opciones.body=cuerpo;
+
+    function falla(xhr) {
+        if (error)
+            error(xhr);
+        if (reload){window.location.reload();}
+    }
+
+    fetch(url, opciones).then(function(r){
+        return r.text().then(function(texto){
+            var xhr={"readyState":4,"status":r.status,"statusText":r.statusText,"responseText":texto};
+            var json, valido=false;
+            if (texto!=="")
             {
-                if(data !=null || data!=undefined)
+                try { json=JSON.parse(texto); valido=true; } catch(e) { valido=false; }
+            }
+            if (valido) xhr.responseJSON=json;
+            var ok=(r.status>=200 && r.status<300) || r.status===304;
+            if (!ok) { falla(xhr); return; }
+            if (r.status===204 || verbo==="HEAD") json=undefined;
+            else if (!valido) { xhr.statusText="parsererror"; falla(xhr); return; }
+            console.log(json);
+            if (r.status>=200 && r.status<300)
+            {
+                if(json !=null || json!=undefined)
                 {
-                    success(data);
+                    success(json);
                 }
                 else if(success)
                 {
@@ -21,34 +56,20 @@ definitive.rest=function(uri, method, data, success, fail, error,reload=false){
                 }
             }
             else
-                fail(data)
-
-        },
-        error:function(e) {
-            if (error)
-                error(e);
-            if (reload){window.location.reload();}
-        }
-
+                fail(json)
+        });
+    }, function(e){
+        falla({"readyState":0,"status":0,"statusText":"error","responseText":""});
     });
 };
 
-var jquery_url="https://code.jquery.com/jquery-3.6.0.min.js";
-
-function on_doc_ready() {
-    $(document).ready(() => {
-		if (definitive.onready) 
-			definitive.onready();
-	});
-}
-
-if(typeof jQuery=='undefined') {
-    var headTag = document.getElementsByTagName("head")[0];
-    var jqTag = document.createElement('script');
-    jqTag.type = 'text/javascript';
-    jqTag.src = jquery_url;
-    jqTag.onload = on_doc_ready;
-    headTag.appendChild(jqTag);
-} else {
-     on_doc_ready();
-}
+(function(){
+    function on_doc_ready() {
+        if (definitive.onready)
+            definitive.onready();
+    }
+    if (document.readyState==="loading")
+        document.addEventListener("DOMContentLoaded", on_doc_ready);
+    else
+        setTimeout(on_doc_ready, 0);
+})();

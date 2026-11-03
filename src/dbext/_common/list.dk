@@ -188,7 +188,6 @@ module "list.dk"
             //////////////////////////////////////////////////////////////////
             div(id="_custom_area")
             {
-                script(src="#<@jQuery>"){$""}
                 script(src="#<@js_definitive_api>"){$""}
                 script(type="text/javascript")
                 {$' 
