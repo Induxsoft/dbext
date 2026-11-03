@@ -65,7 +65,7 @@ module "form.dk"
 
                             compatible=ifstr(@@(l,"#compatible"),"Sí","No")
                             success=ifstr(@@(l,"#success"),"Sí","No")
-                            style="color: red;"
+                            style="color: var(--et-error, var(--ixt-error, red));"
                             #$
                             tr(class="clickable-row" onclick="toggleDetails(this,#<@@(l,'#sys_pk')>)" style="#<ifstr(@@(l,'#success'),'',style)>")
                             {
@@ -113,7 +113,7 @@ module "form.dk"
                     margin-bottom: 2rem;
                 }
                 .expandable-row {
-                    background-color: #f8f9fa;
+                    background-color: var(--ix-light, #f8f9fa);
                     display: none;
                 }
                 .expandable-row.show {
@@ -123,7 +123,7 @@ module "form.dk"
                     cursor: pointer;
                 }
                 .clickable-row:hover {
-                    background-color: #f8f9fa;
+                    background-color: var(--ix-light, #f8f9fa);
                 }
                 "
             }

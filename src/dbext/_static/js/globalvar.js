@@ -372,7 +372,7 @@ var globalvar =
                 if (varValue) 
                 {
                     label_control.textContent = varValue;
-                    label_control.style.cssText="color:green";
+                    label_control.style.cssText="color:var(--et-ok, var(--ixt-ok, green))";
                 }
                 break;
             }

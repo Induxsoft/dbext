@@ -52,7 +52,7 @@ module "form.dk"
             {
                 ref log=@item(logs,i)
                 success=parse.bool(@@(log,"$success"))
-                style_error="border: 1px solid red"
+                style_error="border: 1px solid var(--et-error, var(--ixt-error, red))"
                 #$
                 div(class="card" )
                 {

@@ -45,8 +45,8 @@ module "list.dk"
                 @"caption":"Acciones" 
                 @"template":ftext('
                     <div style="display:flex;gap:8px;justify-content:center;width:100%;" class="no-print">
-                        <a href="${DataRow.entry_point}${DataRow.sys_pk}/${DataRow.view}?exit_url_encode=#<current_url>" style="cursor:pointer; text-decoration: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Editar</a>
-                        <button onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})" style="cursor:pointer; border: none; outline: none; padding: 0px 8px; background-color: #F5F5F5; color: #000;">Eliminar</button>
+                        <a href="${DataRow.entry_point}${DataRow.sys_pk}/${DataRow.view}?exit_url_encode=#<current_url>" style="cursor:pointer; text-decoration: none; padding: 0px 8px; background-color: var(--et-header-bg, var(--ixt-header-bg, #F5F5F5)); color: var(--et-fg, var(--ixt-fg, #000));">Editar</a>
+                        <button onclick="InduxsoftCrudlModel.Delete(${DataRow.sys_pk})" style="cursor:pointer; border: none; outline: none; padding: 0px 8px; background-color: var(--et-header-bg, var(--ixt-header-bg, #F5F5F5)); color: var(--et-fg, var(--ixt-fg, #000));">Eliminar</button>
                     </div>')
                 @"no-print":@true
             }

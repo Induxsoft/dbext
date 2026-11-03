@@ -15,7 +15,7 @@ module "list.dk"
 	@_entities_type = @("$parameters/_entities_type")
 
     table_id = "tbl_"+@_entities_type
-    tbtn_style = "cursor:pointer; text-decoration:none; border:none; outline:none; padding: 0px 8px; background-color:#F5F5F5; color:#000000;"
+    tbtn_style = "cursor:pointer; text-decoration:none; border:none; outline:none; padding: 0px 8px; background-color:var(--et-header-bg, var(--ixt-header-bg, #F5F5F5)); color:var(--et-fg, var(--ixt-fg, #000000));"
     
     new table_definition
     {

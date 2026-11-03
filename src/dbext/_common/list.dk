@@ -33,7 +33,7 @@ module "list.dk"
 
         new headers
         {
-            @"style":"position:sticky !important; top:0 !important; background-color:#fff;"
+            @"style":"position:sticky !important; top:0 !important; background-color:var(--et-header-bg, var(--ixt-header-bg, #fff));"
             @"class":"h6"
         }
 
@@ -170,7 +170,7 @@ module "list.dk"
                     }
                     #$ div(class="text-center")
                     {
-                        h6(style="background-color: #F5F5F5; padding: 10rem 0;"){"#<message>"}
+                        h6(style="background-color: var(--et-panel-bg, var(--ixt-header-bg, #F5F5F5)); padding: 10rem 0;"){"#<message>"}
                     }
                 }
                 #! else 

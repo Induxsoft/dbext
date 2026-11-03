@@ -46,7 +46,7 @@ program "form.dk"
             }
             .form-control:focus {
                 box-shadow: none !important;
-                border-color: rgb(206, 212, 218);
+                border-color: var(--ix-input-border, rgb(206, 212, 218));
             }
             @media (min-width: 768px) {
                 .control-container {

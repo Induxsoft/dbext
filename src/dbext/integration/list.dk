@@ -14,7 +14,7 @@ module "list"
     ref integrations=ifnull(@("&."),list.create())
     ref db=@("&database")
 
-    tbtn_style = "cursor:pointer; text-decoration:none; border:1px solid gray; outline:none; padding: 0px 8px; background-color:#F5F5F5; color:#000000;"
+    tbtn_style = "cursor:pointer; text-decoration:none; border:1px solid var(--et-input-border, var(--ixt-input-border, gray)); outline:none; padding: 0px 8px; background-color:var(--et-header-bg, var(--ixt-header-bg, #F5F5F5)); color:var(--et-fg, var(--ixt-fg, #000000));"
     new table_definition
     {
         @"datatable*": integrations
