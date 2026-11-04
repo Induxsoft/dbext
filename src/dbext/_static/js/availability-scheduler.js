@@ -419,7 +419,10 @@ class AvailabilityScheduler extends HTMLElement {
     }
     this._syncFormValue();
     this._render();
+    this._temaConectar();
   }
+
+  disconnectedCallback() { this._temaDesconectar(); }
 
   attributeChangedCallback(name, oldVal, newVal) {
     if (name === 'value') {
@@ -796,6 +799,91 @@ class AvailabilityScheduler extends HTMLElement {
     this._render();
     this._emitDayChange(day);
     this._emitChange();
+  }
+
+  // ---------- tema (InduxsoftTheme.bind; sin el módulo o sin tema, el control queda como siempre) ----------
+  static _temaModulo(fn) {
+    const listo = () => { const T = window.InduxsoftTheme; return (T && typeof T.bind === 'function') ? T : null; };
+    const T = listo();
+    if (T) { fn(T); return null; }
+    if (document.readyState === 'complete') return null;
+    let hecho = false;
+    const fin = () => { hecho = true; document.removeEventListener('DOMContentLoaded', probar); window.removeEventListener('load', probar); };
+    const probar = () => { if (hecho) return; const t = listo(); if (t) { fin(); fn(t); } else if (document.readyState === 'complete') fin(); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', probar);
+    window.addEventListener('load', probar);
+    return fin;
+  }
+  _temaConectar() {
+    if (this._tema || this._temaCancelar) return;
+    this._temaCancelar = AvailabilityScheduler._temaModulo(T => {
+      this._temaCancelar = null;
+      if (!this.isConnected || this._tema) return;
+      this._tema = T.bind(this, { root: this.shadowRoot, name: 'availability-scheduler', css: V => AvailabilityScheduler._temaCss(V) });
+    });
+  }
+  _temaDesconectar() {
+    if (this._temaCancelar) { this._temaCancelar(); this._temaCancelar = null; }
+    if (this._tema) { this._tema.dispose(); this._tema = null; }
+  }
+  static _temaCss(V) {
+    // :host(:not(...)) tiene más especificidad que el :host y las clases de TEMPLATE_STYLES, que va después.
+    const P = ':host(:not(.ix-sin-tema))';
+    const H = 'var(--ix-h, var(--ix-t-h))', PAD = 'var(--ix-pad, var(--ix-t-pad))', FS = 'var(--ix-fs, var(--ix-t-fs))';
+    const campo = `box-sizing: border-box; min-height: ${H}; padding: ${PAD}; font-size: ${FS}; border: 1px solid ${V('input-border', '#8C959F')}; border-radius: ${V('radius', '4px')};`;
+    const foco = `outline: none; border-color: ${V('accent', '#2F66CC')}; box-shadow: 0 0 0 3px color-mix(in srgb, ${V('focus-ring', '#2F66CC')} 30%, transparent);`;
+    return `
+${P} {
+  --as-bg: ${V('bg', '#FFFFFF')};
+  --as-surface: ${V('header-bg', '#F3F5F8')};
+  --as-ink: ${V('fg', '#1F2328')};
+  --as-muted: ${V('muted-fg', '#59636E')};
+  --as-line: ${V('border', '#E1E5EA')};
+  --as-accent: ${V('accent', '#2F66CC')};
+  --as-accent-soft: ${V('sel-bg-soft', '#E3ECFA')};
+  --as-accent-strong: ${V('accent', '#2F66CC')};
+  --as-off: ${V('input-disabled-bg', '#EEF1F4')};
+  --as-danger: ${V('error', '#C62828')};
+  --as-danger-soft: ${V('error-bg', '#FDECEC')};
+  --as-radius: ${V('radius', '4px')};
+  --as-font-ui: ${V('font', 'system-ui, sans-serif')};
+  --as-font-mono: ${V('num-font', 'ui-monospace, Consolas, monospace')};
+  color-scheme: var(--ix-t-cs, normal);
+  border-color: ${V('card-border', '#E1E5EA')};
+  font-size: ${FS};
+}
+${P} .segmented { background: ${V('header-bg', '#F3F5F8')}; border-color: ${V('header-border', '#D0D7DE')}; border-radius: ${V('radius', '4px')}; }
+${P} .segmented button { font-size: ${FS}; color: ${V('header-fg', '#1F2328')}; border-radius: calc(${V('radius', '4px')} - 1px); padding: 4px 12px; }
+${P} .segmented button:hover { background: ${V('hover-bg', '#EDF2F8')}; color: ${V('fg', '#1F2328')}; }
+${P} .segmented button[aria-pressed="true"] { background: ${V('sel-bg', '#2F66CC')}; color: ${V('sel-fg', '#FFFFFF')}; }
+${P} .day-label { font-family: ${V('font', 'system-ui, sans-serif')}; font-weight: ${V('header-weight', '600')}; font-size: 12.5px; color: ${V('fg', '#1F2328')}; }
+${P} .switch { background: ${V('input-disabled-bg', '#EEF1F4')}; border-color: ${V('input-border', '#8C959F')}; }
+${P} .switch::after { background: ${V('muted-fg', '#59636E')}; box-shadow: none; top: 2px; left: 2px; width: 14px; height: 14px; }
+${P} .switch[aria-checked="true"] { background: ${V('sel-bg', '#2F66CC')}; border-color: ${V('sel-bg', '#2F66CC')}; }
+${P} .switch[aria-checked="true"]::after { background: ${V('sel-fg', '#FFFFFF')}; }
+${P} .switch:focus-visible, ${P} .icon-btn:focus-visible, ${P} .add-range:focus-visible, ${P} .segmented button:focus-visible, ${P} .remove:focus-visible { ${foco} }
+${P} .switch-label, ${P} .check { color: ${V('muted-fg', '#59636E')}; }
+${P} .check input { accent-color: ${V('accent', '#2F66CC')}; }
+${P} .icon-btn { ${campo} background: ${V('bg', '#FFFFFF')}; color: ${V('fg', '#1F2328')}; padding-top: 0; padding-bottom: 0; font-family: inherit; }
+${P} .icon-btn:hover { background: ${V('hover-bg', '#EDF2F8')}; color: ${V('fg', '#1F2328')}; border-color: ${V('input-border', '#8C959F')}; }
+${P} .day-content.is-off { color: ${V('muted-fg', '#59636E')}; }
+${P} .strip-track { border-color: ${V('input-border', '#8C959F')}; border-radius: ${V('radius', '4px')}; background: ${V('input-disabled-bg', '#EEF1F4')}; }
+${P} .cell { border-right-color: color-mix(in srgb, ${V('bg', '#FFFFFF')} 60%, transparent); }
+${P} .cell:hover { background: ${V('hover-bg', '#EDF2F8')}; }
+${P} .cell[aria-pressed="true"] { background: ${V('accent', '#2F66CC')}; }
+${P} .cell:focus-visible { outline-color: ${V('focus-ring', '#2F66CC')}; }
+${P} .strip-ticks { color: ${V('muted-fg', '#59636E')}; }
+${P} .range-row label { color: ${V('muted-fg', '#59636E')}; }
+${P} .range-row input[type="time"] { ${campo} height: ${H}; line-height: 1.2; background: ${V('input-bg', '#FFFFFF')}; color: ${V('input-fg', '#1F2328')}; color-scheme: var(--ix-t-cs, normal); }
+${P} .range-row input[type="time"]:focus { ${foco} }
+${P} .range-row input[type="time"].has-error { border-color: ${V('error', '#C62828')}; background: ${V('error-bg', '#FDECEC')}; color: ${V('input-fg', '#1F2328')}; }
+${P} .range-row .remove { color: ${V('muted-fg', '#59636E')}; min-height: ${H}; min-width: ${H}; border-radius: ${V('radius', '4px')}; }
+${P} .range-row .remove:hover { color: ${V('error', '#C62828')}; background: ${V('error-bg', '#FDECEC')}; }
+${P} .add-range { min-height: ${H}; padding: 0 12px; font-size: ${FS}; border-color: ${V('input-border', '#8C959F')}; color: ${V('accent', '#2F66CC')}; border-radius: ${V('radius', '4px')}; }
+${P} .add-range:hover { border-color: ${V('accent', '#2F66CC')}; background: ${V('hover-bg', '#EDF2F8')}; }
+${P} .slot-error { color: ${V('error', '#C62828')}; }
+:host([readonly]:not(.ix-sin-tema)) input[type="time"] { background: ${V('input-disabled-bg', '#EEF1F4')}; color: ${V('muted-fg', '#59636E')}; }
+`;
   }
 
   // ---------- reflejo de atributos booleanos como propiedades ----------
