@@ -46,7 +46,7 @@ module ""
             OR n.recipient_email LIKE CONCAT('%', @search, '%')
         )
     ORDER BY n.scheduled_for DESC
-    LIMIT #<@default_max_rows>
+    LIMIT #<dbr.vars.max_rows_list(db)>
     "
 
     //#region prepareView()

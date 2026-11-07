@@ -24,7 +24,7 @@ module "Privilegios por Tipo de Elementos de Datos.:detusr"
         INNER JOIN sys_app_item_type AS det ON t1.ref_det = det.id
     WHERE NOT IFNULL(t1.sys_deleted,0)
         #<conditions>
-    LIMIT #<@default_max_rows>
+    LIMIT #<dbr.vars.max_rows_list(db)>
     "
 
     @read_query = "

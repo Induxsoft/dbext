@@ -10,7 +10,7 @@ module ":ciudad"
         AND IF(IFNULL(@s,'')='', true, (c.codigo = @s OR c.nombre LIKE CONCAT('%',@s,'%')))
         AND (c.estado=@edo OR ISNULL(@edo))
     ORDER BY c.codigo
-    LIMIT #<@default_max_rows>;
+    LIMIT #<dbr.vars.max_rows_list(db)>;
     "
     @read_query = "SELECT sys_pk, sys_recver, codigo, codigotel, nombre, estado FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1;"
 

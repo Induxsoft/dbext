@@ -20,7 +20,7 @@ module ""
         NOT IFNULL(n.sys_deleted, 0)
         AND (IFNULL(@search, '') = '' OR n.name LIKE CONCAT('%', @search, '%') OR c.name LIKE CONCAT('%', @search, '%'))
     ORDER BY n.name
-    LIMIT #<@default_max_rows>
+    LIMIT #<dbr.vars.max_rows_list(db)>
     "
     @read_query = "SELECT * FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1"
 

@@ -165,6 +165,15 @@
                         "keyfield": "id"
                     }
                 }
+            },
+            {
+                "varname": "dbext.max_rows",
+                "vardefault": "1000",
+                "varvalue": "1000",
+                "varcaption": "Filas máximas en listas y reportes",
+                "varhelp": "Tope de filas de las listas y reportes de todos los paquetes. Una variable del paquete o de la lista con valor (por ejemplo cxc.clientes.max_rows) manda sobre esta. Si ninguna tiene un número mayor que 0, el tope es 1000. No aplica a los buscadores de la captura.",
+                "vartype": "int",
+                "varinput": { "control": "number" }
             }
         ]
     },

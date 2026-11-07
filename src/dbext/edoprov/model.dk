@@ -10,7 +10,7 @@ module ":edoprov"
         AND IF(IFNULL(@s,'')='', true, (e.codigo = @s OR e.nombre LIKE CONCAT('%',@s,'%')))
         AND (ipais=@pais OR ISNULL(@pais))
     ORDER BY e.codigo
-    LIMIT #<@default_max_rows>;
+    LIMIT #<dbr.vars.max_rows_list(db)>;
     "
     @read_query = "SELECT sys_pk, sys_recver, codigo, nombre, ipais FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1;"
     

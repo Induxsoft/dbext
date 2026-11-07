@@ -129,7 +129,7 @@ module "model"
             NOT IFNULL(sys_deleted,0)
             AND IF(IFNULL(@s,'')='', TRUE, (groupid = @s OR description LIKE CONCAT('%',@s,'%')))
         ORDER BY groupid
-        LIMIT #<@default_max_rows>;
+        LIMIT #<dbr.vars.max_rows_list(db)>;
         "
         return dbr.list(db, ftext(query), params)
 

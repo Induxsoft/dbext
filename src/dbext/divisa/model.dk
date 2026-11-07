@@ -8,7 +8,7 @@ module ":divisa"
     WHERE NOT IFNULL(sys_deleted,0)
 		AND IF(IFNULL(@s,'')='', true, (codigo = @s OR descripcion LIKE CONCAT('%',@s,'%')))
     ORDER BY codigo
-    LIMIT #<@default_max_rows>;
+    LIMIT #<dbr.vars.max_rows_list(db)>;
 	"
     @read_query = "SELECT sys_pk, sys_recver, codigo, descripcion, tcambio, IFNULL(decimales,0) decimales FROM #<@table_name> WHERE #<@keyfield> = @_entity_id LIMIT 1;"
 

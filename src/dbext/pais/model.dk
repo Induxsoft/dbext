@@ -8,7 +8,7 @@ module ":pais"
     WHERE NOT IFNULL(sys_deleted,0)
         AND IF(IFNULL(@s,'')='', true, (codigo = @s OR nombre LIKE CONCAT('%',@s,'%')))
     ORDER BY codigo
-    LIMIT #<@default_max_rows>;
+    LIMIT #<dbr.vars.max_rows_list(db)>;
     "
     @read_query = "SELECT
         sys_pk,

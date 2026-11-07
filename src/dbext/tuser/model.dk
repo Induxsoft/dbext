@@ -282,7 +282,7 @@ module "model"
             AND IF(IFNULL(@s,'')='', TRUE, (u.userid = @s OR u.username LIKE CONCAT('%',@s,'%')))
         GROUP BY u.userid
         ORDER BY u.username ASC
-        LIMIT #<@default_max_rows>;
+        LIMIT #<dbr.vars.max_rows_list(db)>;
         "
 
         new data

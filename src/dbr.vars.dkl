@@ -126,6 +126,37 @@ module "Variables alojadas en la base de datos :dbr.vars"
 
     }
 
+    // Valor entero de una variable para max_rows; 0 si no existe, está vacía o no es un número
+    max_rows_valor::&db, varname
+    {
+        v=trim(dbr.vars.getd(db,varname,""))
+        if v=="" { return 0 }
+        n=trun(parse.num(v))
+        return n
+
+        exception { return 0 }
+    }
+
+    // D100 (v12_qa): tope de filas de las listas y reportes, sin paginación (D53).
+    // 1) la variable del paquete o de la lista (varname; "" si no tiene) si es un número > 0, tal cual;
+    // 2) si no, la variable global dbext.max_rows; 3) si tampoco, 1000.
+    // No aplica a los buscadores de la captura (autocompletar).
+    max_rows::&db, varname
+    {
+        tope=0
+        if trim(varname)!="" { tope=dbr.vars.max_rows_valor(db,varname) }
+        if tope<=0 { tope=dbr.vars.max_rows_valor(db,"dbext.max_rows") }
+        if tope<=0 { tope=1000 }
+        return tope
+    }
+
+    // Tope de una lista sin variable propia: dbext.max_rows o 1000.
+    // Para las consultas con ftext: LIMIT #<dbr.vars.max_rows_list(db)>
+    max_rows_list::&db
+    {
+        return dbr.vars.max_rows(db,"")
+    }
+
     has_sys_recver :: &db, tname
     {
         if not(isset("@_cache_sys_recver")) { ref @_cache_sys_recver = record.create() }
